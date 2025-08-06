@@ -1,0 +1,42 @@
+/* src/app/about/About.module.css */
+
+/* Find and replace this rule in About.module.css */
+
+.aboutContainer {
+  padding: 2rem 1.5rem; /* UPDATED: Increased side padding */
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  background-color: var(--bg-color);
+  flex-grow: 1;
+}
+
+.content {
+  max-width: 800px;
+  line-height: 1.6;
+  color: var(--accent-cream); /* Use your brand's dark font color */
+}
+
+/* This targets the subheadings like "The Problem" */
+.content h3 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.content p {
+  margin-bottom: 1rem; /* Adds a 16px gap below each paragraph */
+}
+
+/* Add this to the bottom of your About.module.css file */
+.styledLink {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-color: var(--accent-green);
+  text-decoration-thickness: 1.5px;
+}
+
+.styledLink:hover {
+  text-decoration-color: var(--accent-red);
+}
