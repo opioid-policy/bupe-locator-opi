@@ -5,20 +5,49 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { ...reportData } = body; // We no longer need the turnstileToken here
+  const { turnstileToken, ...reportData } = body;
 
-  // --- Turnstile Verification is Temporarily Disabled ---
-  /*
+  // --- Start Turnstile Verification ---
   try {
-    // ... all turnstile code is commented out ...
+    if (!turnstileToken) {
+      throw new Error("Turnstile token is missing.");
+    }
+    
+    const secretKey = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
+    if (!secretKey) {
+      throw new Error("Cloudflare secret key is not configured.");
+    }
+
+    // This is a more robust way to send the data for serverless environments
+    const response = await fetch('https://challenges.cloudflare.com/api/turnstile/v2/siteverify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `secret=${encodeURIComponent(secretKey)}&response=${encodeURIComponent(turnstileToken)}`,
+    });
+
+    if (!response.ok) {
+        const rawResponseText = await response.text();
+        console.error('Cloudflare verification request failed!');
+        console.error('Status:', response.status);
+        console.error('Raw Response Body:', rawResponseText);
+        return NextResponse.json({ error: 'Turnstile verification failed at the network level.' }, { status: 500 });
+    }
+
+    const turnstileData = await response.json();
+
+    if (!turnstileData.success) {
+      console.error('Turnstile verification was not successful:', turnstileData['error-codes']);
+      return NextResponse.json({ error: 'Turnstile check failed.' }, { status: 403 });
+    }
   } catch (error) {
-    // ...
+    console.error('CRITICAL: Error during Turnstile verification:', error);
+    return NextResponse.json({ error: 'Could not verify Turnstile token.' }, { status: 500 });
   }
-  */
-  // --- End of Disabled Section ---
+  // --- End Turnstile Verification ---
 
-
-  // The code will now go directly to the Airtable section
+  // If we get here, Turnstile was successful. Now, save to Airtable.
   try {
     if (!reportData.pharmacy) {
       return NextResponse.json({ error: 'Pharmacy data is missing.' }, { status: 400 });
