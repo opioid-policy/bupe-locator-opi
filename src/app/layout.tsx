@@ -2,8 +2,6 @@
 
 import type { Metadata } from "next";
 import Link from 'next/link';
-import Image from 'next/image';
-// UPDATED: Import both fonts
 import { Raleway, Merriweather } from 'next/font/google';
 import styles from "./Layout.module.css";
 import "./globals.css";
@@ -48,12 +46,7 @@ export default function RootLayout({
           </main>
           <footer className={styles.footer}>
             <p>This is a crowd-source resource. This tool is not a guarantee of service.</p>
-            <p style={{marginTop: '0.5rem'}}>
-              <Link href="/privacy" className={styles.styledLink}>
-                Privacy Practices
-              </Link>
-            </p>
-            <p style={{marginTop: '0.5rem'}}>
+               <p style={{marginTop: '0.5rem'}}>
               <Link href="/about" className={styles.styledLink}>
                 About This Project
               </Link>
@@ -65,7 +58,12 @@ export default function RootLayout({
             </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/methadone-naltrexone" className={styles.styledLink}>
-                *What about Methadone, Naltrexone, and Long Acting Injectable Bupe?
+                What About Other Treatments?
+              </Link>
+            </p>
+             <p style={{marginTop: '0.5rem'}}>
+              <Link href="/privacy" className={styles.styledLink}>
+                Privacy Practices
               </Link>
             </p>
             <a 

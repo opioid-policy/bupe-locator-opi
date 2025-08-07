@@ -86,7 +86,7 @@
 .printFooter { display: none; }
 .findHeader { text-align: center; }
 .lastUpdated { font-style: italic; }
-.listItemActions { display: flex; gap: 0.5rem; align-self: flex-end; }
+.listItemActions { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
 .callButton { padding: 0.5rem 1rem; background-color: var(--accent-green); color: var(--accent-navy); border-radius: 0.375rem; text-decoration: none; font-weight: 500; font-size: 0.9rem; white-space: nowrap; transition: background-color 0.2s; }
 .callButton:hover { background-color: var(--accent-blue); }
 .filterGroup { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; }
@@ -124,4 +124,49 @@
   .printableArea, .printableArea * { color: #000 !important; }
   .printFooter { display: block; text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ccc; font-size: 0.9rem; color: #666; }
   .printOnlyPhone { display: block; font-size: 0.9rem; color: #000 !important; margin-top: 0.25rem; }
+   .listItem:nth-child(n+12) {
+    display: none;
+  }
+}
+
+.pharmacyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.pharmacyHeader strong {
+  font-size: 1.1rem;
+  color: var(--font-color-dark);
+}
+
+.pharmacyAddress {
+  color: var(--accent-green);
+  text-decoration: none;
+  display: block;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.pharmacyAddress:hover {
+  text-decoration: underline;
+}
+
+.buttonContainer {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .buttonContainer {
+    flex-direction: column;
+  }
+  
+  .directionsButton,
+  .callButton {
+    width: 100%;
+    text-align: center;
+  }
 }

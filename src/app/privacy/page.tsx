@@ -37,14 +37,14 @@ export default function PrivacyPage() {
           We use modern, privacy-focused tools to run this site:
         </p>
         <ul>
-          <li><strong>Spam Protection:</strong> We use a tool called **Cloudflare Turnstile** to check if a submission is from a real person, not a robot. It does this without the annoying puzzles and without building a profile of you.</li>
-          <li><strong>Maps:</strong> The map is provided by **Mapbox**, and the &quot;Get Directions&quot; links use **OpenStreetMap**, a non-profit mapping service, to protect your privacy. Your searches are not linked to a personal account. If you are using this website on a mobile phone it might open the pharmacy links on a service like Google Maps. Google Maps is not private and uses this data to target you with advertisements. This is bad for your privacy. However, we cannot control what apps you use on your mobile device. We suggest you use privacy preserving maping tools like: {' '}
+          <li><strong>Spam Protection:</strong> We use a tool called Cloudflare Turnstile to check if a submission is from a real person, not a robot. It does this without the annoying puzzles and without building a profile of you.</li>
+          <li><strong>Maps:</strong> The map is provided by Mapbox, and the &quot;Get Directions&quot; links use OpenStreetMap, a non-profit mapping service, to protect your privacy. Your searches are not linked to a personal account. If you are using this website on a mobile phone it might open the pharmacy links on a service like Google Maps. Google Maps uses this data to target you with advertisements. This is bad for your privacy. However, we cannot control what apps you use on your mobile device. We suggest you use privacy preserving maping tools like: {' '}
           <Link href="https://organicmaps.app/" className={styles.styledLink} target="_blank" rel="noopener noreferrer">
            Organic Maps
           </Link> to reduce these issuse. </li>
-          <li><strong>Database:</strong> Your anonymous reports are stored in a secure database called **Airtable**. We are the only ones with access to this data and it only includes information you submitted on the pharmacy updating tool + automatically adding time of submission (to help represent the freshness of the data).</li>
-          <li><strong>Hosting:</strong> The website is hosted on **Vercel**, and we have configured it not to store logs of visitor IP addresses.</li>
-          <li><strong>Code:</strong> The website code (not the form data) is hosted on **Codeberg** so that people can audit this website and suggest fixes to our privacy and security practices.</li>
+          <li><strong>Database:</strong> Your anonymous reports are stored in a secure database called Airtable. We are the only ones with access to this data and it only includes information you submitted on the pharmacy updating tool + automatically adding time of submission (to help represent the freshness of the data).</li>
+          <li><strong>Hosting:</strong> The website is hosted on Vercel, and we have configured it not to store logs of visitor IP addresses.</li>
+          <li><strong>Code:</strong> The website code (not the form data) is hosted on Codeberg and GitHub so that people can audit this website and suggest fixes to our privacy and security practices.</li>
 
         </ul>
 
