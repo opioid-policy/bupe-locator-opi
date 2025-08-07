@@ -2,47 +2,28 @@
 
 import { table } from '@/lib/airtable';
 import { NextRequest, NextResponse } from 'next/server';
-import axios from 'axios'; // NEW: Import axios
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { turnstileToken, ...reportData } = body;
+  const { ...reportData } = body; // We no longer need the turnstileToken here
 
-  // --- Start Turnstile Verification using Axios ---
+  // --- Turnstile Verification is Temporarily Disabled ---
+  /*
   try {
-    if (!turnstileToken) {
-      throw new Error("Turnstile token is missing.");
-    }
-    
-    const secretKey = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
-    if (!secretKey) {
-      throw new Error("Cloudflare secret key is not configured.");
-    }
-
-    // Axios handles URL-encoded forms easily with a simple object
-    const params = new URLSearchParams();
-    params.append('secret', secretKey);
-    params.append('response', turnstileToken);
-
-    const turnstileResponse = await axios.post(
-      'https://challenges.cloudflare.com/api/turnstile/v2/siteverify',
-      params
-    );
-
-    const turnstileData = turnstileResponse.data;
-
-    if (!turnstileData.success) {
-      console.error('Turnstile verification was not successful:', turnstileData['error-codes']);
-      return NextResponse.json({ error: 'Turnstile check failed.' }, { status: 403 });
-    }
+    // ... all turnstile code is commented out ...
   } catch (error) {
-    console.error('CRITICAL: Error during Turnstile verification:', error);
-    return NextResponse.json({ error: 'Could not verify Turnstile token.' }, { status: 500 });
+    // ...
   }
-  // --- End Turnstile Verification ---
+  */
+  // --- End of Disabled Section ---
 
-  // If we get here, Turnstile was successful. Now, save to Airtable.
+
+  // The code will now go directly to the Airtable section
   try {
+    if (!reportData.pharmacy) {
+      return NextResponse.json({ error: 'Pharmacy data is missing.' }, { status: 400 });
+    }
+
     await table.create([
       {
         fields: {
