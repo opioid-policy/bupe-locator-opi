@@ -86,6 +86,24 @@ export default function Home() {
   const [isLoadingPharmacies, setIsLoadingPharmacies] = useState(true);
   const [dateFilter, setDateFilter] = useState<number | null>(30);
 
+  // NEW: useEffect for handling browser back button
+  useEffect(() => {
+    const handlePopState = () => {
+      // Logic to go "back" one step in our app's flow
+      if (mode) {
+        setMode(null);
+      } else if (locationCoords) {
+        setLocationCoords(null);
+        setZipCode('');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [mode, locationCoords]);
+
   useEffect(() => { if (locationCoords && !mode) { const fetchStats = async () => { try { const response = await fetch('/api/stats'); const data = await response.json(); setStats(data); } catch (error) { console.error("Failed to fetch stats", error); } }; fetchStats(); } }, [locationCoords, mode]);
   useEffect(() => { if ((mode === 'find' || mode === 'report') && locationCoords) { setIsLoadingPharmacies(true); const fetchAllReports = async () => { try { const [lat, lon] = locationCoords; const response = await fetch(`/api/pharmacies?lat=${lat}&lon=${lon}`); const data: Report[] = await response.json(); setAllReports(data); } catch (error) { console.error("Failed to fetch pharmacy reports:", error); } finally { setIsLoadingPharmacies(false); } }; fetchAllReports(); } }, [mode, locationCoords]);
   useEffect(() => { if (allReports.length === 0 && !isLoadingPharmacies) { setAggregatedPharmacies({}); return; } const summary: Record<string, AggregatedPharmacy> = {}; const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); for (const report of allReports) { if (!summary[report.pharmacyId]) { const fullAddress = `${report.streetAddress}, ${report.city}, ${report.state} ${report.zipCode}`; summary[report.pharmacyId] = { id: report.pharmacyId, name: report.pharmacyName, coords: [report.latitude, report.longitude], status: 'denial', successCount: 0, denialCount: 0, lastUpdated: '', full_address: fullAddress, phone_number: report.phoneNumber, standardizedNotes: [], trend: 'neutral' }; } if (report.reportType === 'success') { summary[report.pharmacyId].successCount++; if (!summary[report.pharmacyId].lastUpdated || new Date(report.submissionTime) > new Date(summary[report.pharmacyId].lastUpdated)) { summary[report.pharmacyId].lastUpdated = report.submissionTime; } } else { summary[report.pharmacyId].denialCount++; } if(report.standardizedNotes) { summary[report.pharmacyId].standardizedNotes.push(...report.standardizedNotes); } } for (const pharmacyId in summary) { const pharmacy = summary[pharmacyId]; if (pharmacy.successCount > pharmacy.denialCount) { pharmacy.status = 'success'; } else { pharmacy.status = 'denial'; } const recentSuccesses = allReports.filter(r => r.pharmacyId === pharmacyId && r.reportType === 'success' && new Date(r.submissionTime) > sevenDaysAgo).length; const recentDenials = allReports.filter(r => r.pharmacyId === pharmacyId && r.reportType === 'denial' && new Date(r.submissionTime) > sevenDaysAgo).length; if (recentSuccesses > recentDenials) { pharmacy.trend = 'up'; } else if (recentDenials > recentSuccesses) { pharmacy.trend = 'down'; } summary[pharmacyId].standardizedNotes = [...new Set(summary[pharmacyId].standardizedNotes)]; } setAggregatedPharmacies(summary); }, [allReports, isLoadingPharmacies]);

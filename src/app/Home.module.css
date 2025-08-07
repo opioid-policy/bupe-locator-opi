@@ -79,7 +79,7 @@
 .listItemInfo { display: flex; flex-direction: column; align-items: flex-start; }
 .listItemInfo strong { font-weight: 600; margin-bottom: 0.5rem; color: var(--accent-cream); }
 .listItemInfo small { font-size: 0.9rem; color: var(--accent-cream); line-height: 1.5; }
-.directionsButton { padding: 0.5rem 1rem; background-color: var(--accent-green); color: var(--font-color-dark); border-radius: 0.375rem; text-decoration: none; font-weight: 500; font-size: 0.9rem; white-space: nowrap; transition: background-color 0.2s; align-self: flex-end; }
+.directionsButton { padding: 0.75rem 1rem; background-color: var(--accent-green); color: var(--accent-navy); border-radius: 0.375rem; text-decoration: none; font-weight: 600; font-size: 1rem; text-align: center; white-space: nowrap; transition: background-color 0.2s; }
 .directionsButton:hover { background-color: var(--accent-blue); color: var(--accent-navy); }
 .printButton { display: inline-block; margin-bottom: 1.5rem; padding: 0.5rem 1rem; font-size: 1rem; font-weight: bold; color: var(--accent-navy); background-color: var(--accent-green); border: 1px solid var(--accent-navy); border-radius: 0.375rem; cursor: pointer; transition: all 0.2s ease-in-out; }
 .printButton:hover { background-color: var(--accent-blue); }
@@ -87,7 +87,7 @@
 .findHeader { text-align: center; }
 .lastUpdated { font-style: italic; }
 .listItemActions { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
-.callButton { padding: 0.5rem 1rem; background-color: var(--accent-green); color: var(--accent-navy); border-radius: 0.375rem; text-decoration: none; font-weight: 500; font-size: 0.9rem; white-space: nowrap; transition: background-color 0.2s; }
+.callButton { padding: 0.75rem 1rem; background-color: var(--accent-green); color: var(--accent-navy); border-radius: 0.375rem; text-decoration: none; font-weight: 600; font-size: 1rem; text-align: center; white-space: nowrap; transition: background-color 0.2s; }
 .callButton:hover { background-color: var(--accent-blue); }
 .filterGroup { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; }
 .filterButton { padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; color: var(--font-color-dark); background-color: transparent; border: 1px solid var(--font-color-dark); border-radius: 9999px; cursor: pointer; transition: all 0.2s ease-in-out; }
@@ -117,56 +117,57 @@
 .formDivider { height: 2px; width: 100%; background-color: var(--accent-green); margin: 0.5rem 0; border: none; }
 
 /* --- Print Styles --- */
+/* Find and replace this entire block at the bottom of Home.module.css */
+
 @media print {
-  .mapSection, .directionsButton, .printButton, .callButton { display: none; }
-  .formSection { width: 100%; border: none; }
-  .listItem { background-color: transparent !important; border: 1px solid #bbb !important; page-break-inside: avoid; }
-  .printableArea, .printableArea * { color: #000 !important; }
-  .printFooter { display: block; text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ccc; font-size: 0.9rem; color: #666; }
-  .printOnlyPhone { display: block; font-size: 0.9rem; color: #000 !important; margin-top: 0.25rem; }
-   .listItem:nth-child(n+12) {
+  /* Hide non-essential elements */
+  .mapSection,
+  .directionsButton,
+  .printButton,
+  .callButton,
+  .filterGroup { /* Also hide the filter buttons */
     display: none;
   }
-}
 
-.pharmacyHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-
-.pharmacyHeader strong {
-  font-size: 1.1rem;
-  color: var(--font-color-dark);
-}
-
-.pharmacyAddress {
-  color: var(--accent-green);
-  text-decoration: none;
-  display: block;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-}
-
-.pharmacyAddress:hover {
-  text-decoration: underline;
-}
-
-.buttonContainer {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-@media (max-width: 768px) {
-  .buttonContainer {
-    flex-direction: column;
+  /* Make the list section take up the whole page */
+  .formSection {
+    width: 100%;
+    border: none;
   }
   
-  .directionsButton,
-  .callButton {
-    width: 100%;
+  /* Style the list items for black & white printing */
+  .listItem {
+    background-color: transparent !important;
+    border: 1px solid #bbb !important;
+    page-break-inside: avoid; /* THIS IS THE FIX */
+  }
+
+  /* Ensure all text within the printable area is black */
+  .printableArea, .printableArea * {
+    color: #000 !important;
+  }
+  
+  /* Show and style the print footer */
+  .printFooter {
+    display: block;
     text-align: center;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #ccc;
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  /* Show the phone number text ONLY when printing */
+  .printOnlyPhone {
+    display: block;
+    font-size: 0.9rem;
+    color: #000 !important;
+    margin-top: 0.25rem;
+  }
+
+  /* Cap the printout at 25 items */
+  .listItem:nth-child(n+13) {
+    display: none;
   }
 }
