@@ -2,7 +2,7 @@
 
 import { useState, useEffect, FormEvent, useMemo } from 'react';
 import Link from 'next/link';
-import { Turnstile } from '@marsidev/react-turnstile';
+import Turnstile, { useTurnstile } from 'react-turnstile';
 import MapLoader from "./components/MapLoader";
 import styles from "./Home.module.css";
 import PharmacyListItem from './components/PharmacyListItem';
@@ -75,7 +75,7 @@ export default function Home() {
   const [notes, setNotes] = useState('');
   const [consentMap, setConsentMap] = useState(false);
   const [consentResearch, setConsentResearch] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [stats, setStats] = useState<Stats | null>(null);
@@ -85,6 +85,7 @@ export default function Home() {
   const [aggregatedPharmacies, setAggregatedPharmacies] = useState<Record<string, AggregatedPharmacy>>({});
   const [isLoadingPharmacies, setIsLoadingPharmacies] = useState(true);
   const [dateFilter, setDateFilter] = useState<number | null>(30);
+  const turnstile = useTurnstile();
 
   // NEW: useEffect for handling browser back button
   useEffect(() => {
@@ -112,7 +113,7 @@ export default function Home() {
   useEffect(() => { if (!locationCoords) return; if (!sessionToken) setSessionToken(crypto.randomUUID()); if (searchTerm.length <= 2) { setResults([]); return; } const timer = setTimeout(() => { const fetchPharmacies = async () => { const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN; const [lat, lon] = locationCoords; const endpoint = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${searchTerm}&access_token=${accessToken}&language=en&session_token=${sessionToken}&proximity=${lon},${lat}&types=poi`; try { const response = await fetch(endpoint); const data = await response.json(); setResults(data.suggestions || []); } catch (error) { console.error("Error fetching pharmacies:", error); } }; fetchPharmacies(); }, 300); return () => clearTimeout(timer); }, [searchTerm, locationCoords, sessionToken]);
   const handleFormulationChange = (option: string) => { setFormulations(prev => prev.includes(option) ? prev.filter(item => item !== option) : [...prev, option]); };
   const handleStandardizedNoteChange = (option: string) => { setStandardizedNotes(prev => prev.includes(option) ? prev.filter(item => item !== option) : [...prev, option]); };
-  const handleSubmit = async (e: FormEvent) => { e.preventDefault(); setIsSubmitting(true); setSubmitStatus('idle'); const reportData = { pharmacy: selectedPharmacy, reportType, formulations, standardizedNotes, notes, turnstileToken, consentResearch }; try { const response = await fetch('/api/submit-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reportData), }); if (!response.ok) throw new Error('Submission failed'); const statsResponse = await fetch(`/api/stats?zip_code=${selectedPharmacy?.zip_code || ''}`); const statsData = await statsResponse.json(); setFinalStats(statsData); setSubmitStatus('success'); } catch (error) { console.error('Submission error:', error); setSubmitStatus('error'); } setIsSubmitting(false); };
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); setIsSubmitting(true); setSubmitStatus('idle'); const reportData = { pharmacy: selectedPharmacy, reportType, formulations, standardizedNotes, notes, consentResearch, turnstileToken }; try { const response = await fetch('/api/submit-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reportData), }); if (!response.ok) throw new Error('Submission failed'); const statsResponse = await fetch(`/api/stats?zip_code=${selectedPharmacy?.zip_code || ''}`); const statsData = await statsResponse.json(); setFinalStats(statsData); setSubmitStatus('success'); } catch (error) { console.error('Submission error:', error); setSubmitStatus('error'); turnstile.reset(); } setIsSubmitting(false); };
   const handleShare = () => { const shareText = `Know a pharmacy's status for buprenorphine? Help map access in our community: ${window.location.origin}`; navigator.clipboard.writeText(shareText).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }); };
   const canSubmit = reportType && consentMap && turnstileToken && !isSubmitting;
   const successfulPharmacies = useMemo(() => { return Object.values(aggregatedPharmacies).filter(p => p.status === 'success').sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()); }, [aggregatedPharmacies]);
@@ -178,7 +179,10 @@ export default function Home() {
                     </div>
                     <div className={styles.formGroup}><label className={styles.checkboxLabel}><input type="checkbox" checked={consentMap} onChange={(e) => setConsentMap(e.target.checked)} required />I understand my anonymous report will be used to update the public map (Required).</label></div>
                     <div className={styles.formGroup}><label className={styles.checkboxLabel}><input type="checkbox" checked={consentResearch} onChange={(e) => setConsentResearch(e.target.checked)} />I consent for my anonymized data to be used for research purposes (Optional).</label></div>
-                    <Turnstile siteKey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY!} onSuccess={setTurnstileToken} />
+                    <Turnstile
+                      sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                      onVerify={(token) => setTurnstileToken(token)}
+                    />
                     <button type="submit" className={styles.submitButton} style={{marginTop: '1rem'}} disabled={!canSubmit}>{isSubmitting ? 'Submitting...' : 'Submit Report'}</button>
                     {submitStatus === 'error' && <p className={styles.errorText}>Submission failed. Please try again.</p>}
                   </>
