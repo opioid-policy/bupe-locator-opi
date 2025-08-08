@@ -1,612 +1,94 @@
 /* src/app/Home.module.css */
-
 /* --- Mobile First Styles (default) --- */
-.homeContainer {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  width: 100%;
-}
-
-.mapSection {
-  height: 50vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #1f1f1f;
-  padding: 1rem;
-  margin-bottom: 1rem; /* Add margin to separate the map from other elements */
-}
-
-.formSection {
-  flex-grow: 1;
-  padding: 1.5rem;
-  background-color: var(--accent-cream);
-  border-top: 1px solid var(--border-color);
-  overflow-y: auto;
-  color: var(--font-color-dark);
-}
-
+.homeContainer { display: flex; flex-direction: column; flex-grow: 1; width: 100%; }
+.mapSection { height: 50vh; display: flex; justify-content: center; align-items: center; background-color: #1f1f1f; padding: 1rem; margin-bottom: 1rem; overflow: hidden; }
+.formSection { flex-grow: 1; padding: 1.5rem; background-color: var(--accent-cream); border-top: 1px solid var(--border-color); overflow-y: auto; color: var(--font-color-dark); }
 /* --- Tablet & Desktop Styles --- */
 @media (min-width: 768px) {
-  .homeContainer {
-    flex-direction: row;
-    height: 100vh; /* Ensure the container takes the full viewport height */
-  }
-
-  .mapSection {
-    flex: 1; /* Take up remaining space */
-    height: 100vh; /* Full viewport height for the map */
-    width: auto;
-    margin-bottom: 0; /* Remove margin on desktop */
-  }
-
-  .formSection {
-    flex: 0 0 500px; /* Fixed width for the form section */
-    padding: 2rem;
-    border-top: none;
-    border-left: 1px solid var(--border-color);
-    overflow-y: auto;
-    height: 100vh; /* Full viewport height for the form section */
-  }
+  .homeContainer { flex-direction: row; height: 100vh; }
+  .mapSection { flex: 1; height: 100vh; width: auto; margin-bottom: 0; overflow: hidden; }
+  .formSection { flex: 0 0 500px; padding: 2rem; border-top: none; border-left: 1px solid var(--border-color); overflow-y: auto; height: 100vh; }
 }
-
 /* --- Form & UI Element Styles --- */
-.formSection h2 {
-  margin-bottom: 1.5rem;
-  font-size: 1.25rem;
-}
-
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1rem;
-  background-color: var(--bg-color);
-  padding: 1rem;
-  border-radius: 0.375rem;
-  border: 1px solid var(--border-color);
-}
-
-.formGroup label {
-  margin-bottom: 0.5rem;
-  font-weight: bold;
-  font-size: 0.875rem;
-  color: var(--font-color-light);
-}
-
-.formGroup input,
-.formGroup textarea {
-  padding: 0.75rem;
-  border: 1px solid var(--font-color-dark);
-  border-radius: 0.375rem;
-  font-size: 1rem;
-  font-family: inherit;
-  background-color: #fff;
-  color: var(--font-color-dark);
-}
-
-.formGroup textarea {
-  resize: vertical;
-}
-
-.formGroup input:focus,
-.formGroup textarea:focus {
-  outline: none;
-  border-color: var(--font-color-dark);
-  box-shadow: 0 0 0 3px var(--focus-ring-color);
-}
-
-.resultsList {
-  margin-top: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.resultItem {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  text-align: left;
-  background-color: #fff;
-  border: none;
-  border-bottom: 1px solid var(--border-color);
-  cursor: pointer;
-  line-height: 1.4;
-  color: var(--font-color-dark);
-}
-
-.resultItem:last-child {
-  border-bottom: none;
-}
-
-.resultItem:hover {
-  background-color: var(--bg-color);
-  color: var(--font-color-light);
-}
-
-.resultItem strong {
-  font-weight: 600;
-}
-
-.resultItem small {
-  color: inherit;
-  font-size: 0.875rem;
-}
-
+.formSection h2 { margin-bottom: 1.5rem; font-size: 1.25rem; }
+.formGroup { display: flex; flex-direction: column; margin-bottom: 1rem; background-color: var(--bg-color); padding: 1rem; border-radius: 0.375rem; border: 1px solid var(--border-color); }
+.formGroup label { margin-bottom: 0.5rem; font-weight: bold; font-size: 0.875rem; color: var(--font-color-light); }
+.formGroup input, .formGroup textarea { padding: 0.75rem; border: 1px solid var(--font-color-dark); border-radius: 0.375rem; font-size: 1rem; font-family: inherit; background-color: #fff; color: var(--font-color-dark); }
+.formGroup textarea { resize: vertical; }
+.formGroup input:focus, .formGroup textarea:focus { outline: none; border-color: var(--font-color-dark); box-shadow: 0 0 0 3px var(--focus-ring-color); }
+.resultsList { margin-top: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.375rem; max-height: 300px; overflow-y: auto; }
+.resultItem { display: flex; flex-direction: column; width: 100%; padding: 0.75rem 1rem; text-align: left; background-color: #fff; border: none; border-bottom: 1px solid var(--border-color); cursor: pointer; line-height: 1.4; color: var(--font-color-dark); }
+.resultItem:last-child { border-bottom: none; }
+.resultItem:hover { background-color: var(--bg-color); color: var(--font-color-light); }
+.resultItem strong { font-weight: 600; }
+.resultItem small { color: inherit; font-size: 0.875rem; }
 /* --- ZIP Code & Choice Screen Styles --- */
-.zipCodeContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-grow: 1;
-  padding: 2rem;
-}
-
-.zipCodeContainer form {
-  width: 100%;
-  max-width: 400px;
-  background-color: var(--accent-cream);
-  padding: 2rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--border-color);
-  text-align: center;
-}
-
-.zipCodeContainer h2 {
-  color: var(--font-color-dark);
-  margin-bottom: 0.5rem;
-}
-
-.zipCodeContainer p {
-  margin-bottom: 1.5rem;
-  color: var(--font-color-dark);
-}
-
-.submitButton {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: var(--accent-green);
-  color: var(--font-color-dark);
-  border: 1px solid var(--accent-green);
-  border-radius: 0.375rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
-.submitButton:hover {
-  background-color: var(--accent-blue);
-  color: var(--font-color-dark);
-  border-color: var(--accent-blue);
-}
-
-.submitButton:disabled {
-  background-color: var(--accent-cream);
-  color: var(--font-color-dark);
-  opacity: 0.7;
-  cursor: not-allowed;
-  border: 1px solid var(--font-color-dark);
-}
-
-.errorText {
-  margin-top: 1rem;
-  color: var(--accent-red);
-  font-weight: 500;
-}
-
-.choiceContainer {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  flex-grow: 1;
-  text-align: center;
-  padding: 2rem;
-}
-
-.choiceContainer h2 {
-  margin-bottom: 2rem;
-  font-size: 1.75rem;
-}
-
-.choiceButtons {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  width: 100%;
-  max-width: 450px;
-}
-
-.choiceButton {
-  padding: 1.25rem;
-  font-size: 1.125rem;
-  font-weight: 600;
-  border: 1px solid var(--accent-green);
-  background-color: var(--accent-green);
-  color: var(--font-color-dark);
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
-.choiceButton:hover {
-  background-color: var(--accent-blue);
-  color: var(--font-color-dark);
-  border-color: var(--accent-blue);
-  transform: translateY(-2px);
-}
-
+.zipCodeContainer { display: flex; justify-content: center; align-items: center; flex-grow: 1; padding: 2rem; }
+.zipCodeContainer form { width: 100%; max-width: 400px; background-color: var(--accent-cream); padding: 2rem; border-radius: 0.5rem; border: 1px solid var(--border-color); text-align: center; }
+.zipCodeContainer h2 { color: var(--font-color-dark); margin-bottom: 0.5rem; }
+.zipCodeContainer p { margin-bottom: 1.5rem; color: var(--font-color-dark); }
+.submitButton { width: 100%; padding: 0.75rem; background-color: var(--accent-green); color: var(--font-color-dark); border: 1px solid var(--accent-green); border-radius: 0.375rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease-in-out; }
+.submitButton:hover { background-color: var(--accent-blue); color: var(--font-color-dark); border-color: var(--accent-blue); }
+.submitButton:disabled { background-color: var(--accent-cream); color: var(--font-color-dark); opacity: 0.7; cursor: not-allowed; border: 1px solid var(--font-color-dark); }
+.errorText { margin-top: 1rem; color: var(--accent-red); font-weight: 500; }
+.choiceContainer { display: flex; flex-direction: column; justify-content: center; align-items: center; flex-grow: 1; text-align: center; padding: 2rem; }
+.choiceContainer h2 { margin-bottom: 2rem; font-size: 1.75rem; }
+.choiceButtons { display: flex; flex-direction: column; gap: 1rem; width: 100%; max-width: 450px; }
+.choiceButton { padding: 1.25rem; font-size: 1.125rem; font-weight: 600; border: 1px solid var(--accent-green); background-color: var(--accent-green); color: var(--font-color-dark); border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease-in-out; }
+.choiceButton:hover { background-color: var(--accent-blue); color: var(--font-color-dark); border-color: var(--accent-blue); transform: translateY(-2px); }
 /* --- Report Form & Success Screen Styles --- */
-.selectedPharmacy {
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  background-color: var(--bg-color);
-}
-
-.selectedPharmacy p {
-  font-size: 0.9rem;
-  color: var(--font-color-light);
-  margin-top: 0.25rem;
-}
-
-.selectedPharmacy button {
-  background: none;
-  border: none;
-  color: var(--accent-green);
-  text-decoration: underline;
-  cursor: pointer;
-  padding: 0;
-  font-size: 0.8rem;
-  margin-top: 0.5rem;
-}
-
-.radioGroup {
-  display: flex;
-  gap: 1.5rem;
-  margin-top: 0.25rem;
-}
-
-.radioGroup label,
-.checkboxLabel {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: bold;
-  color: var(--font-color-light);
-}
-
-.checkboxLabel input[type="checkbox"] {
-  accent-color: var(--accent-green);
-}
-
-.checkboxGroup {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.75rem;
-  margin-top: 0.25rem;
-}
-
-.successMessage {
-  text-align: center;
-  padding: 2rem;
-  background-color: var(--accent-cream);
-}
-
-.successMessage h3 {
-  color: var(--font-color-dark);
-  font-size: 1.75rem;
-  margin-bottom: 1rem;
-  font-weight: 700;
-}
-
-.successMessage p {
-  margin-bottom: 1.5rem;
-  color: var(--font-color-dark);
-  font-weight: 500;
-}
-
-.statsTextOnDark {
-  margin-bottom: 2rem;
-  font-size: 1.125rem;
-  color: var(--accent-cream);
-  font-weight: 500;
-}
-
-.statsTextOnLight {
-  font-size: 1rem;
-  font-style: italic;
-  color: var(--font-color-dark);
-}
-
-.styledLink {
-  color: inherit;
-  text-decoration-line: underline;
-  text-decoration-color: var(--accent-green);
-  text-decoration-thickness: 1.5px;
-}
-
-.styledLink:hover {
-  text-decoration-color: var(--accent-red);
-}
-
+.selectedPharmacy { padding: 1rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color); border-radius: 0.375rem; background-color: var(--bg-color); }
+.selectedPharmacy p { font-size: 0.9rem; color: var(--font-color-light); margin-top: 0.25rem; }
+.selectedPharmacy button { background: none; border: none; color: var(--accent-green); text-decoration: underline; cursor: pointer; padding: 0; font-size: 0.8rem; margin-top: 0.5rem; }
+.radioGroup { display: flex; gap: 1.5rem; margin-top: 0.25rem; }
+.radioGroup label, .checkboxLabel { display: flex; align-items: center; gap: 0.5rem; font-weight: bold; color: var(--font-color-light); }
+.checkboxLabel input[type="checkbox"] { accent-color: var(--accent-green); }
+.checkboxGroup { display: grid; grid-template-columns: 1fr; gap: 0.75rem; margin-top: 0.25rem; }
+.successMessage { text-align: center; padding: 2rem; background-color: var(--accent-cream); }
+.successMessage h3 { color: var(--font-color-dark); font-size: 1.75rem; margin-bottom: 1rem; font-weight: 700; }
+.successMessage p { margin-bottom: 1.5rem; color: var(--font-color-dark); font-weight: 500; }
+.statsTextOnDark { margin-bottom: 2rem; font-size: 1.125rem; color: var(--accent-cream); font-weight: 500; }
+.statsTextOnLight { font-size: 1rem; font-style: italic; color: var(--font-color-dark); }
+.styledLink { color: inherit; text-decoration-line: underline; text-decoration-color: var(--accent-green); text-decoration-thickness: 1.5px; }
+.styledLink:hover { text-decoration-color: var(--accent-red); }
 /* --- List Styles for "Find" Mode --- */
-.pharmacyList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.listItem {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  page-break-inside: avoid; /* Avoid breaking items across pages */
-}
-
-.listItemInfo {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.listItemInfo strong {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--accent-cream);
-}
-
-.listItemInfo small {
-  font-size: 0.9rem;
-  color: var(--accent-cream);
-  line-height: 1.5;
-}
-
-.directionsButton {
-  padding: 0.75rem 1rem;
-  background-color: var(--accent-green);
-  color: var(--accent-navy);
-  border-radius: 0.375rem;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 1rem;
-  text-align: center;
-  white-space: nowrap;
-  transition: background-color 0.2s;
-}
-
-.directionsButton:hover {
-  background-color: var(--accent-blue);
-  color: var(--accent-navy);
-}
-
-.printButton {
-  display: inline-block;
-  margin-bottom: 1.5rem;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  font-weight: bold;
-  color: var(--accent-navy);
-  background-color: var(--accent-green);
-  border: 1px solid var(--accent-navy);
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
-.printButton:hover {
-  background-color: var(--accent-blue);
-}
-
-.printFooter {
-  display: none;
-}
-
-.findHeader {
-  text-align: center;
-}
-
-.lastUpdated {
-  font-style: italic;
-}
-
-.listItemActions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  width: 100%;
-}
-
-.callButton {
-  padding: 0.75rem 1rem;
-  background-color: var(--accent-green);
-  color: var(--accent-navy);
-  border-radius: 0.375rem;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 1rem;
-  text-align: center;
-  white-space: nowrap;
-  transition: background-color 0.2s;
-}
-
-.callButton:hover {
-  background-color: var(--accent-blue);
-}
-
-.filterGroup {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.filterButton {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--font-color-dark);
-  background-color: transparent;
-  border: 1px solid var(--font-color-dark);
-  border-radius: 9999px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
-.filterButton:hover {
-  background-color: var(--font-color-dark);
-  color: var(--accent-cream);
-}
-
-.filterButton.active {
-  background-color: var(--font-color-dark);
-  color: var(--accent-green);
-  border-color: var(--font-color-dark);
-  font-weight: bold;
-}
-
-.allTimeButton {
-  color: var(--font-color-dark);
-  background-color: transparent;
-  border: 1px dashed var(--font-color-dark);
-}
-
-.tagContainer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-}
-
-.tag {
-  background-color: #e9ecef;
-  color: #495057;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.trendIconWrapper {
-  display: inline-block;
-  margin-left: 0.5rem;
-  vertical-align: middle;
-  line-height: 1;
-}
-
-.printOnlyPhone {
-  display: none;
-}
-
-.trendLegend {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  padding-left: 1rem;
-  font-size: 0.875rem;
-  color: var(--font-color-dark);
-  font-weight: 700;
-}
-
-.trendLegend div {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.formDivider {
-  height: 2px;
-  width: 100%;
-  background-color: var(--accent-green);
-  margin: 0.5rem 0;
-  border: none;
-}
-
+.pharmacyList { display: flex; flex-direction: column; gap: 0.5rem; }
+.listItem { display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; padding: 1rem; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 0.375rem; page-break-inside: avoid; }
+.listItemInfo { display: flex; flex-direction: column; align-items: flex-start; }
+.listItemInfo strong { font-weight: 600; margin-bottom: 0.5rem; color: var(--accent-cream); }
+.listItemInfo small { font-size: 0.9rem; color: var(--accent-cream); line-height: 1.5; }
+.directionsButton { padding: 0.75rem 1rem; background-color: var(--accent-green); color: var(--accent-navy); border-radius: 0.375rem; text-decoration: none; font-weight: 600; font-size: 1rem; text-align: center; white-space: nowrap; transition: background-color 0.2s; }
+.directionsButton:hover { background-color: var(--accent-blue); color: var(--accent-navy); }
+.printButton { display: inline-block; margin-bottom: 1.5rem; padding: 0.5rem 1rem; font-size: 1rem; font-weight: bold; color: var(--accent-navy); background-color: var(--accent-green); border: 1px solid var(--accent-navy); border-radius: 0.375rem; cursor: pointer; transition: all 0.2s ease-in-out; }
+.printButton:hover { background-color: var(--accent-blue); }
+.printFooter { display: none; }
+.findHeader { text-align: center; }
+.lastUpdated { font-style: italic; }
+.listItemActions { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
+.callButton { padding: 0.75rem 1rem; background-color: var(--accent-green); color: var(--accent-navy); border-radius: 0.375rem; text-decoration: none; font-weight: 600; font-size: 1rem; text-align: center; white-space: nowrap; transition: background-color 0.2s; }
+.callButton:hover { background-color: var(--accent-blue); }
+.filterGroup { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; }
+.filterButton { padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; color: var(--font-color-dark); background-color: transparent; border: 1px solid var(--font-color-dark); border-radius: 9999px; cursor: pointer; transition: all 0.2s ease-in-out; }
+.filterButton:hover { background-color: var(--font-color-dark); color: var(--accent-cream); }
+.filterButton.active { background-color: var(--font-color-dark); color: var(--accent-green); border-color: var(--font-color-dark); font-weight: bold; }
+.allTimeButton { color: var(--font-color-dark); background-color: transparent; border: 1px dashed var(--font-color-dark); }
+.tagContainer { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+.tag { background-color: #e9ecef; color: #495057; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 500; }
+.trendIconWrapper { display: inline-block; margin-left: 0.5rem; vertical-align: middle; line-height: 1; }
+.printOnlyPhone { display: none; }
+.trendLegend { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; margin-bottom: 1.5rem; padding-left: 1rem; font-size: 0.875rem; color: var(--font-color-dark); font-weight: 700; }
+.trendLegend div { display: flex; align-items: center; gap: 0.5rem; }
+.formDivider { height: 2px; width: 100%; background-color: var(--accent-green); margin: 0.5rem 0; border: none; }
 /* --- Print Styles --- */
 @media print {
-  body * {
-    visibility: hidden;
-  }
-
-  .printableArea,
-  .printableArea * {
-    visibility: visible;
-  }
-
-  .printableArea {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: auto;
-    overflow-y: visible;
-    padding: 1.5rem;
-  }
-
-  /* Hide non-essential elements */
-  .mapSection,
-  .directionsButton,
-  .printButton,
-  .callButton,
-  .filterGroup {
-    display: none;
-  }
-
-  /* Make the list section take up the whole page */
-  .formSection {
-    width: 100%;
-    border: none;
-    height: auto;
-    overflow-y: visible;
-    padding: 0;
-  }
-
-  /* Style the list items for black & white printing */
-  .listItem {
-    background-color: transparent !important;
-    border: 1px solid #bbb !important;
-    page-break-inside: avoid;
-  }
-
-  /* Ensure all text within the printable area is black */
-  .printableArea,
-  .printableArea * {
-    color: #000 !important;
-  }
-
-  /* Show and style the print footer */
-  .printFooter {
-    display: block;
-    text-align: center;
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid #ccc;
-    font-size: 0.9rem;
-    color: #666;
-  }
-
-  /* Show the phone number text ONLY when printing */
-  .printOnlyPhone {
-    display: block;
-    font-size: 0.9rem;
-    color: #000 !important;
-    margin-top: 0.25rem;
-  }
-
-  /* Cap the printout at 13 items */
-  .listItem:nth-child(n+13) {
-    display: none;
-  }
+  body * { visibility: hidden; }
+  .printableArea, .printableArea * { visibility: visible; }
+  .printableArea { position: absolute; left: 0; top: 0; width: 100%; height: auto; overflow-y: visible; padding: 1.5rem; }
+  .mapSection, .directionsButton, .printButton, .callButton, .filterGroup { display: none; }
+  .formSection { width: 100%; border: none; height: auto; overflow-y: visible; padding: 0; }
+  .listItem { background-color: transparent !important; border: 1px solid #bbb !important; page-break-inside: avoid; }
+  .printableArea, .printableArea * { color: #000 !important; }
+  .printFooter { display: block; text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ccc; font-size: 0.9rem; color: #666; }
+  .printOnlyPhone { display: block; font-size: 0.9rem; color: #000 !important; margin-top: 0.25rem; }
+  .listItem:nth-child(n+13) { display: none; }
 }
