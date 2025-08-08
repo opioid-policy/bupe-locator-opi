@@ -26,7 +26,6 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
 
   useEffect(() => {
     setDirectionsUrl(getDirectionsUrl(latitude, longitude, pharmacy.full_address || pharmacy.name));
-    // eslint-disable-next-line
   }, [latitude, longitude, pharmacy.full_address, pharmacy.name]);
 
   return (
@@ -41,9 +40,7 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
           href={directionsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className={styles.styledLink}
-          style={{ textDecoration: "underline", cursor: "pointer" }}
-        >
+          className={styles.styledLink}   >
           <small>{pharmacy.full_address}</small>
         </a>
         {pharmacy.phone_number && (
