@@ -8,46 +8,23 @@ export async function POST(request: NextRequest) {
   const { turnstileToken, ...reportData } = body;
 
   // --- Start Turnstile Verification ---
-  try {
-    if (!turnstileToken) {
-      throw new Error("Turnstile token is missing.");
-    }
-    
-    const secretKey = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
-    if (!secretKey) {
-      throw new Error("Cloudflare secret key is not configured.");
-    }
+  const formData = new FormData();
+  formData.append('secret', process.env.TURNSTILE_SECRET_KEY!);
+  formData.append('response', turnstileToken);
 
-    // This is a more robust way to send the data for serverless environments
-    const response = await fetch('https://challenges.cloudflare.com/api/turnstile/v2/siteverify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: `secret=${encodeURIComponent(secretKey)}&response=${encodeURIComponent(turnstileToken)}`,
-    });
+  const verificationResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    body: formData,
+  });
 
-    if (!response.ok) {
-        const rawResponseText = await response.text();
-        console.error('Cloudflare verification request failed!');
-        console.error('Status:', response.status);
-        console.error('Raw Response Body:', rawResponseText);
-        return NextResponse.json({ error: 'Turnstile verification failed at the network level.' }, { status: 500 });
-    }
+  const verificationData = await verificationResponse.json();
 
-    const turnstileData = await response.json();
-
-    if (!turnstileData.success) {
-      console.error('Turnstile verification was not successful:', turnstileData['error-codes']);
-      return NextResponse.json({ error: 'Turnstile check failed.' }, { status: 403 });
-    }
-  } catch (error) {
-    console.error('CRITICAL: Error during Turnstile verification:', error);
-    return NextResponse.json({ error: 'Could not verify Turnstile token.' }, { status: 500 });
+  if (!verificationData.success) {
+    console.error('Turnstile verification failed:', verificationData['error-codes']);
+    return NextResponse.json({ error: 'Turnstile verification failed.' }, { status: 403 });
   }
   // --- End Turnstile Verification ---
 
-  // If we get here, Turnstile was successful. Now, save to Airtable.
   try {
     if (!reportData.pharmacy) {
       return NextResponse.json({ error: 'Pharmacy data is missing.' }, { status: 400 });
