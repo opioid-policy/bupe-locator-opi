@@ -87,6 +87,54 @@ export default function Home() {
   const [dateFilter, setDateFilter] = useState<number | null>(30);
   const turnstile = useTurnstile();
 
+  // --- Reset submit status on form open or change ---
+  useEffect(() => {
+    if (mode === 'report') {
+      setSubmitStatus('idle');
+    }
+  }, [mode]);
+
+  const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
+    setSubmitStatus('idle');
+    const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+    const endpoint = `https://api.mapbox.com/search/searchbox/v1/retrieve/${pharmacy.mapbox_id}?access_token=${accessToken}&session_token=${sessionToken}`;
+    try {
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      const feature = data.features[0];
+      const street = feature.properties.address || '';
+      const city = feature.properties.context.place?.name || '';
+      const postcode = feature.properties.context.postcode?.name || '';
+      const state = feature.properties.context.region?.region_code?.replace('US-', '') || '';
+      const phone = feature.properties.phone || '';
+      const [longitude, latitude] = feature.geometry.coordinates;
+      setSelectedPharmacy({
+        mapbox_id: pharmacy.mapbox_id,
+        name: pharmacy.name,
+        full_address: pharmacy.full_address,
+        street_address: street,
+        city: city,
+        state: state,
+        zip_code: postcode,
+        latitude: latitude,
+        longitude: longitude,
+        phone_number: phone,
+      });
+      setSearchTerm('');
+      setResults([]);
+    } catch (error) {
+      console.error("Error retrieving pharmacy details:", error);
+    }
+  };
+
+  // --- Reset error if user changes key form fields ---
+  useEffect(() => {
+    if (submitStatus === 'error') {
+      setSubmitStatus('idle');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportType, consentMap, consentResearch, standardizedNotes, formulations, notes, selectedPharmacy]);
+
   // --- Browser back button logic ---
   useEffect(() => {
     const handlePopState = () => {
@@ -207,39 +255,6 @@ export default function Home() {
     }
     setAggregatedPharmacies(summary);
   }, [allReports, isLoadingPharmacies]);
-
-  // --- Mapbox pharmacy select ---
-  const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
-    const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-    const endpoint = `https://api.mapbox.com/search/searchbox/v1/retrieve/${pharmacy.mapbox_id}?access_token=${accessToken}&session_token=${sessionToken}`;
-    try {
-      const response = await fetch(endpoint);
-      const data = await response.json();
-      const feature = data.features[0];
-      const street = feature.properties.address || '';
-      const city = feature.properties.context.place?.name || '';
-      const postcode = feature.properties.context.postcode?.name || '';
-      const state = feature.properties.context.region?.region_code?.replace('US-', '') || '';
-      const phone = feature.properties.phone || '';
-      const [longitude, latitude] = feature.geometry.coordinates;
-      setSelectedPharmacy({
-        mapbox_id: pharmacy.mapbox_id,
-        name: pharmacy.name,
-        full_address: pharmacy.full_address,
-        street_address: street,
-        city: city,
-        state: state,
-        zip_code: postcode,
-        latitude: latitude,
-        longitude: longitude,
-        phone_number: phone,
-      });
-      setSearchTerm('');
-      setResults([]);
-    } catch (error) {
-      console.error("Error retrieving pharmacy details:", error);
-    }
-  };
 
   // --- Mapbox ZIP code submit ---
   const handleZipCodeSubmit = async (e: FormEvent) => {
