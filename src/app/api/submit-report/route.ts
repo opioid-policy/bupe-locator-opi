@@ -1,5 +1,3 @@
-// src/app/api/submit-report/route.ts
-
 import { table } from '@/lib/airtable';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -8,19 +6,29 @@ export async function POST(request: NextRequest) {
   const { turnstileToken, ...reportData } = body;
 
   // --- Start Turnstile Verification ---
+  if (!turnstileToken) {
+    console.error('Turnstile token missing from request.');
+    return NextResponse.json({ error: 'Turnstile token missing.' }, { status: 400 });
+  }
+
   const formData = new FormData();
   formData.append('secret', process.env.TURNSTILE_SECRET_KEY!);
   formData.append('response', turnstileToken);
 
-  const verificationResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    body: formData,
-  });
+  let verificationData;
+  try {
+    const verificationResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      body: formData,
+    });
+    verificationData = await verificationResponse.json();
+  } catch (error) {
+    console.error('Error contacting Turnstile verification endpoint:', error);
+    return NextResponse.json({ error: 'Turnstile verification error.' }, { status: 500 });
+  }
 
-  const verificationData = await verificationResponse.json();
-
-  if (!verificationData.success) {
-    console.error('Turnstile verification failed:', verificationData['error-codes']);
+  if (!verificationData?.success) {
+    console.error('Turnstile verification failed:', verificationData?.['error-codes']);
     return NextResponse.json({ error: 'Turnstile verification failed.' }, { status: 403 });
   }
   // --- End Turnstile Verification ---
