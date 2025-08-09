@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from 'react';
 import styles from '../Home.module.css';
 import { AggregatedPharmacy } from '../page';
@@ -19,7 +18,6 @@ function formatDate(dateString: string) {
   });
 }
 
-
 export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
   const [latitude, longitude] = pharmacy.coords;
   const [directionsUrl, setDirectionsUrl] = useState<string>("");
@@ -35,29 +33,58 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
           {pharmacy.name}
           <TrendIndicator trend={pharmacy.trend} />
         </strong>
-        {/* Address is now a clickable link */}
+
+        {/* Address as a clickable link */}
         <a
           href={directionsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className={styles.styledLink}   >
+          className={styles.styledLink}
+        >
           <small>{pharmacy.full_address}</small>
         </a>
+
+        {/* Phone number - visible both on screen and in print */}
         {pharmacy.phone_number && (
-          <small className={styles.printOnlyPhone}>{pharmacy.phone_number}</small>
+          <div className={styles.phoneNumber}>
+            <small>Phone: {pharmacy.phone_number}</small>
+          </div>
         )}
-        <small>&nbsp;</small> 
-        <small>Success Reports: {pharmacy.successCount} / Denial Reports: {pharmacy.denialCount}</small>
-        {pharmacy.lastUpdated && (<small className={styles.lastUpdated}>Last Successful Report: {formatDate(pharmacy.lastUpdated)}</small>)}
+
+        {/* Add a line break before the reports section */}
+        <div className={styles.reportSection}>
+          <br className={styles.reportBreak} />
+          <small>Success Reports: {pharmacy.successCount}</small>
+          <br />
+          <small>Denial Reports: {pharmacy.denialCount}</small>
+        </div>
+
+        {pharmacy.lastUpdated && (
+          <small className={styles.lastUpdated}>
+            <br className={styles.reportBreak} />
+            Last Successful Report: {formatDate(pharmacy.lastUpdated)}
+          </small>
+        )}
+
         {pharmacy.standardizedNotes && pharmacy.standardizedNotes.length > 0 && (
           <div className={styles.tagContainer}>
-            {pharmacy.standardizedNotes.map(note => ( <span key={note} className={styles.tag}>{note}</span> ))}
+            {pharmacy.standardizedNotes.map(note => (
+              <span key={note} className={styles.tag}>{note}</span>
+            ))}
           </div>
         )}
       </div>
+
       <div className={styles.listItemActions}>
-        {pharmacy.phone_number && ( <a href={`tel:${pharmacy.phone_number}`} className={styles.callButton}>Call Pharmacy</a> )}
-        <a 
+        {pharmacy.phone_number && (
+          <a
+            href={`tel:${pharmacy.phone_number}`}
+            className={styles.callButton}
+          >
+            Call Pharmacy
+          </a>
+        )}
+        <a
           href={directionsUrl}
           target="_blank"
           rel="noopener noreferrer"

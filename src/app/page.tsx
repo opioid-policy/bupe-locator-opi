@@ -8,6 +8,7 @@ import styles from "./Home.module.css";
 import PharmacyListItem from './components/PharmacyListItem';
 import TrendIndicator from './components/TrendIndicator';
 
+
 // --- Types ---
 interface SearchSuggestion { name: string; mapbox_id: string; full_address: string; }
 interface SelectedPharmacy {
@@ -23,7 +24,7 @@ interface SelectedPharmacy {
   phone_number: string;
 }
 type Coords = [number, number];
-interface Stats { 
+interface Stats {
   weeklyCount: number;
   totalCount?: number;
   zipCodeCount?: number;
@@ -55,7 +56,6 @@ interface Report {
   phoneNumber: string;
   standardizedNotes: string[];
 }
-
 const formulationOptions = [ 'Suboxone Film', 'Suboxone Tablet', 'Zubsolv Tablet', 'Buprenorphine/Naloxone Film (generic)', 'Buprenorphine/Naloxone Tablet (generic)', 'Buprenorphine Tablet (generic)', ];
 const standardizedNoteOptions = [ 'Best to call ahead', 'Only fills for existing patients', 'Requires specific diagnosis code', 'Long wait times', 'Won\'t accept cash', 'Helpful/Kind Staff', 'Unhelpful/Stigmatizing Staff' ];
 
@@ -87,12 +87,27 @@ export default function Home() {
   const [dateFilter, setDateFilter] = useState<number | null>(30);
   const turnstile = useTurnstile();
 
+  // Scroll to top when mode changes or after successful submission
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [mode, submitStatus]);
+
   // --- Reset submit status on form open or change ---
   useEffect(() => {
     if (mode === 'report') {
       setSubmitStatus('idle');
     }
   }, [mode]);
+
+  // Specific scroll effect for after successful submission
+  useEffect(() => {
+    if (submitStatus === 'success') {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  }, [submitStatus]);
 
   const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
     setSubmitStatus('idle');
@@ -432,40 +447,44 @@ export default function Home() {
         <MapLoader center={locationCoords} pharmacies={aggregatedPharmacies} />
       </section>
       <section className={styles.formSection}>
-        {mode === 'find' && (
-          <div className={styles.printableArea}>
-            <div className={styles.findHeader}>
-              <h2>Bupe-Friendly Pharmacies</h2>
-              <button onClick={() => window.print()} className={styles.printButton}>Print List</button>
-            </div>
-            <div className={styles.trendLegend}>
-              <p>Trending Recently:</p>
-              <div><TrendIndicator trend="up" /> <span>More Successes</span></div>
-              <div><TrendIndicator trend="neutral" /> <span>Neutral</span></div>
-              <div><TrendIndicator trend="down" /> <span>More Denials</span></div>
-            </div>
-            <div className={styles.filterGroup}>
-              <button onClick={() => handleFilterClick(7)} className={`${styles.filterButton} ${dateFilter === 7 ? styles.active : ''}`}>Last 7 Days</button>
-              <button onClick={() => handleFilterClick(15)} className={`${styles.filterButton} ${dateFilter === 15 ? styles.active : ''}`}>Last 15 Days</button>
-              <button onClick={() => handleFilterClick(30)} className={`${styles.filterButton} ${dateFilter === 30 ? styles.active : ''}`}>Last 30 Days</button>
-              <button onClick={() => handleFilterClick(null)} className={`${styles.filterButton} ${styles.allTimeButton} ${dateFilter === null ? styles.active : ''}`}>All Time</button>
-            </div>
-            <div className={styles.pharmacyList}>
-              {isLoadingPharmacies ? (
-                <p>Loading pharmacies...</p>
-              ) : successfulPharmacies.length > 0 ? (
-                successfulPharmacies.map(pharmacy => (
-                  <PharmacyListItem key={pharmacy.id} pharmacy={pharmacy} />
-                ))
-              ) : (
-                <p>No successful reports found for the selected time period. Try a wider date range or select &quot;All Time&quot;.</p>
-              )}
-            </div>
-            <div className={styles.printFooter}>
-              <p>For the latest updates, visit bupe.opioidpolicy.org</p>
-            </div>
-          </div>
+{mode === 'find' && (
+  <>
+    <div className={styles.findHeader}>
+      <h2>Bupe-Friendly Pharmacies</h2>
+      <button onClick={() => window.print()} className={styles.printButton}>Print List</button>
+    </div>
+    <div className={styles.trendLegend}>
+      <p>Trending Recently:</p>
+      <div><TrendIndicator trend="up" /> <span>More Successes</span></div>
+      <div><TrendIndicator trend="neutral" /> <span>Neutral</span></div>
+      <div><TrendIndicator trend="down" /> <span>More Denials</span></div>
+    </div>
+    <div className={styles.filterGroup}>
+      <button onClick={() => handleFilterClick(7)} className={`${styles.filterButton} ${dateFilter === 7 ? styles.active : ''}`}>Last 7 Days</button>
+      <button onClick={() => handleFilterClick(15)} className={`${styles.filterButton} ${dateFilter === 15 ? styles.active : ''}`}>Last 15 Days</button>
+      <button onClick={() => handleFilterClick(30)} className={`${styles.filterButton} ${dateFilter === 30 ? styles.active : ''}`}>Last 30 Days</button>
+      <button onClick={() => handleFilterClick(null)} className={`${styles.filterButton} ${styles.allTimeButton} ${dateFilter === null ? styles.active : ''}`}>All Time</button>
+    </div>
+
+    {/* This is the printable content container */}
+    <div className={styles.printableContent}>
+      <div className={styles.pharmacyList}>
+        {isLoadingPharmacies ? (
+          <p>Loading pharmacies...</p>
+        ) : successfulPharmacies.length > 0 ? (
+          successfulPharmacies.map(pharmacy => (
+            <PharmacyListItem key={pharmacy.id} pharmacy={pharmacy} />
+          ))
+        ) : (
+          <p>No successful reports found for the selected time period. Try a wider date range or select &quot;All Time&quot;.</p>
         )}
+      </div>
+      <div className={styles.printFooter}>
+        <p>For the latest updates, visit bupe.opioidpolicy.org</p>
+      </div>
+    </div>
+  </>
+)}
         {mode === 'report' && (
           <>
             {submitStatus === 'success' ? (

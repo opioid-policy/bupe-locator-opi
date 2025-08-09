@@ -536,80 +536,69 @@
   border: none;
 }
 
-/* --- Print Styles --- */
+
+/* Add this to your Home.module.css file */
+.printableContent {
+  color: var(--font-color-dark);
+}
+
+/* Update your print styles section to this: */
 @media print {
-  body * {
-    visibility: hidden;
-  }
-
-  .printableArea,
-  .printableArea * {
-    visibility: visible;
-  }
-
-  .printableArea {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: auto;
-    overflow-y: visible;
-    padding: 1.5rem;
-  }
-
-  /* Hide non-essential elements */
+  /* Hide non-printable elements */
   .mapSection,
   .directionsButton,
   .printButton,
   .callButton,
-  .filterGroup {
-    display: none;
+  .filterGroup,
+  .findHeader,
+  .trendLegend,
+  .filterButton {
+    display: none !important;
   }
 
-  /* Make the list section take up the whole page */
-  .formSection {
-    width: 100%;
-    border: none;
-    height: auto;
-    overflow-y: visible;
-    padding: 0;
+  /* Style the printable content */
+  .printableContent {
+    width: 100% !important;
+    padding: 0 !important;
+    background-color: white !important;
+    color: #000 !important;
   }
 
-  /* Style the list items for black & white printing */
+  .pharmacyList {
+    background-color: transparent !important;
+  }
+
+  
   .listItem {
     background-color: transparent !important;
     border: 1px solid #bbb !important;
-    page-break-inside: avoid;
-  }
-
-  /* Ensure all text within the printable area is black */
-  .printableArea,
-  .printableArea * {
+    page-break-inside: avoid !important;
     color: #000 !important;
+    margin-bottom: 10px !important;
+    padding: 10px !important;
   }
 
-  /* Show and style the print footer */
   .printFooter {
-    display: block;
+    display: block !important;
     text-align: center;
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid #ccc;
-    font-size: 0.9rem;
-    color: #666;
-  }
-
-  /* Show the phone number text ONLY when printing */
-  .printOnlyPhone {
-    display: block;
-    font-size: 0.9rem;
+    margin-top: 2rem !important;
+    padding-top: 1rem !important;
+    border-top: 1px solid #ccc !important;
+    font-size: 0.9rem !important;
     color: #000 !important;
-    margin-top: 0.25rem;
   }
 
-  /* Cap the printout at 13 items */
-  .listItem:nth-child(n+13) {
-    display: none;
+  /* Ensure all text is black */
+  .printableContent,
+  .printableContent * {
+    color: #000 !important;
+    background-color: transparent !important;
   }
+
+  /* Limit the number of items printed */
+  .listItem:nth-child(n+13) {
+    display: none !important;
+  }
+
 }
 
