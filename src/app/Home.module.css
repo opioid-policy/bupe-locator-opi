@@ -4,7 +4,6 @@
 .homeContainer {
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
   width: 100%;
 }
 
@@ -31,8 +30,10 @@
 /* --- Tablet & Desktop Styles --- */
 @media (min-width: 768px) {
   .homeContainer {
+    display: flex;
     flex-direction: row;
-    height: 100vh; /* Ensure the container takes the full viewport height */
+    width: 100%;
+    min-height: 100vh; /* Ensure the container takes the full viewport height */
   }
 
   .mapSection {
@@ -224,14 +225,16 @@
 }
 
 .choiceButton {
-  padding: 1.25rem;
-  font-size: 1.125rem;
+  padding: 1rem;
+  font-size: 1rem;
   font-weight: 600;
   border: 1px solid var(--accent-green);
   background-color: var(--accent-green);
   color: var(--font-color-dark);
   border-radius: 0.5rem;
+  gap: 1rem;
   cursor: pointer;
+  width: 100%;
   transition: all 0.2s ease-in-out;
 }
 
@@ -296,8 +299,9 @@
 
 .successMessage {
   text-align: center;
-  padding: 2rem;
+  padding: 1rem;
   background-color: var(--accent-cream);
+  align-items: center;
 }
 
 .successMessage h3 {
@@ -602,3 +606,192 @@
 
 }
 
+@media (min-width: 768px) {
+  .homeContainer:not(:has(.mapSection)) .formSection {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+}
+
+/* Full height container for non-map views */
+.homeContainer.noMap {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Full height form section when no map is present */
+.homeContainer.noMap .formSection {
+  flex: 1;
+  overflow-y: auto;
+  max-height: none;
+  height: auto;
+  min-height: calc(100vh - 2rem); /* Account for padding */
+}
+
+/* Success message full height */
+.successMessage {
+  min-height: calc(100vh - 4rem); /* Account for padding and header */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 767px) {
+  .homeContainer.noMap {
+    min-height: 100vh;
+  }
+
+  .homeContainer.noMap .formSection {
+    min-height: calc(100vh - 2rem);
+  }
+
+  .successMessage {
+    min-height: calc(100vh - 3rem);
+  }
+}
+
+/* Desktop-specific adjustments for no-map view */
+@media (min-width: 768px) {
+  .homeContainer.noMap {
+    flex-direction: column;
+  }
+
+  .homeContainer.noMap .formSection {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    min-height: calc(100vh - 4rem);
+  }
+}
+
+.successMessage button {
+  margin: 0.75rem 0;
+  width: 100%;
+  max-width: 400px;
+  align-items: center;
+}
+
+/* For the share button specifically */
+.successMessage button:last-child {
+  margin-top: 1rem;
+  align-items: center;
+}
+
+/* Ensure container has proper spacing */
+.successMessage > div:not(:last-child) {
+  margin-bottom: 1.5rem;
+  align-items: center;
+}
+
+
+/* Add these styles specifically for the report form */
+.reportFormContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  /* Desktop view for report mode */
+  .reportFormContainer {
+    padding: 2rem;
+  }
+
+  /* Make form take full height but allow content to expand */
+  .formSection {
+    height: auto;
+    min-height: calc(100vh - 4rem);
+    overflow-y: visible;
+  }
+}
+
+/* Style for form groups in report mode */
+.reportFormGroup {
+  margin-bottom: 1.5rem;
+}
+
+/* Style for the pharmacy search section */
+.pharmacySearchSection {
+  margin-bottom: 2rem;
+}
+
+.resultsList {
+  margin-top: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.resultItem {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  background-color: #fff;
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  line-height: 1.4;
+  color: var(--font-color-dark);
+}
+
+.resultItem:last-child {
+  border-bottom: none;
+}
+
+.resultItem:hover {
+  background-color: var(--bg-color);
+  color: var(--font-color-light);
+}
+
+.resultItem strong {
+  font-weight: 600;
+}
+
+.resultItem small {
+  color: inherit;
+  font-size: 0.875rem;
+}
+
+/* Style for the selected pharmacy display */
+.selectedPharmacyDisplay {
+  background-color: rgba(0, 28, 58, 0.7);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Style for radio and checkbox groups */
+.formOptionsGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+/* Style for individual checkbox items */
+.checkboxItem {
+  display: flex;
+  align-items: center;
+}
+
+/* Style for the notes textarea */
+.formTextarea {
+  min-height: 120px;
+  resize: vertical;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-color);
+  color: var(--font-color-light);
+  font-family: var(--font-raleway), sans-serif;
+}

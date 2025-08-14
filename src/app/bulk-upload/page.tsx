@@ -10,15 +10,15 @@ export default function BulkUploadPage() {
       <div className={styles.content}>
         <h2>Bulk Data Submission Instructions</h2>
         <p>
-          For researchers conducting secret shopper studies or organizations with multiple data points, we offer a bulk submission option to help populate the map quickly.
+          For researchers conducting secret shopper studies or organizations with multiple data points (pharmacy chains??? prescribers??? harm reduction orgs???), we offer a bulk submission option to help populate the map quickly.
         </p>
 
         {/* This is now a proper list */}
         <ul>
           <li>To help people make decisions about where they can (and can not) fill their bupe scripts, we need fresh data (ideally less than 30 days old).</li>
-          <li>If you collected bulk data for a secret shopper study or other means, we can use this to quickly fill out the map. Thank you!</li>
-          <li>Use the spreadsheet template to fill in your data. This format is important for batch uploading.</li>
-          <li>Do not include any personally identifiable information in the notes. Simulated patient info can be included in the notes (e.g., pregnant).</li>
+          <li>If you have bulk data, you can help us quickly fill out the map. Thank you!</li>
+          <li>Use the spreadsheet template below to fill in your data. This format is important for batch uploading.</li>
+          <li>Do not include any personally identifiable information in the notes. Simulated patient info can be included in the notes (e.g., pregnant) if relevant.</li>
           <li>We will take care of formatting and uploading to the map!</li>
         </ul>
 
@@ -35,14 +35,23 @@ export default function BulkUploadPage() {
           Access the Template
         </a>
 
+        <a 
+          href="https://cryptpad.fr/doc/#/2/doc/view/6zuDknr3O2U6EBOUPQiC+JCR7wVRudzOaIHuyYeYcJY/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className={styles.styledLink} // Use the styled link class
+        >
+          Access the Template Support Doc
+        </a>
+
         <h3 style={{ marginTop: '2rem' }}>Step 2: Fill Out Your Data</h3>
         <p>
-          The only required fields are pharmacy_address, report_type (success or denied), formulation, and notes.
+          The only required fields are pharmacy_address, report_type (success or denied), formulation, standardized_notes, and notes.
         </p>
 
         <h3 style={{ marginTop: '2rem' }}>Step 3: Securely Submit Your File</h3>
         <p>
-          Once your sheet is complete, please save it as a TSV file (`File` &gt; `Save as` &gt; `TSV (.tsv)`). To securely transfer files, please use the free, encrypted service WORMHOLE to send us your file.
+          Once your sheet is complete, please save it as a TSV file (`File` &gt; `Save as` &gt; `TSV (.tsv)`). We use TSV because some people might use commas in the address or notes line, but no one will use tabs. This makes importing and cleaning the data much more straightforward on our end and is easy to do on your end (win/win). To securely transfer files, please use the free, encrypted service WORMHOLE to send us your file.
         </p>
         
         {/* This is now a proper ordered list */}

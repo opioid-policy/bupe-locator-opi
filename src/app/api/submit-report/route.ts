@@ -54,7 +54,6 @@ export async function POST(request: NextRequest) {
           formulation: reportData.formulations,
           standardized_notes: reportData.standardizedNotes,
           notes: reportData.notes,
-          consent_research: reportData.consentResearch,
         },
       },
     ]);

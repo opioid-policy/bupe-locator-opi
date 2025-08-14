@@ -28,8 +28,12 @@ export default function PrivacyPage() {
           <li>We **do not** know your computer&apos;s IP address.</li>
           <li>We **do not** track your location.</li>
         </ul>
+        <br />
         <p>
-          The only information we save is the report you choose to share: the pharmacy&apos;s name, the date, the medicine, and whether your visit was a success or a denial. Your report is completely anonymous. If you use our contact form, you are sharing personal information, but that is not avoidable with contact information. You do not have to ues the contact form unless you have a question or comment.
+          The only information we need for a report is what you choose to share: the pharmacy&apos;s name, pharmacy location, the date, and whether your visit was a success or a denial. There are other questions you can choose to answer, but you do not have to. 
+        </p>
+        <p>
+          If you use our contact form (different from the pharmacy reporting form), you are sharing personal information, but that is not avoidable with contact information. You do not have to use the contact form unless you have a question or comment. Same with our newsletter signup form, which is optional and not required to use the site.
         </p>
 
         <h3 style={{ marginTop: '2rem' }}>How the Technology Works</h3>
@@ -37,24 +41,39 @@ export default function PrivacyPage() {
           We use modern, privacy-focused tools to run this site:
         </p>
         <ul>
-          <li><strong>Spam Protection:</strong> We use a tool called Cloudflare Turnstile to check if a submission is from a real person, not a robot. It does this without the annoying puzzles and without building a profile of you.</li>
-          <li><strong>Maps:</strong> The map is provided by Mapbox, and the &quot;Get Directions&quot; links use OpenStreetMap, a non-profit mapping service, to protect your privacy. Your searches are not linked to a personal account. If you are using this website on a mobile phone it might open the pharmacy links on a service like Google Maps. Google Maps uses this data to target you with advertisements. This is bad for your privacy. However, we cannot control what apps you use on your mobile device. We suggest you use privacy preserving maping tools like: {' '}
+          <li><strong>Spam Protection:</strong> We use a tool called Cloudflare Turnstile to check if a submission is from a real person, not a robot. It does this without the annoying puzzles and without building a profile of you. It is one way to protect from fake entries.</li>
+          <br/> 
+          <li><strong>Maps:</strong> To protect your privacy, the maps we use are provided by Mapbox, and the &quot;Get Directions&quot; links use OpenStreetMap, a non-profit mapping service. Your searches are not linked to a personal account used to build an advertising profile, unlike with Google Maps. Mapbox prioritizes privacy, especially compared to Google Maps. 
+          <br/>
+          <br/>  If you are using this website on a mobile phone it might open the pharmacy &quot;Get Direction&quot; links on a service like Google Maps on your phone. We set it up to make it easy to navigate to a pharmacy that has bupe on your phone, but using Google Maps (if that is your default) is a privacy risk (not just with this information). Google Maps uses your data to target you with advertisements, including navigating to a pharmacy. 
+          <br/>
+          <br/> This is bad for your privacy.
+          <br/>
+          <br/> However, we cannot control what apps you use on your mobile device. We suggest you use privacy preserving maping tools like: {' '}
           <Link href="https://organicmaps.app/" className={styles.styledLink} target="_blank" rel="noopener noreferrer">
            Organic Maps
-          </Link> to reduce these issuse. </li>
+          </Link> on your phone to reduce these issuse. You can also use Google Maps in &quot;Incognito Mode&quot; but other Google &quot;Incognito Mode&quot; products were found to not actually protect your privacy, so it is best to avoid products from companies like Google, Meta/Facebook/Instagram, Amazon, Apple, Microsoft, etc to avoid them getting your information to use for advertising. </li>
+          <br/>
           <li><strong>Database:</strong> Your anonymous reports are stored in a secure database called Airtable. We are the only ones with access to this data and it only includes information you submitted on the pharmacy updating tool + automatically adding time of submission (to help represent the freshness of the data).</li>
-          <li><strong>Hosting:</strong> The website is hosted on Vercel, and we have configured it not to store logs of visitor IP addresses.</li>
-          <li><strong>Code:</strong> The website code (not the form data) is hosted on Codeberg and GitHub so that people can audit this website and suggest fixes to our privacy and security practices.</li>
-
+           <br/>
+          <li><strong>Hosting:</strong> The website is hosted on Vercel, and we have configured it not to store logs of visitor IP addresses (so that your device is not identified).</li>
+          <br/>
+          <li><strong>Code:</strong> The website code (not the form data) is hosted on {' '}
+          <Link href="https://codeberg.org/opioidpolicy/bupe-locator-opi" className={styles.styledLink} target="_blank" rel="noopener noreferrer">
+          Codeberg</Link> and {' '}
+          <Link href="https://github.com/opioid-policy/bupe-locator-opi" className={styles.styledLink} target="_blank" rel="noopener noreferrer">
+          GitHub</Link> so that people can audit this website and suggest fixes to our privacy and security practices. 
+          {' '}
+          <Link href="https://opioidpolicy.fillout.com/contact-form" className={styles.styledLink} target="_blank" rel="noopener noreferrer">
+           Please reach out using our secure form if you have questions or suggestions.
+          </Link> This is a community-oriented project and we appreciate the help.</li>
         </ul>
 
 <h3 style={{ marginTop: '2rem' }}>How to Protect Yourself</h3>
         <p>
-          While our website is secure, your own web browser saves a history of the sites you visit. If you are using a shared computer, we strongly recommend using &quot;Private&quot; or &quot;Incognito&quot; mode in your browser.
+          While our website strives to be secure and protect your privacy, your own web browser saves a history of the sites you visit. If you are using a shared computer, we strongly recommend using &quot;Private&quot; or &quot;Incognito&quot; mode in your browser. This deletes your history when you close the browser window, so no one else can see what sites you visited. It might be good to clear your browser history after using this site, even if not on a shared computer.
         </p>
-        
-        {/* This is now a proper list */}
-        <ul>
+         <ul>
           <li>
             You may also want to consider browsers that have better privacy protections like Mullvad on desktop or Brave on mobile. {' '}
             <Link href="https://www.privacyguides.org/en/mobile-browsers/" className={styles.styledLink} target="_blank" rel="noopener noreferrer">

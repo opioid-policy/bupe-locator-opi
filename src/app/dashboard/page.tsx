@@ -1,0 +1,405 @@
+"use client";
+
+import { useState, useEffect } from 'react';
+import styles from './Dashboard.module.css';
+
+// Define types matching your Airtable structure
+type ReportType = 'success' | 'denial';
+
+interface AirtableReport {
+  reportType: ReportType;
+  formulations: string[];
+  standardizedNotes: string[];
+  zipCode: string;
+  state: string;
+  submissionTime: string;
+}
+
+interface StateStats {
+  success: number;
+  denied: number;
+  lastUpdated: string;
+}
+
+interface DashboardData {
+  pastMonth: {
+    total: number;
+    success: number;
+    denied: number;
+    period: string;
+  };
+  allTime: {
+    total: number;
+    success: number;
+    denied: number;
+  };
+  byState: Record<string, { 
+    pastMonth: { success: number; denied: number; lastUpdated: string };
+    allTime: { success: number; denied: number; lastUpdated: string };
+  }>;
+  formulations: Array<{
+    name: string;
+    success: number;
+    denied: number;
+  }>;
+  barriers: Array<{
+    note: string;
+    count: number;
+  }>;
+}
+
+// Define these constants directly in the file
+const formulationOptions = [
+  'Suboxone Film', 'Suboxone Tablet', 'Zubsolv Tablet',
+  'Buprenorphine/Naloxone Film (generic)', 'Buprenorphine/Naloxone Tablet (generic)',
+  'Buprenorphine Tablet (generic)'
+];
+
+const standardizedNoteOptions = [
+  'Will order, but not in stock', 'Best to call ahead',
+  'Only fills for existing patients', 'Only fills from prescribers "close-by"',
+  'Requires specific diagnosis code', 'Long wait times',
+  'Won\'t accept cash', 'Helpful staff', 'Unhelpful staff'
+];
+
+// Helper function to get month names
+function getMonthInfo() {
+  const now = new Date();
+  
+  // Past month = the most recently completed month
+  const pastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1);
+  const pastMonth = pastMonthDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+  
+  return { pastMonth };
+}
+
+export default function Dashboard() {
+  const [data, setData] = useState<DashboardData>({
+    pastMonth: { total: 0, success: 0, denied: 0, period: '' },
+    allTime: { total: 0, success: 0, denied: 0 },
+    byState: {},
+    formulations: formulationOptions.map(name => ({ name, success: 0, denied: 0 })),
+    barriers: standardizedNoteOptions.map(note => ({ note, count: 0 }))
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch data for different time periods
+        // "previous-month" in the API = the most recently completed month
+        const [pastMonthRes, allTimeRes] = await Promise.all([
+          fetch('/api/reports?timeframe=previous-month').then(res => res.json()),
+          fetch('/api/reports').then(res => res.json())
+        ]);
+
+        // Check for API errors
+        if (pastMonthRes.error || allTimeRes.error) {
+          throw new Error(pastMonthRes.error || allTimeRes.error);
+        }
+
+        // Log cache status for debugging
+        console.log('Data sources:', {
+          pastMonth: pastMonthRes.source || 'unknown',
+          allTime: allTimeRes.source || 'unknown'
+        });
+
+        // Process the data
+        const processReports = (reports: AirtableReport[]) => {
+          // Process state data
+          const byState: Record<string, StateStats> = {};
+          reports.forEach(report => {
+            if (!report.state) return;
+
+            if (!byState[report.state]) {
+              byState[report.state] = { success: 0, denied: 0, lastUpdated: '' };
+            }
+
+            if (report.reportType === 'success') {
+              byState[report.state].success++;
+            } else {
+              byState[report.state].denied++;
+            }
+
+            if (report.submissionTime &&
+                (!byState[report.state].lastUpdated ||
+                 new Date(report.submissionTime) > new Date(byState[report.state].lastUpdated))) {
+              byState[report.state].lastUpdated = report.submissionTime;
+            }
+          });
+
+          // Process formulation data
+          const formulations = formulationOptions.map(form => ({
+            name: form,
+            success: reports.filter(r =>
+              r.reportType === 'success' &&
+              r.formulations &&
+              r.formulations.includes(form)
+            ).length,
+            denied: reports.filter(r =>
+              r.reportType === 'denial' &&
+              r.formulations &&
+              r.formulations.includes(form)
+            ).length
+          }));
+
+          // Process barrier data
+          const barriers = standardizedNoteOptions.map(note => ({
+            note,
+            count: reports.filter(r =>
+              r.standardizedNotes &&
+              r.standardizedNotes.includes(note)
+            ).length
+          })).sort((a, b) => b.count - a.count);
+
+          return {
+            total: reports.length,
+            success: reports.filter(r => r.reportType === 'success').length,
+            denied: reports.filter(r => r.reportType === 'denial').length,
+            byState,
+            formulations,
+            barriers
+          };
+        };
+
+        const pastMonthData = processReports(pastMonthRes.data || []);
+        const allTimeData = processReports(allTimeRes.data || []);
+        const { pastMonth } = getMonthInfo();
+
+        // Combine state data from both timeframes for the table
+        const combinedStateData: Record<string, { 
+          pastMonth: { success: number; denied: number; lastUpdated: string };
+          allTime: { success: number; denied: number; lastUpdated: string };
+        }> = {};
+
+        // Get all unique states from both datasets
+        const allStates = new Set([
+          ...Object.keys(pastMonthData.byState),
+          ...Object.keys(allTimeData.byState)
+        ]);
+
+        allStates.forEach(state => {
+          combinedStateData[state] = {
+            pastMonth: pastMonthData.byState[state] || { success: 0, denied: 0, lastUpdated: '' },
+            allTime: allTimeData.byState[state] || { success: 0, denied: 0, lastUpdated: '' }
+          };
+        });
+
+        setData({
+          pastMonth: {
+            total: pastMonthData.total,
+            success: pastMonthData.success,
+            denied: pastMonthData.denied,
+            period: pastMonth
+          },
+          allTime: {
+            total: allTimeData.total,
+            success: allTimeData.success,
+            denied: allTimeData.denied
+          },
+          byState: combinedStateData,
+          formulations: allTimeData.formulations,
+          barriers: allTimeData.barriers
+        });
+
+        // Set last updated timestamp
+        setLastUpdated(allTimeRes.generatedAt || new Date().toISOString());
+        setLoading(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        setLoading(false);
+        console.error(err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) return <div className={styles.loading}>Loading dashboard...</div>;
+  if (error) return <div className={styles.error}>Error: {error}</div>;
+
+  return (
+    <div className={styles.container}>
+      <h1 className={styles.title}>Bupe Access Dashboard</h1>
+
+      {/* 1. High-Level Stats */}
+      <div className={styles.statsSection}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Report Statistics</h2>
+          {lastUpdated && (
+            <div className={styles.lastUpdated}>
+              Last updated: {new Date(lastUpdated).toLocaleString()}
+              <br />
+              <small>Data refreshes automatically at the start of each month</small>
+            </div>
+          )}
+        </div>
+        <div className={styles.statsGrid}>
+           <StatCard
+            title="All Time"
+            total={data.allTime.total}
+            success={data.allTime.success}
+            denied={data.allTime.denied}
+            subtitle="Total Reports"
+          />
+          <StatCard
+            title={`Past Month (${data.pastMonth.period})`}
+            total={data.pastMonth.total}
+            success={data.pastMonth.success}
+            denied={data.pastMonth.denied}
+            subtitle="Total Reports"
+          />
+        </div>
+      </div>
+
+      {/* 2. State by State Table */}
+      <div className={styles.tableSection}>
+        <h2 className={styles.sectionTitle}>State Level Reports</h2>
+        <div className={styles.tableContainer}>
+          {Object.keys(data.byState).length > 0 ? (
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th colSpan={2}>{data.pastMonth.period}</th>
+                  <th colSpan={2}>All Time</th>
+                  <th>Last Updated</th>
+                </tr>
+                <tr>
+                  <th>State</th>
+                  <th>Success</th>
+                  <th>Denied</th>
+                  <th>Success</th>
+                  <th>Denied</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(data.byState)
+                  .sort(([, a], [, b]) => 
+                    (b.allTime.success + b.allTime.denied) - (a.allTime.success + a.allTime.denied)
+                  )
+                  .map(([state, stats]) => (
+                    <tr key={state}>
+                      <td>{state}</td>
+                      <td className={styles.successCell}>{stats.pastMonth.success}</td>
+                      <td className={styles.deniedCell}>{stats.pastMonth.denied}</td>
+                      <td className={styles.successCell}>{stats.allTime.success}</td>
+                      <td className={styles.deniedCell}>{stats.allTime.denied}</td>
+                      <td>
+                        {stats.allTime.lastUpdated ? 
+                          new Date(stats.allTime.lastUpdated).toLocaleDateString() : 'N/A'
+                        }
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className={styles.noData}>No state data available</div>
+          )}
+        </div>
+        <br/><em>Scroll left to right on mobile</em> ↔️
+      </div>
+
+      {/* 3. Formulation Trends */}
+      <div className={styles.formulationSection}>
+        <h2 className={styles.sectionTitle}>Formulation Availability (All Time)</h2>
+        <div className={styles.formulationGrid}>
+          {data.formulations
+            .sort((a, b) => (b.success + b.denied) - (a.success + a.denied))
+            .filter(form => form.success > 0 || form.denied > 0)
+            .map(form => (
+              <FormulationBar
+                key={form.name}
+                name={form.name}
+                success={form.success}
+                denied={form.denied}
+                total={data.allTime.total}
+              />
+            ))}
+        </div>
+      </div>
+
+      {/* 4. Common Barriers */}
+      <div className={styles.barriersSection}>
+        <h2 className={styles.sectionTitle}>Common Bupe Barriers (All Time)</h2>
+        <div className={styles.barChart}>
+          {data.barriers
+            .filter(barrier => barrier.count > 0)
+            .slice(0, 5)
+            .map(barrier => (
+              <div className={styles.barItem} key={barrier.note}>
+                <div className={styles.barLabel}>{barrier.note}</div>
+                <div className={styles.barBackground}>
+                  <div
+                    className={styles.bar}
+                    style={{ width: `${(barrier.count / (data.barriers[0]?.count || 1)) * 100}%` }}
+                  />
+                </div>
+                <div className={styles.barValue}>{barrier.count}</div>
+              </div>
+            ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Stat Card Component
+function StatCard({ title, total, success, denied, subtitle }: {
+  title: string;
+  total: number;
+  success: number;
+  denied: number;
+  subtitle?: string;
+}) {
+  return (
+    <div className={styles.statCard}>
+      <h3 className={styles.statCardTitle}>{title}</h3>
+      {subtitle && <p className={styles.statCardSubtitle}>{subtitle}</p>}
+      <div className={styles.statBigNumber}>{total}</div>
+      <div className={styles.statDetails}>
+        <div className={styles.statDetail}>
+          <span className={styles.successDot} /> Success: {success}
+        </div>
+        <div className={styles.statDetail}>
+          <span className={styles.deniedDot} /> Denied: {denied}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Formulation Bar Component
+function FormulationBar({ name, success, denied, total }: {
+  name: string;
+  success: number;
+  denied: number;
+  total: number;
+}) {
+  const successPercent = total > 0 ? (success / total) * 100 : 0;
+  const deniedPercent = total > 0 ? (denied / total) * 100 : 0;
+
+  return (
+    <div className={styles.formulationItem}>
+      <div className={styles.formulationName}>{name}</div>
+      <div className={styles.formulationBars}>
+        <div
+          className={styles.successBar}
+          style={{ width: `${successPercent}%` }}
+        />
+        <div
+          className={styles.deniedBar}
+          style={{ width: `${deniedPercent}%` }}
+        />
+      </div>
+      <div className={styles.formulationCounts}>
+        <span className={styles.successCount}>{success}</span>
+        <span className={styles.deniedCount}>{denied}</span>
+      </div>
+    </div>
+  );
+}

@@ -52,8 +52,8 @@ export default function RootLayout({
               </Link>
             </p>
             <p style={{marginTop: '0.5rem'}}>
-              <Link href="/bulk-upload" className={styles.styledLink}>
-                Bulk Data Submission?
+              <Link href="/dashboard" className={styles.styledLink}>
+                Check Out Our Dashboard
               </Link>
             </p>
             <p style={{marginTop: '0.5rem'}}>

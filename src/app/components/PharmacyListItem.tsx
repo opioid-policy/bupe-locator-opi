@@ -19,12 +19,18 @@ function formatDate(dateString: string) {
 }
 
 export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
-  const [latitude, longitude] = pharmacy.coords;
+  // Destructure coordinates directly from pharmacy.coords
+  const [latitude, longitude] = pharmacy.coords || [0, 0];
   const [directionsUrl, setDirectionsUrl] = useState<string>("");
+  const [mapUrl, setMapUrl] = useState<string>("");
 
   useEffect(() => {
-    setDirectionsUrl(getDirectionsUrl(latitude, longitude, pharmacy.full_address || pharmacy.name));
-  }, [latitude, longitude, pharmacy.full_address, pharmacy.name]);
+    // Generate both directions and map view URLs
+    if (latitude && longitude) {
+      setDirectionsUrl(getDirectionsUrl(latitude, longitude));
+      setMapUrl(`https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`);
+    }
+  }, [latitude, longitude]);
 
   return (
     <div className={styles.listItem}>
@@ -34,9 +40,9 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
           <TrendIndicator trend={pharmacy.trend} />
         </strong>
 
-        {/* Address as a clickable link */}
+        {/* Use mapUrl for the address link instead of directionsUrl */}
         <a
-          href={directionsUrl}
+          href={mapUrl}
           target="_blank"
           rel="noopener noreferrer"
           className={styles.styledLink}
@@ -44,14 +50,14 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
           <small>{pharmacy.full_address}</small>
         </a>
 
-        {/* Phone number - visible both on screen and in print */}
+        {/* Phone number section - keep as is */}
         {pharmacy.phone_number && (
           <div className={styles.phoneNumber}>
             <small>Phone: {pharmacy.phone_number}</small>
           </div>
         )}
 
-        {/* Add a line break before the reports section */}
+        {/* Reports section - keep as is */}
         <div className={styles.reportSection}>
           <br className={styles.reportBreak} />
           <small>Success Reports: {pharmacy.successCount}</small>
@@ -78,20 +84,24 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
       <div className={styles.listItemActions}>
         {pharmacy.phone_number && (
           <a
-            href={`tel:${pharmacy.phone_number}`}
+            href={`tel:${pharmacy.phone_number.replace(/\D/g, '')}`}
             className={styles.callButton}
           >
             Call Pharmacy
           </a>
         )}
-        <a
-          href={directionsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.directionsButton}
-        >
-          Get Directions
-        </a>
+
+        {/* Only show directions button if we have valid coordinates */}
+        {latitude && longitude && (
+          <a
+            href={directionsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.directionsButton}
+          >
+            Get Directions
+          </a>
+        )}
       </div>
     </div>
   );

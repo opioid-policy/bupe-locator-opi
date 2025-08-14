@@ -1,36 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This project was built to help people find buprenorphine (bupe) in pharmacies. Bupe is used to treat opioid addiction. Many pharmacies do not stock it. This makes it hard to fill a prescription. Which makes treatment hard, and treatment is already harder than it should be. 
 
-## Getting Started
+This is bad. 
 
-First, run the development server:
+For those interested in treatment, we must facilitate access to care rather than create obstacles. While obstacles occur across healthcare, the risks associated with opioid addiction are significantly heightened by an unsafe drug supply, a direct consequence of ongoing drug criminalization.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+For those reasons, we built this project to help people report pharmacies that fill bupe scripts, those that don’t, and any other relevant info to help folks get meds (e.g., doesn’t take cash, out of stock).Based on this data, people can find pharmacies near them that have bupe.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+We were driven to action by the frustration faced by people seeking meds and have been trying to figure out how to have an impact. We conduct research and advocacy on this topic but prefer direct action. This project is the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+When trying to find ways to address this issue were inspired by the McFlurry Down Detector (https://github.com/filippofinke/mcbroken) from back in the day, but obviously that wouldn’t work for a controlled substance at a pharmacy. So we hit a wall. To break this barrier, we used various AI tools to help with code (just kinda rotated, pretty sure it took way longer than it should have…). 
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+We're using vercel, mapbox, airtable, github, codeberg as our tech stack (codeberg and vercel didn’t play nice together, but I still wanted to use it). We tried to make it perform well on mobile, because a lot of folks don’t have a computer or limited access. Because addiction is a protected health condition, we attempted to make this maximally privacy preserving for people reporting pharmacies, finding pharmacies, or just visiting the site.
 
-## Learn More
+Any one of these things might have been messed up. We’ve never done a project like this from scratch (usually use WYSIWYG web tools), so I’m sure the code is a mess and we might have missed something. This effort is not funded so we tried to keep costs down while still accomplishing our end goals. 
 
-To learn more about Next.js, take a look at the following resources:
+If we missed something, please let us know. 
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+We’ll keep trying to improve and respond to feedback.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Check out our other stuff at opioidpolicy.org

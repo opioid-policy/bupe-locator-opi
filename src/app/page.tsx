@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect, FormEvent, useMemo } from 'react';
 import Link from 'next/link';
 import Turnstile, { useTurnstile } from 'react-turnstile';
@@ -7,7 +6,7 @@ import MapLoader from "./components/MapLoader";
 import styles from "./Home.module.css";
 import PharmacyListItem from './components/PharmacyListItem';
 import TrendIndicator from './components/TrendIndicator';
-
+import confetti from "canvas-confetti";
 
 // --- Types ---
 interface SearchSuggestion { name: string; mapbox_id: string; full_address: string; }
@@ -57,8 +56,7 @@ interface Report {
   standardizedNotes: string[];
 }
 const formulationOptions = [ 'Suboxone Film', 'Suboxone Tablet', 'Zubsolv Tablet', 'Buprenorphine/Naloxone Film (generic)', 'Buprenorphine/Naloxone Tablet (generic)', 'Buprenorphine Tablet (generic)', ];
-const standardizedNoteOptions = [ 'Best to call ahead', 'Only fills for existing patients', 'Requires specific diagnosis code', 'Long wait times', 'Won\'t accept cash', 'Helpful/Kind Staff', 'Unhelpful/Stigmatizing Staff' ];
-
+const standardizedNoteOptions = [ 'Will order, but not in stock', 'Best to call ahead', 'Only fills for existing patients', 'Only fills from prescribers "close-by"', 'Requires specific diagnosis code', 'Long wait times', 'Won\'t accept cash', 'Helpful staff', 'Unhelpful staff' ];
 export default function Home() {
   const [zipCode, setZipCode] = useState("");
   const [locationCoords, setLocationCoords] = useState<Coords | null>(null);
@@ -74,7 +72,6 @@ export default function Home() {
   const [standardizedNotes, setStandardizedNotes] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
   const [consentMap, setConsentMap] = useState(false);
-  const [consentResearch, setConsentResearch] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -87,6 +84,10 @@ export default function Home() {
   const [dateFilter, setDateFilter] = useState<number | null>(30);
   const turnstile = useTurnstile();
 
+  // Client-side rate limiting state
+  const [lastRequestTime, setLastRequestTime] = useState(0);
+  const REQUEST_DELAY_MS = 2000; // 2 seconds between requests
+  
   // Scroll to top when mode changes or after successful submission
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -148,7 +149,7 @@ export default function Home() {
       setSubmitStatus('idle');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportType, consentMap, consentResearch, standardizedNotes, formulations, notes, selectedPharmacy]);
+  }, [reportType, consentMap, standardizedNotes, formulations, notes, selectedPharmacy]);
 
   // --- Browser back button logic ---
   useEffect(() => {
@@ -208,6 +209,7 @@ export default function Home() {
       setAggregatedPharmacies({});
       return;
     }
+    
     const summary: Record<string, AggregatedPharmacy> = {};
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     for (const report of allReports) {
@@ -271,27 +273,89 @@ export default function Home() {
     setAggregatedPharmacies(summary);
   }, [allReports, isLoadingPharmacies]);
 
-  // --- Mapbox ZIP code submit ---
+  // --- Mapbox ZIP code submit with client-side rate limiting and server-side API ---
   const handleZipCodeSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    const now = Date.now();
+
+    // Client-side rate limiting check
+    if (now - lastRequestTime < REQUEST_DELAY_MS) {
+      setLocationError(`Please wait ${Math.ceil((REQUEST_DELAY_MS - (now - lastRequestTime)) / 1000)} seconds before trying again.`);
+      return;
+    }
+
+    // ZIP code format validation
+    if (!/^\d{5}$/.test(zipCode)) {
+      setLocationError("Please enter a valid 5-digit ZIP code.");
+      return;
+    }
+
+    setLastRequestTime(now);
     setIsLoadingLocation(true);
     setLocationError("");
-    const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-    const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${zipCode}.json?access_token=${accessToken}&types=postcode`;
+
     try {
-      const response = await fetch(endpoint);
+      // Call your new API route instead of Mapbox directly
+      const response = await fetch(`/api/zip?zipCode=${zipCode}`);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        if (response.status === 429) {
+          setLocationError("Too many requests. Please try again in a minute.");
+        } else if (response.status === 400) {
+          setLocationError(errorData.message || "Invalid ZIP code format.");
+        } else {
+          setLocationError("Failed to fetch location data.");
+        }
+        return;
+      }
+
       const data = await response.json();
+
       if (data.features && data.features.length > 0) {
         const [lon, lat] = data.features[0].center;
         setLocationCoords([lat, lon]);
       } else {
         setLocationError("Could not find that ZIP code. Please try another.");
       }
-    } catch {
+    } catch (error) {
+      console.error("Error fetching location:", error);
       setLocationError("Failed to fetch location data.");
+    } finally {
+      setIsLoadingLocation(false);
     }
-    setIsLoadingLocation(false);
   };
+// --- Confetti effect ---
+useEffect(() => {
+  if (submitStatus === 'success' && mode === 'report') {
+    const duration = 1.5 * 1000;
+    const end = Date.now() + duration;
+    const colors = ['#f71824', '#2c7721', '#2c7721', '#f71824'];
+
+    const frame = () => {
+      if (Date.now() > end) return;
+
+      confetti({
+        particleCount: 2,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.7 },
+        colors: colors
+      });
+      confetti({
+        particleCount: 2,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.7 },
+        colors: colors
+      });
+
+      requestAnimationFrame(frame);
+    };
+
+    frame();
+  }
+}, [submitStatus, mode]);
 
   // --- Mapbox pharmacy suggest search ---
   useEffect(() => {
@@ -338,7 +402,6 @@ export default function Home() {
       formulations,
       standardizedNotes,
       notes,
-      consentResearch,
       turnstileToken,
     };
     try {
@@ -348,13 +411,11 @@ export default function Home() {
         body: JSON.stringify(reportData),
       });
       if (!response.ok) throw new Error('Submission failed');
-
       // Reset Turnstile on submit for a new token on next attempt
       if (turnstile && typeof turnstile.reset === 'function') {
         turnstile.reset();
         setTurnstileToken(null);
       }
-
       const statsResponse = await fetch(`/api/stats?zip_code=${selectedPharmacy?.zip_code || ''}`);
       const statsData = await statsResponse.json();
       setFinalStats(statsData);
@@ -381,14 +442,12 @@ export default function Home() {
   };
 
   // --- Form validation for submit button ---
-  const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting);
-
+  const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting && selectedPharmacy);
   const successfulPharmacies = useMemo(() => {
     return Object.values(aggregatedPharmacies)
       .filter(p => p.status === 'success')
       .sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
   }, [aggregatedPharmacies]);
-
   const handleFilterClick = (days: number | null) => {
     if (dateFilter === days) {
       setDateFilter(null);
@@ -417,7 +476,7 @@ export default function Home() {
               required
             />
           </div>
-          <button type="submit" className={styles.submitButton} disabled={isLoadingLocation}>{isLoadingLocation ? 'Loading...' : 'Set Location'}</button>
+          <button type="submit" className={styles.choiceButton} disabled={isLoadingLocation}>{isLoadingLocation ? 'Loading...' : 'Set Location'}</button>
           {locationError && <p className={styles.errorText}>{locationError}</p>}
         </form>
       </div>
@@ -443,48 +502,51 @@ export default function Home() {
 
   return (
     <div className={styles.homeContainer}>
-      <section className={styles.mapSection}>
-        <MapLoader center={locationCoords} pharmacies={aggregatedPharmacies} />
-      </section>
-      <section className={styles.formSection}>
-{mode === 'find' && (
-  <>
-    <div className={styles.findHeader}>
-      <h2>Bupe-Friendly Pharmacies</h2>
-      <button onClick={() => window.print()} className={styles.printButton}>Print List</button>
-    </div>
-    <div className={styles.trendLegend}>
-      <p>Trending Recently:</p>
-      <div><TrendIndicator trend="up" /> <span>More Successes</span></div>
-      <div><TrendIndicator trend="neutral" /> <span>Neutral</span></div>
-      <div><TrendIndicator trend="down" /> <span>More Denials</span></div>
-    </div>
-    <div className={styles.filterGroup}>
-      <button onClick={() => handleFilterClick(7)} className={`${styles.filterButton} ${dateFilter === 7 ? styles.active : ''}`}>Last 7 Days</button>
-      <button onClick={() => handleFilterClick(15)} className={`${styles.filterButton} ${dateFilter === 15 ? styles.active : ''}`}>Last 15 Days</button>
-      <button onClick={() => handleFilterClick(30)} className={`${styles.filterButton} ${dateFilter === 30 ? styles.active : ''}`}>Last 30 Days</button>
-      <button onClick={() => handleFilterClick(null)} className={`${styles.filterButton} ${styles.allTimeButton} ${dateFilter === null ? styles.active : ''}`}>All Time</button>
-    </div>
+      {/* Only show map in 'find' mode */}
+      {mode === 'find' && (
+        <section className={styles.mapSection}>
+          <MapLoader center={locationCoords} pharmacies={aggregatedPharmacies} />
+        </section>
+      )}
 
-    {/* This is the printable content container */}
-    <div className={styles.printableContent}>
-      <div className={styles.pharmacyList}>
-        {isLoadingPharmacies ? (
-          <p>Loading pharmacies...</p>
-        ) : successfulPharmacies.length > 0 ? (
-          successfulPharmacies.map(pharmacy => (
-            <PharmacyListItem key={pharmacy.id} pharmacy={pharmacy} />
-          ))
-        ) : (
-          <p>No successful reports found for the selected time period. Try a wider date range or select &quot;All Time&quot;.</p>
+      <section className={styles.formSection}>
+        {mode === 'find' && (
+          <>
+            <div className={styles.findHeader}>
+              <h2>Bupe-Friendly Pharmacies</h2>
+              <button onClick={() => window.print()} className={styles.printButton}>Print List</button>
+            </div>
+            <div className={styles.trendLegend}>
+              <p>Trending Recently:</p>
+              <div><TrendIndicator trend="up" /> <span>More Successes</span></div>
+              <div><TrendIndicator trend="neutral" /> <span>Neutral</span></div>
+              <div><TrendIndicator trend="down" /> <span>More Denials</span></div>
+            </div>
+            <div className={styles.filterGroup}>
+              <button onClick={() => handleFilterClick(7)} className={`${styles.filterButton} ${dateFilter === 7 ? styles.active : ''}`}>Last 7 Days</button>
+              <button onClick={() => handleFilterClick(15)} className={`${styles.filterButton} ${dateFilter === 15 ? styles.active : ''}`}>Last 15 Days</button>
+              <button onClick={() => handleFilterClick(30)} className={`${styles.filterButton} ${dateFilter === 30 ? styles.active : ''}`}>Last 30 Days</button>
+              <button onClick={() => handleFilterClick(null)} className={`${styles.filterButton} ${styles.allTimeButton} ${dateFilter === null ? styles.active : ''}`}>All Time</button>
+            </div>
+            {/* This is the printable content container */}
+            <div className={styles.printableContent}>
+              <div className={styles.pharmacyList}>
+                {isLoadingPharmacies ? (
+                  <p>Loading pharmacies...</p>
+                ) : successfulPharmacies.length > 0 ? (
+                  successfulPharmacies.map(pharmacy => (
+                    <PharmacyListItem key={pharmacy.id} pharmacy={pharmacy} />
+                  ))
+                ) : (
+                  <p>No successful reports found for the selected time period. Try a wider date range or select &quot;All Time&quot;.</p>
+                )}
+              </div>
+              <div className={styles.printFooter}>
+                <p>For the latest updates, visit bupe.opioidpolicy.org</p>
+              </div>
+            </div>
+          </>
         )}
-      </div>
-      <div className={styles.printFooter}>
-        <p>For the latest updates, visit bupe.opioidpolicy.org</p>
-      </div>
-    </div>
-  </>
-)}
         {mode === 'report' && (
           <>
             {submitStatus === 'success' ? (
@@ -493,18 +555,33 @@ export default function Home() {
                 {finalStats && (
                   <p className={styles.statsTextOnLight}>
                     {finalStats.zipCodeCount === 1 ? (
-                      "Congratulations on being the first submission in your area! This is an important step towards increasing access to bupe in your community."
+                      <>
+                        Congratulations on being the first submission in your area!<br />
+                        This is an important step towards increasing bupe access in your community.
+                      </>
                     ) : (
                       <>
-                        You are part of {finalStats.totalCount} total contributions.
-                        {finalStats.zipCodeCount && finalStats.zipCodeCount > 0 ? ` In your area, ${finalStats.zipCodeCount} reports have been made!` : ''}
+                        You are part of {finalStats.totalCount} total reports to our database.<br />
+                        {finalStats.zipCodeCount && finalStats.zipCodeCount > 0 &&
+                          `In your area, ${finalStats.zipCodeCount} reports have been made!`
+                        }
                       </>
                     )}
                   </p>
                 )}
-                <p>Thank you for helping build this database. We know it can be difficult to fill a bupe script. Your data makes it easier for the community to find this lifesaving medication.</p>
-                <p><strong>The best data is <em>fresh</em> data</strong>, so whenever you fill a script, remember to report to our database and share this with people you know who fill bupe scripts.</p>
-                <button type="button" className={styles.submitButton} onClick={handleShare}>{copied ? 'Copied to Clipboard!' : 'Share with a Friend'}</button>
+                <p>We know filling a bupe script isn&apos;t always easy. Your answers help others in your area find this lifesaving medication.</p>
+                <p><strong>The most helpful info is <em>new</em> info</strong>! So, the next time you try to fill a bupe script, tell us how it went. You can also help by sharing this website with friends who take bupe too.</p>
+                <button
+                  type="button"
+                  className={styles.submitButton}
+                  onClick={() => {
+                    setMode('find');
+                    setSubmitStatus('idle');
+                  }}
+                >
+                  Find Bupe-Friendly Pharmacies Near You
+                </button>
+                <button type="button" className={styles.submitButton} onClick={handleShare}>{copied ? 'Copied to Clipboard!' : 'Share with a Friend 🚀'}</button>
                 <p style={{marginTop: '1.5rem', fontStyle: 'italic', fontSize: '0.9rem'}}><Link href="/bulk-upload" className={styles.styledLink}>If you&apos;re interested in submitting multiple reports, check out our bulk reporting tool.</Link></p>
               </div>
             ) : (
@@ -517,7 +594,7 @@ export default function Home() {
                       <input
                         type="text"
                         id="pharmacy-search"
-                        placeholder="e.g., CVS on 28th St"
+                        placeholder="e.g., CVS"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
@@ -619,17 +696,7 @@ export default function Home() {
                           onChange={(e) => setConsentMap(e.target.checked)}
                           required
                         />
-                        I understand my anonymous report will be used to update the public map (Required).
-                      </label>
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label className={styles.checkboxLabel}>
-                        <input
-                          type="checkbox"
-                          checked={consentResearch}
-                          onChange={(e) => setConsentResearch(e.target.checked)}
-                        />
-                        I consent for my anonymized data to be used for research purposes (Optional).
+                        I understand my anonymous report will be used to update the public map (REQUIRED).
                       </label>
                     </div>
                     <Turnstile
