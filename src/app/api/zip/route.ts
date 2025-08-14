@@ -38,17 +38,20 @@ export async function GET(request: Request) {
 
     // Validate ZIP code
     if (!validateZipCode(zipCode)) {
-      return new NextResponse('Please provide a valid 5-digit ZIP code', { status: 400 });
+      return NextResponse.json(
+        { error: 'Please provide a valid 5-digit ZIP code' }, 
+        { status: 400 }
+      );
     }
 
     // Check cache first
-    const cachedData = cache.get<string>(zipCode);
+    const cachedData = cache.get<MapboxGeocodingResponse>(zipCode);
     if (cachedData) {
-      return new NextResponse(JSON.parse(cachedData), {
+      return NextResponse.json(cachedData, {
         headers: {
           'Cache-Control': 'public, max-age=3600',
           'X-RateLimit-Limit': '50',
-          'X-RateLimit-Remaining': String(await globalRateLimiter.get('global_key'))
+          'X-RateLimit-Remaining': '50'
         }
       });
     }
@@ -56,39 +59,61 @@ export async function GET(request: Request) {
     // Call Mapbox
     const accessToken = process.env.MAPBOX_ACCESS_TOKEN;
     if (!accessToken) {
-      return new NextResponse('Server misconfiguration', { status: 500 });
+      console.error('MAPBOX_ACCESS_TOKEN is not configured');
+      return NextResponse.json(
+        { error: 'Server misconfiguration' }, 
+        { status: 500 }
+      );
     }
 
     const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${zipCode}.json?access_token=${accessToken}&types=postcode`;
+    
+    console.log(`Fetching: ${endpoint}`);
     const response = await fetch(endpoint);
 
     if (!response.ok) {
-      return new NextResponse('Failed to fetch location data', { status: response.status });
+      console.error(`Mapbox API error: ${response.status} ${response.statusText}`);
+      return NextResponse.json(
+        { error: 'Failed to fetch location data' }, 
+        { status: response.status }
+      );
     }
 
     const data: MapboxGeocodingResponse = await response.json();
 
     if (!data.features || data.features.length === 0) {
-      return new NextResponse('No location found for that ZIP code', { status: 404 });
+      return NextResponse.json(
+        { error: 'No location found for that ZIP code' }, 
+        { status: 404 }
+      );
     }
 
-    // Cache the response
-    cache.set(zipCode, JSON.stringify(data));
+    // Cache the response (store the actual object, not stringified)
+    cache.set(zipCode, data);
 
     // Return with headers
-    return new NextResponse(JSON.stringify(data), {
+    return NextResponse.json(data, {
       status: 200,
       headers: {
         'Cache-Control': 'public, max-age=3600',
         'X-RateLimit-Limit': '50',
-        'X-RateLimit-Remaining': String(await globalRateLimiter.get('global_key'))
+        'X-RateLimit-Remaining': '50'
       }
     });
 
   } catch (error) {
+    console.error('API Route Error:', error);
+    
     if (error instanceof Error && error.message.includes('Cannot consume')) {
-      return new NextResponse('Too Many Requests', { status: 429 });
+      return NextResponse.json(
+        { error: 'Too Many Requests' }, 
+        { status: 429 }
+      );
     }
-    return new NextResponse('Internal Server Error', { status: 500 });
+    
+    return NextResponse.json(
+      { error: 'Internal Server Error' }, 
+      { status: 500 }
+    );
   }
 }
