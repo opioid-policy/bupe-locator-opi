@@ -25,7 +25,7 @@ export default function PharmacyMarkers({ pharmacies }: PharmacyMarkersProps) {
     <>
       {Object.values(pharmacies).map((pharmacy) => {
         const [latitude, longitude] = pharmacy.coords;
-        const directionsUrl = getDirectionsUrl(latitude, longitude, pharmacy.full_address || pharmacy.name);
+        const directionsUrl = getDirectionsUrl(latitude, longitude);
 
         return (
           <Marker

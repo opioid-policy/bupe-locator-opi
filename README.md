@@ -18,4 +18,4 @@ If we missed something, please let us know.
 
 We’ll keep trying to improve and respond to feedback.
 
-Check out our other stuff at opioidpolicy.org
+Check out our other stuff at https://opioidpolicy.org
