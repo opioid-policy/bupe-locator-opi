@@ -1,47 +1,228 @@
-// src/app/api/pharmacy-search/route.ts - Overpass API implementation
-
+// src/app/api/pharmacy-search/route.ts
 import { NextResponse } from 'next/server';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import NodeCache from 'node-cache';
 
-interface OverpassElement {
-  type: 'node' | 'way' | 'relation';
-  id: number;
-  lat?: number;
-  lon?: number;
-  center?: { lat: number; lon: number };
-  tags: {
-    name?: string;
-    amenity?: string;
+interface NominatimSearchResult {
+  place_id: number;
+  osm_type: string;
+  osm_id: number;
+  lat: string;
+  lon: string;
+  display_name: string;
+  class: string;
+  type: string;
+  importance: number;
+  address?: {
+    house_number?: string;
+    road?: string;
+    city?: string;
+    state?: string;
+    postcode?: string;
+    country?: string;
     shop?: string;
-    operator?: string;
-    brand?: string;
-    'addr:housenumber'?: string;
-    'addr:street'?: string;
-    'addr:city'?: string;
-    'addr:state'?: string;
-    'addr:postcode'?: string;
+    amenity?: string;
+    name?: string;
+    town?: string;
+    village?: string;
+  };
+  extratags?: {
     phone?: string;
     'contact:phone'?: string;
-    opening_hours?: string;
+    brand?: string;
+    operator?: string;
+    'brand:wikidata'?: string;
   };
 }
 
 interface SearchSuggestion {
   name: string;
-  mapbox_id: string;
+  mapbox_id: string; // Keep for compatibility
   full_address: string;
-  distance?: number;
 }
 
-// Rate limiting for Overpass API (be very respectful)
-const searchRateLimiter = new RateLimiterMemory({
-  points: 1, // 1 request per 2 seconds for Overpass
-  duration: 2,
+// Enhanced pharmacy chains list including grocery stores with pharmacies
+const PHARMACY_KEYWORDS = new Set([
+  // Traditional pharmacies
+  'pharmacy', 'drug store', 'apothecary', 'chemist',
+  
+  // Major pharmacy chains
+  'cvs', 'walgreens', 'rite aid', 'duane reade', 
+  'medicine shoppe', 'healthmart', 'genoa', 'capsule',
+  
+  // Grocery stores with pharmacies
+  'walmart', 'target', 'kroger', 'safeway', 'albertsons',
+  'vons', 'pavilions', 'randalls', 'tom thumb', 'acme',
+  'jewel-osco', 'shaw\'s', 'star market', 'meijer',
+  'publix', 'wegmans', 'h-e-b', 'heb', 'hy-vee', 'giant',
+  'giant eagle', 'stop & shop', 'harris teeter', 'food lion',
+  'fred meyer', 'qfc', 'smith\'s', 'king soopers', 'city market',
+  'fry\'s', 'ralphs', 'dillons', 'baker\'s', 'gerbes',
+  'pick \'n save', 'metro market', 'mariano\'s', 'whole foods',
+  'sam\'s club', 'costco', 'bj\'s', 'price chopper', 'market basket',
+  'shoprite', 'winn-dixie', 'ingles', 'food city', 'brookshire\'s',
+  'united supermarkets', 'market street', 'amigos', 'albertsons market',
+  'carrs', 'pavilions', 'tom thumb', 'united', 'randalls',
+  'jewel', 'osco', 'sav-on', 'star', 'shaws', 'hannaford',
+  'price rite', 'tops', 'weis', 'giant food stores', 'martin\'s',
+  'food giant', 'piggly wiggly', 'bi-lo', 'harveys', 'fresco y más'
+]);
+
+// Generate a random session-based key for rate limiting
+// This avoids using IP addresses entirely
+function generateRateLimitKey(): string {
+  // Use a timestamp-based approach with random component
+  // This provides rate limiting without tracking users
+  const timestamp = Math.floor(Date.now() / 1000); // Current second
+  const random = Math.random().toString(36).substring(7);
+  return `${timestamp}-${random}`;
+}
+
+// Rate limiting without IP tracking
+// Using a global rate limiter to prevent API abuse
+const globalRateLimiter = new RateLimiterMemory({
+  points: 10, // Allow 10 requests per second globally
+  duration: 1,
+  blockDuration: 2, // Block for 2 seconds if exceeded
 });
 
-const searchCache = new NodeCache({ stdTTL: 7200 }); // 2 hour cache
+// Per-session rate limiter (using timestamp buckets)
+const sessionRateLimiter = new RateLimiterMemory({
+  points: 3, // Allow 3 requests per 2 seconds per session
+  duration: 2,
+  blockDuration: 3, // Block for 3 seconds if exceeded
+});
 
+// Extended cache for better performance (2 hours for search, 24 hours for details)
+// Note: In production, consider using Vercel KV or similar for persistent caching
+const searchCache = new NodeCache({ stdTTL: 7200 });
+const detailsCache = new NodeCache({ stdTTL: 86400 });
+
+// Deduplicate pharmacies based on proximity and name similarity
+function deduplicatePharmacies(results: NominatimSearchResult[]): NominatimSearchResult[] {
+  const deduplicated: NominatimSearchResult[] = [];
+  const seen = new Map<string, NominatimSearchResult>();
+  
+  for (const result of results) {
+    const lat = parseFloat(result.lat);
+    const lon = parseFloat(result.lon);
+    
+    // Create a key based on rounded coordinates (approximately 100m precision)
+    const geoKey = `${lat.toFixed(3)}_${lon.toFixed(3)}`;
+    
+    // Extract core name for comparison
+    const name = (result.address?.name || 
+                 result.address?.shop || 
+                 result.address?.amenity || 
+                 result.display_name.split(',')[0]).toLowerCase();
+    
+    // Check for duplicates
+    let isDuplicate = false;
+    for (const [key, existing] of seen.entries()) {
+      const [existingGeo, existingName] = key.split('|');
+      
+      // Check if same location or very similar name at nearby location
+      if (existingGeo === geoKey || 
+          (similarName(name, existingName) && nearbyLocation(lat, lon, existing))) {
+        // Keep the one with more complete data
+        if (hasMoreCompleteData(result, existing)) {
+          seen.set(`${geoKey}|${name}`, result);
+          const index = deduplicated.findIndex(d => d === existing);
+          if (index !== -1) deduplicated[index] = result;
+        }
+        isDuplicate = true;
+        break;
+      }
+    }
+    
+    if (!isDuplicate) {
+      seen.set(`${geoKey}|${name}`, result);
+      deduplicated.push(result);
+    }
+  }
+  
+  return deduplicated;
+}
+
+// Check if two pharmacy names are similar
+function similarName(name1: string, name2: string): boolean {
+  // Remove common suffixes
+  const clean = (n: string) => n.replace(/pharmacy|drug|store|mart|market|#\d+/gi, '').trim();
+  const cleaned1 = clean(name1);
+  const cleaned2 = clean(name2);
+  
+  // Check for exact match or one contains the other
+  return cleaned1 === cleaned2 || 
+         cleaned1.includes(cleaned2) || 
+         cleaned2.includes(cleaned1);
+}
+
+// Check if two locations are nearby (within ~500m)
+function nearbyLocation(lat1: number, lon1: number, result2: NominatimSearchResult): boolean {
+  const lat2 = parseFloat(result2.lat);
+  const lon2 = parseFloat(result2.lon);
+  
+  // Rough distance calculation (good enough for deduplication)
+  const latDiff = Math.abs(lat1 - lat2);
+  const lonDiff = Math.abs(lon1 - lon2);
+  
+  // Approximately 0.005 degrees = 500m
+  return latDiff < 0.005 && lonDiff < 0.005;
+}
+
+// Determine which result has more complete data
+function hasMoreCompleteData(result1: NominatimSearchResult, result2: NominatimSearchResult): boolean {
+  let score1 = 0, score2 = 0;
+  
+  // Score based on completeness of address data
+  if (result1.address?.name) score1 += 2;
+  if (result2.address?.name) score2 += 2;
+  if (result1.address?.house_number) score1++;
+  if (result2.address?.house_number) score2++;
+  if (result1.address?.road) score1++;
+  if (result2.address?.road) score2++;
+  if (result1.extratags?.phone) score1 += 2;
+  if (result2.extratags?.phone) score2 += 2;
+  
+  return score1 > score2;
+}
+
+// Enhanced pharmacy detection
+function isPharmacy(result: NominatimSearchResult): boolean {
+  // Direct pharmacy classification
+  if (result.class === 'amenity' && result.type === 'pharmacy') {
+    return true;
+  }
+  
+  // Check various name fields
+  const namesToCheck = [
+    result.display_name,
+    result.address?.name,
+    result.address?.shop,
+    result.address?.amenity,
+    result.extratags?.brand,
+    result.extratags?.operator
+  ].filter(Boolean).map(n => n!.toLowerCase());
+  
+  // Check if any name contains pharmacy keywords
+  for (const name of namesToCheck) {
+    for (const keyword of PHARMACY_KEYWORDS) {
+      if (name.includes(keyword)) {
+        return true;
+      }
+    }
+  }
+  
+  // Check for healthcare/pharmacy classification in OSM
+  if (result.class === 'healthcare' || 
+      result.class === 'shop' && namesToCheck.some(n => n.includes('pharmacy'))) {
+    return true;
+  }
+  
+  return false;
+}
+
+// GET endpoint for pharmacy search
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -49,6 +230,7 @@ export async function GET(request: Request) {
     const lat = searchParams.get('lat');
     const lon = searchParams.get('lon');
 
+    // Input validation
     if (!query || !lat || !lon) {
       return NextResponse.json({ suggestions: [] });
     }
@@ -57,352 +239,298 @@ export async function GET(request: Request) {
       return NextResponse.json({ suggestions: [] });
     }
 
-    await searchRateLimiter.consume('overpass_search');
+    // Apply rate limiting without IP tracking
+    try {
+      // Global rate limit to protect the API
+      await globalRateLimiter.consume('global');
+      
+      // Optional: Use session token from frontend for per-user limiting
+      const sessionToken = searchParams.get('session') || generateRateLimitKey();
+      await sessionRateLimiter.consume(sessionToken);
+    } catch {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a moment.' },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': '3',
+            'X-RateLimit-Limit': '3',
+            'X-RateLimit-Remaining': '0'
+          }
+        }
+      );
+    }
 
-    const cacheKey = `overpass_${query}_${lat}_${lon}`;
+    // Check cache
+    const cacheKey = `search_${query}_${lat}_${lon}`;
     const cachedResults = searchCache.get<SearchSuggestion[]>(cacheKey);
     if (cachedResults) {
-      return NextResponse.json({ suggestions: cachedResults });
+      return NextResponse.json({ 
+        suggestions: cachedResults,
+        cached: true
+      });
     }
 
     const latitude = parseFloat(lat);
     const longitude = parseFloat(lon);
 
-    console.log(`Overpass pharmacy search for: "${query}" near ${lat},${lon}`);
-
-    // Get all pharmacies in the area using Overpass API
-    const pharmacies = await searchPharmaciesWithOverpass(latitude, longitude, query);
-    
-    console.log(`Found ${pharmacies.length} pharmacies from Overpass`);
-
-    // Process and filter results
-    const suggestions = processOverpassResults(pharmacies, query, latitude, longitude);
-
-    console.log(`Returning ${suggestions.length} suggestions`);
-
-    searchCache.set(cacheKey, suggestions);
-    return NextResponse.json({ suggestions });
-
-  } catch (error) {
-    console.error('Overpass pharmacy search error:', error);
-    return NextResponse.json({ suggestions: [] });
-  }
-}
-
-async function searchPharmaciesWithOverpass(
-  lat: number, 
-  lon: number, 
-  query: string, 
-  radius: number = 30000 // 30km radius
-): Promise<OverpassElement[]> {
-  
-  const queryLower = query.toLowerCase();
-  
-  // Determine search strategy
-  const isAddressSearch = /\d+.*?(street|st|road|rd|avenue|ave|drive|dr|boulevard|blvd|lane|ln|way|circle|cir|court|ct)/i.test(query);
-  
-  let overpassQuery: string;
-  
-  if (isAddressSearch) {
-    // For address searches, cast a wider net and filter later
-    overpassQuery = `
-      [out:json][timeout:15];
-      (
-        node["amenity"="pharmacy"](around:${radius/2},${lat},${lon});
-        way["amenity"="pharmacy"](around:${radius/2},${lat},${lon});
-        node["shop"="chemist"](around:${radius/2},${lat},${lon});
-        node["name"~".*[Pp]harmacy.*"](around:${radius/2},${lat},${lon});
-        way["name"~".*[Pp]harmacy.*"](around:${radius/2},${lat},${lon});
-      );
-      out center meta;
-    `;
-  } else {
-    // For name/chain searches, use more targeted approach
-    const majorChains = ['CVS', 'Walgreens', 'Rite Aid', 'Walmart', 'Target', 'Meijer', 'Kroger', 'Costco', 'Safeway', 'Publix'];
-    const isChainSearch = majorChains.some(chain => queryLower.includes(chain.toLowerCase()));
-    
-    if (isChainSearch) {
-      // Chain-specific search
-      const chainRegex = queryLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape regex chars
-      overpassQuery = `
-        [out:json][timeout:15];
-        (
-          node["amenity"="pharmacy"](around:${radius},${lat},${lon});
-          way["amenity"="pharmacy"](around:${radius},${lat},${lon});
-          node["name"~".*${chainRegex}.*",i](around:${radius},${lat},${lon});
-          way["name"~".*${chainRegex}.*",i](around:${radius},${lat},${lon});
-          node["operator"~".*${chainRegex}.*",i](around:${radius},${lat},${lon});
-          way["operator"~".*${chainRegex}.*",i](around:${radius},${lat},${lon});
-          node["brand"~".*${chainRegex}.*",i](around:${radius},${lat},${lon});
-          way["brand"~".*${chainRegex}.*",i](around:${radius},${lat},${lon});
-        );
-        out center meta;
-      `;
-    } else {
-      // General pharmacy search
-      overpassQuery = `
-        [out:json][timeout:15];
-        (
-          node["amenity"="pharmacy"](around:${radius},${lat},${lon});
-          way["amenity"="pharmacy"](around:${radius},${lat},${lon});
-          node["shop"="chemist"](around:${radius},${lat},${lon});
-          node["name"~".*[Pp]harmacy.*"](around:${radius},${lat},${lon});
-          way["name"~".*[Pp]harmacy.*"](around:${radius},${lat},${lon});
-        );
-        out center meta;
-      `;
-    }
-  }
-
-  try {
-    const response = await fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'BupeLocator/1.0 (https://bupe.opioidpolicy.org; contact@opioidpolicy.org)'
-      },
-      body: `data=${encodeURIComponent(overpassQuery)}`
-    });
-
-    if (!response.ok) {
-      throw new Error(`Overpass API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.elements || [];
-
-  } catch (error) {
-    console.error('Overpass API error:', error);
-    return [];
-  }
-}
-
-function processOverpassResults(
-  elements: OverpassElement[],
-  originalQuery: string,
-  userLat: number,
-  userLon: number
-): SearchSuggestion[] {
-  
-  const queryLower = originalQuery.toLowerCase();
-  const isAddressSearch = /\d+.*?(street|st|road|rd|avenue|ave|drive|dr|boulevard|blvd|lane|ln|way|circle|cir|court|ct)/i.test(originalQuery);
-  
-  // Use Map for perfect deduplication by coordinates
-  const locationMap = new Map<string, SearchSuggestion>();
-
-  elements.forEach(element => {
-    // Get coordinates
-    const lat = element.lat || element.center?.lat;
-    const lon = element.lon || element.center?.lon;
-    
-    if (!lat || !lon) return;
-
-    // Calculate distance
-    const distance = getDistanceInMiles(userLat, userLon, lat, lon);
-    if (distance > 50) return; // Skip if too far
-
-    // Enhanced filtering
-    if (!isPharmacyElement(element, queryLower, isAddressSearch)) return;
-
-    // Create unique key for deduplication (within 100 meter tolerance)
-    const locationKey = `${Math.round(lat * 10000)}_${Math.round(lon * 10000)}`;
-
-    const name = extractName(element);
-    const address = buildAddress(element);
-
-    if (!address || address.length < 5) return;
-
-    const suggestion: SearchSuggestion = {
-      name: name,
-      mapbox_id: `osm_${element.type}_${element.id}`,
-      full_address: address,
-      distance: distance
+    // Larger bounding box for better coverage (roughly 30 miles)
+    const bbox = {
+      left: longitude - 0.4,
+      top: latitude + 0.4,
+      right: longitude + 0.4,
+      bottom: latitude - 0.4
     };
 
-    // Only keep the best match for each location
-    const existing = locationMap.get(locationKey);
-    if (!existing || 
-        calculateRelevance(suggestion.name, queryLower) > calculateRelevance(existing.name, queryLower) ||
-        (calculateRelevance(suggestion.name, queryLower) === calculateRelevance(existing.name, queryLower) && distance < (existing.distance || Infinity))) {
-      locationMap.set(locationKey, suggestion);
-    }
-  });
-
-  // Convert to array and sort
-  return Array.from(locationMap.values())
-    .sort((a, b) => {
-      // Sort by relevance first, then distance
-      const aRelevance = calculateRelevance(a.name, queryLower);
-      const bRelevance = calculateRelevance(b.name, queryLower);
-      
-      if (aRelevance !== bRelevance) {
-        return bRelevance - aRelevance;
-      }
-      
-      return (a.distance || 0) - (b.distance || 0);
-    })
-    .slice(0, 15); // Reasonable limit
-}
-
-function isPharmacyElement(element: OverpassElement, queryLower: string, isAddressSearch: boolean): boolean {
-  const tags = element.tags;
-  const name = (tags.name || '').toLowerCase();
-  const operator = (tags.operator || '').toLowerCase();
-  const brand = (tags.brand || '').toLowerCase();
-  
-  // Direct pharmacy classification
-  if (tags.amenity === 'pharmacy' || tags.shop === 'chemist') return true;
-  
-  // Has pharmacy in name/operator/brand
-  if (name.includes('pharmacy') || operator.includes('pharmacy') || brand.includes('pharmacy')) return true;
-  
-  // For address searches, be more inclusive
-  if (isAddressSearch) {
-    // Check if address matches
-    const street = (tags['addr:street'] || '').toLowerCase();
-    const houseNumber = tags['addr:housenumber'] || '';
-    const fullAddress = `${houseNumber} ${street}`.trim().toLowerCase();
+    // Determine search strategy based on query type
+    const isAddress = /\d/.test(query) && (query.includes(' ') || query.length > 10);
+    const searches = isAddress 
+      ? [query] // If it looks like an address, search as-is
+      : [`${query} pharmacy`, query]; // Otherwise search both with and without "pharmacy"
     
-    if (fullAddress.includes(queryLower.replace(/[^\w\s]/g, '').toLowerCase())) {
-      // If address matches, check if it's likely a pharmacy
-      return name.includes('pharmacy') || 
-             name.includes('cvs') || 
-             name.includes('walgreens') ||
-             name.includes('rite aid') ||
-             name.includes('walmart') ||
-             name.includes('target') ||
-             tags.amenity === 'pharmacy';
+    const allResults: NominatimSearchResult[] = [];
+    
+    for (const searchQuery of searches) {
+      const endpoint = `https://nominatim.openstreetmap.org/search?` +
+        `format=json&` +
+        `q=${encodeURIComponent(searchQuery)}&` +
+        `addressdetails=1&` +
+        `extratags=1&` + // Get extra tags for phone numbers
+        `limit=20&` + // Increase limit for better coverage
+        `bounded=1&` +
+        `viewbox=${bbox.left},${bbox.top},${bbox.right},${bbox.bottom}&` +
+        `countrycodes=us`;
+
+      const response = await fetch(endpoint, {
+        headers: {
+          'User-Agent': 'BupeLocator/1.0 (https://bupe.opioidpolicy.org; contact@opioidpolicy.org)',
+          'Accept': 'application/json'
+        },
+        signal: AbortSignal.timeout(5000) // 5 second timeout
+      });
+
+      if (response.ok) {
+        const results: NominatimSearchResult[] = await response.json();
+        allResults.push(...results);
+      }
     }
-  }
-  
-  // Major pharmacy chains
-  const chains = ['cvs', 'walgreens', 'rite aid', 'walmart', 'target', 'meijer', 'kroger', 'costco', 'safeway', 'publix'];
-  return chains.some(chain => 
-    name.includes(chain) || 
-    operator.includes(chain) || 
-    brand.includes(chain)
-  );
-}
 
-function extractName(element: OverpassElement): string {
-  const tags = element.tags;
-  
-  // Priority: name > operator > brand
-  let name = tags.name || tags.operator || tags.brand || '';
-  
-  // Clean up the name
-  name = name.trim();
-  
-  // Standardize major chains
-  if (name.toLowerCase().includes('walmart')) {
-    if (name.toLowerCase().includes('supercenter')) {
-      name = 'Walmart Supercenter Pharmacy';
-    } else if (name.toLowerCase().includes('neighborhood')) {
-      name = 'Walmart Neighborhood Market Pharmacy';
-    } else {
-      name = 'Walmart Pharmacy';
+    // Filter for pharmacies and deduplicate
+    const pharmacyResults = allResults.filter(isPharmacy);
+    const deduplicated = deduplicatePharmacies(pharmacyResults);
+    
+    // Sort by importance and distance
+    deduplicated.sort((a, b) => {
+      const distA = Math.abs(parseFloat(a.lat) - latitude) + Math.abs(parseFloat(a.lon) - longitude);
+      const distB = Math.abs(parseFloat(b.lat) - latitude) + Math.abs(parseFloat(b.lon) - longitude);
+      
+      // Prioritize results with names
+      const hasNameA = a.address?.name ? 1 : 0;
+      const hasNameB = b.address?.name ? 1 : 0;
+      
+      if (hasNameA !== hasNameB) return hasNameB - hasNameA;
+      
+      // Then sort by distance
+      return distA - distB;
+    });
+
+    // Format results
+    const pharmacySuggestions: SearchSuggestion[] = deduplicated
+      .slice(0, 15) // Return up to 15 results
+      .map(result => {
+        // Extract pharmacy name with better logic
+        let name = result.address?.name || 
+                   result.address?.shop ||
+                   result.address?.amenity ||
+                   result.extratags?.brand ||
+                   '';
+        
+        // If no specific name, try to extract from display name
+        if (!name) {
+          const parts = result.display_name.split(',');
+          name = parts[0];
+          
+          // Try to identify pharmacy name from common patterns
+          for (const part of parts) {
+            const lower = part.toLowerCase().trim();
+            for (const keyword of PHARMACY_KEYWORDS) {
+              if (lower.includes(keyword)) {
+                name = part.trim();
+                break;
+              }
+            }
+          }
+        }
+
+        // Clean up the name
+        name = name.replace(/\s+/g, ' ').trim();
+        if (name.length > 50) {
+          name = name.substring(0, 50) + '...';
+        }
+
+        // Format address in standard US format
+        const formatAddress = () => {
+          const houseNumber = result.address?.house_number || '';
+          const road = result.address?.road || '';
+          const city = result.address?.city || result.address?.town || result.address?.village || '';
+          const state = result.address?.state || '';
+          const postcode = result.address?.postcode || '';
+          
+          // Build address components
+          const streetAddress = `${houseNumber} ${road}`.trim();
+          const cityStateZip = [city, state, postcode].filter(Boolean).join(', ');
+          
+          // Combine components
+          if (streetAddress && cityStateZip) {
+            return `${streetAddress}, ${cityStateZip}`;
+          } else if (cityStateZip) {
+            return cityStateZip;
+          } else {
+            // Fallback to display name but clean it up
+            const parts = result.display_name.split(',');
+            if (parts.length > 1) {
+              // Remove the pharmacy name and country
+              const cleanParts = parts.slice(1, -1).map(p => p.trim());
+              return cleanParts.join(', ');
+            }
+            return result.display_name;
+          }
+        };
+
+        return {
+          name: name || 'Pharmacy',
+          mapbox_id: `osm_${result.osm_type}_${result.osm_id}`,
+          full_address: formatAddress()
+        };
+      });
+
+    // Add a manual entry option if less than 3 results found
+    if (pharmacySuggestions.length < 3) {
+      pharmacySuggestions.push({
+        name: '+ Add a pharmacy not listed',
+        mapbox_id: 'manual_entry',
+        full_address: 'Enter pharmacy details manually'
+      });
     }
-  } else if (name.toLowerCase().includes('target')) {
-    name = 'Target Pharmacy';
-  } else if (name.toLowerCase().includes('costco')) {
-    name = 'Costco Pharmacy';
-  } else if (name.toLowerCase().includes('meijer')) {
-    name = 'Meijer Pharmacy';
+
+    // Cache the results
+    searchCache.set(cacheKey, pharmacySuggestions);
+
+    return NextResponse.json({ 
+      suggestions: pharmacySuggestions,
+      cached: false
+    });
+
+  } catch (error) {
+    // Privacy: Don't leak error details to client
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Pharmacy search error:', error);
+    }
+    
+    return NextResponse.json(
+      { suggestions: [], error: 'Search temporarily unavailable' },
+      { status: 503 }
+    );
   }
-  
-  // Add "Pharmacy" if major chain doesn't have it
-  const majorChains = ['walmart', 'target', 'costco', 'meijer', 'kroger', 'safeway'];
-  if (majorChains.some(chain => name.toLowerCase().includes(chain)) && 
-      !name.toLowerCase().includes('pharmacy')) {
-    name += ' Pharmacy';
-  }
-  
-  return name || 'Pharmacy';
 }
 
-function buildAddress(element: OverpassElement): string {
-  const tags = element.tags;
-  const parts = [];
-  
-  // Street address
-  if (tags['addr:housenumber'] && tags['addr:street']) {
-    parts.push(`${tags['addr:housenumber']} ${tags['addr:street']}`);
-  } else if (tags['addr:street']) {
-    parts.push(tags['addr:street']);
-  }
-  
-  // City
-  if (tags['addr:city']) {
-    parts.push(tags['addr:city']);
-  }
-  
-  // ZIP code
-  if (tags['addr:postcode']) {
-    parts.push(tags['addr:postcode']);
-  }
-  
-  // State
-  if (tags['addr:state']) {
-    const stateAbbr = getStateAbbreviation(tags['addr:state']);
-    parts.push(stateAbbr);
-  }
-  
-  return parts.join(', ');
-}
-
-function calculateRelevance(name: string, query: string): number {
-  const nameLower = name.toLowerCase();
-  
-  if (nameLower === query) return 100;
-  if (nameLower.startsWith(query)) return 90;
-  if (nameLower.includes(query)) return 80;
-  
-  const queryWords = query.split(' ');
-  const matchingWords = queryWords.filter(word => nameLower.includes(word)).length;
-  return matchingWords > 0 ? 60 + (matchingWords * 10) : 0;
-}
-
-function getStateAbbreviation(stateName: string): string {
-  const states: Record<string, string> = {
-    'Michigan': 'MI', 'Ohio': 'OH', 'Wisconsin': 'WI', 'Illinois': 'IL', 'Indiana': 'IN',
-    'Pennsylvania': 'PA', 'New York': 'NY', 'California': 'CA', 'Texas': 'TX', 'Florida': 'FL',
-    'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'Colorado': 'CO',
-    'Connecticut': 'CT', 'Delaware': 'DE', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID',
-    'Iowa': 'IA', 'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME',
-    'Maryland': 'MD', 'Massachusetts': 'MA', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
-    'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
-    'New Mexico': 'NM', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Oklahoma': 'OK',
-    'Oregon': 'OR', 'Rhode Island': 'RI', 'South Carolina': 'SC', 'South Dakota': 'SD',
-    'Tennessee': 'TN', 'Utah': 'UT', 'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA',
-    'West Virginia': 'WV', 'Wyoming': 'WY'
-  };
-  
-  return states[stateName] || stateName.substring(0, 2).toUpperCase();
-}
-
-function getDistanceInMiles(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 3959;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-// Keep existing POST handler for compatibility
+// POST endpoint for pharmacy details
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { pharmacy_id } = body;
 
-    if (!pharmacy_id || !pharmacy_id.startsWith('osm_')) {
-      return NextResponse.json({ error: 'Invalid pharmacy ID' }, { status: 400 });
+    // Input validation
+    if (!pharmacy_id || typeof pharmacy_id !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid pharmacy ID' }, 
+        { status: 400 }
+      );
     }
 
-    const [, osmType, osmId] = pharmacy_id.split('_');
+    // Handle manual entry requests
+    if (pharmacy_id === 'manual_entry') {
+      return NextResponse.json({
+        features: [{
+          properties: {
+            address: '',
+            context: {
+              place: { name: '' },
+              postcode: { name: '' },
+              region: { region_code: '' }
+            },
+            phone: '',
+            manual: true
+          },
+          geometry: {
+            coordinates: [0, 0]
+          }
+        }]
+      });
+    }
+
+    // Validate OSM ID format
+    if (!pharmacy_id.startsWith('osm_')) {
+      return NextResponse.json(
+        { error: 'Invalid pharmacy ID format' }, 
+        { status: 400 }
+      );
+    }
+
+    // Apply rate limiting without IP tracking
+    try {
+      // Global rate limit to protect the API
+      await globalRateLimiter.consume('global');
+      
+      // Use pharmacy_id as a simple rate limit key
+      const rateLimitKey = `details-${pharmacy_id.substring(0, 10)}`;
+      await sessionRateLimiter.consume(rateLimitKey);
+    } catch {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a moment.' },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': '3'
+          }
+        }
+      );
+    }
+
+    // Check cache
+    const cachedDetails = detailsCache.get(pharmacy_id);
+    if (cachedDetails) {
+      return NextResponse.json(cachedDetails);
+    }
+
+    // Extract and validate OSM details
+    const parts = pharmacy_id.split('_');
+    if (parts.length !== 3) {
+      return NextResponse.json(
+        { error: 'Invalid pharmacy ID format' }, 
+        { status: 400 }
+      );
+    }
     
+    const [, osmType, osmId] = parts;
+    
+    // Validate OSM type
+    if (!['node', 'way', 'relation'].includes(osmType)) {
+      return NextResponse.json(
+        { error: 'Invalid OSM type' }, 
+        { status: 400 }
+      );
+    }
+    
+    // Validate OSM ID is numeric
+    if (!/^\d+$/.test(osmId)) {
+      return NextResponse.json(
+        { error: 'Invalid OSM ID' }, 
+        { status: 400 }
+      );
+    }
+    
+    // Get detailed info from Nominatim
     const endpoint = `https://nominatim.openstreetmap.org/lookup?` +
       `format=json&` +
       `osm_ids=${osmType.charAt(0).toUpperCase()}${osmId}&` +
@@ -413,27 +541,53 @@ export async function POST(request: Request) {
       headers: {
         'User-Agent': 'BupeLocator/1.0 (https://bupe.opioidpolicy.org; contact@opioidpolicy.org)',
         'Accept': 'application/json'
-      }
+      },
+      signal: AbortSignal.timeout(5000) // 5 second timeout
     });
 
-    if (!response.ok) throw new Error(`Lookup error: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Nominatim lookup error: ${response.status}`);
+    }
 
     const details = await response.json();
-    if (!details || details.length === 0) throw new Error('No details found');
+    
+    if (!details || details.length === 0) {
+      return NextResponse.json(
+        { error: 'Pharmacy details not found' },
+        { status: 404 }
+      );
+    }
 
     const result = details[0];
     
+    // Format address in standard US format
+    const formatDetailedAddress = () => {
+      const houseNumber = result.address?.house_number || '';
+      const road = result.address?.road || '';
+      
+      // Build full formatted address
+      const streetAddress = `${houseNumber} ${road}`.trim();
+      return streetAddress;
+    };
+    
+    // Format response to match existing structure
     const pharmacyDetails = {
       features: [{
         properties: {
-          address: result.address?.road || result.address?.house_number ? 
-            `${result.address.house_number || ''} ${result.address.road || ''}`.trim() : '',
+          address: formatDetailedAddress(),
           context: {
-            place: { name: result.address?.city || result.address?.town || result.address?.village || '' },
+            place: { 
+              name: result.address?.city || 
+                    result.address?.town || 
+                    result.address?.village || 
+                    '' 
+            },
             postcode: { name: result.address?.postcode || '' },
-            region: { region_code: `US-${result.address?.state || ''}` }
+            region: { region_code: result.address?.state ? `US-${result.address.state}` : '' }
           },
-          phone: result.extratags?.phone || result.extratags?.['contact:phone'] || ''
+          phone: result.extratags?.phone || 
+                 result.extratags?.['contact:phone'] || 
+                 ''
         },
         geometry: {
           coordinates: [parseFloat(result.lon), parseFloat(result.lat)]
@@ -441,10 +595,20 @@ export async function POST(request: Request) {
       }]
     };
 
+    // Cache the details
+    detailsCache.set(pharmacy_id, pharmacyDetails);
+
     return NextResponse.json(pharmacyDetails);
 
   } catch (error) {
-    console.error('Pharmacy details error:', error);
-    return NextResponse.json({ error: 'Failed to get pharmacy details' }, { status: 500 });
+    // Privacy: Don't leak error details to client
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Pharmacy details error:', error);
+    }
+    
+    return NextResponse.json(
+      { error: 'Failed to get pharmacy details' }, 
+      { status: 500 }
+    );
   }
 }

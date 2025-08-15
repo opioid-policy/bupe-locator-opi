@@ -1,3 +1,4 @@
+// src/app/api/submit-report/route.ts
 import { table } from '@/lib/airtable';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -38,6 +39,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Pharmacy data is missing.' }, { status: 400 });
     }
 
+    // Determine if this is a manual entry
+    const isManualEntry = 
+      reportData.pharmacy.manual_entry === true || 
+      reportData.pharmacy.mapbox_id?.startsWith('manual_') ||
+      reportData.isManualEntry === true;
+
     await table.create([
       {
         fields: {
@@ -54,6 +61,8 @@ export async function POST(request: NextRequest) {
           formulation: reportData.formulations,
           standardized_notes: reportData.standardizedNotes,
           notes: reportData.notes,
+          // Set the manual_entry checkbox in Airtable
+          manual_entry: isManualEntry
         },
       },
     ]);

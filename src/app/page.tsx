@@ -354,14 +354,14 @@ useEffect(() => {
         particleCount: 4,
         angle: 60,
         spread: 55,
-        origin: { x: 0, y: 0.7 },
+        origin: { x: 0, y: 1 },
         colors: colors
       });
       confetti({
         particleCount: 4,
         angle: 120,
         spread: 55,
-        origin: { x: 1, y: 0.7 },
+        origin: { x: 1, y: 1 },
         colors: colors
       });
 
@@ -387,8 +387,7 @@ useEffect(() => {
   const timer = setTimeout(() => {
     const fetchPharmacies = async () => {
       const [lat, lon] = locationCoords;
-      const endpoint = `/api/pharmacy-search?q=${encodeURIComponent(searchTerm)}&lat=${lat}&lon=${lon}`;
-      try {
+      const endpoint = `/api/pharmacy-search-hybrid?q=${encodeURIComponent(searchTerm)}&lat=${lat}&lon=${lon}`;      try {
         const response = await fetch(endpoint);
         const data = await response.json();
         setResults(data.suggestions || []);
