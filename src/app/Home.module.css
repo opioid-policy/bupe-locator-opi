@@ -795,3 +795,37 @@
   color: var(--font-color-light);
   font-family: var(--font-raleway), sans-serif;
 }
+
+
+.searchStatus {
+  padding: 1rem;
+  text-align: center;
+  color: var(--accent-green);
+}
+
+.loadingIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--font-color-dark);
+  border-top: 2px solid var(--accent-green);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.noResults {
+  color: var(--font-color-dark);
+  font-style: italic;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

@@ -83,6 +83,7 @@ export default function Home() {
   const [isLoadingPharmacies, setIsLoadingPharmacies] = useState(true);
   const [dateFilter, setDateFilter] = useState<number | null>(30);
   const turnstile = useTurnstile();
+  const [isSearching, setIsSearching] = useState(false);
 
   // Client-side rate limiting state
   const [lastRequestTime, setLastRequestTime] = useState(0);
@@ -377,8 +378,12 @@ useEffect(() => {
   if (!sessionToken) setSessionToken(crypto.randomUUID());
   if (searchTerm.length <= 2) {
     setResults([]);
+    setIsSearching(false); // Add this state
     return;
   }
+
+  setIsSearching(true); // Add this state
+
   const timer = setTimeout(() => {
     const fetchPharmacies = async () => {
       const [lat, lon] = locationCoords;
@@ -390,11 +395,17 @@ useEffect(() => {
       } catch (error) {
         console.error("Error fetching pharmacies:", error);
         setResults([]);
+      } finally {
+        setIsSearching(false); // Always turn off loading
       }
     };
     fetchPharmacies();
-  }, 500); // Slightly longer delay to be respectful to Nominatim
-  return () => clearTimeout(timer);
+  }, 500);
+
+  return () => {
+    clearTimeout(timer);
+    setIsSearching(false);
+  };
 }, [searchTerm, locationCoords, sessionToken]);
 
   // --- Form helpers ---
@@ -614,7 +625,20 @@ useEffect(() => {
                       />
                     </div>
                     <div className={styles.resultsList}>
-                      {results.map((result) => (
+                      {searchTerm.length > 2 && isSearching && (
+                        <div className={styles.loadingIndicator}>
+                          <div className={styles.spinner}></div>
+                          <span>Searching pharmacies...</span>
+                        </div>
+                      )}
+                      
+                      {!isSearching && searchTerm.length > 2 && results.length === 0 && (
+                        <div className={styles.noResults}>
+                          No pharmacies found. Try a different search term.
+                        </div>
+                      )}
+                      
+                      {!isSearching && results.map((result) => (
                         <button
                           key={result.mapbox_id}
                           type="button"
