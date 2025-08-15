@@ -12,8 +12,6 @@ interface MapProps {
 }
 
 export default function Map({ center, pharmacies }: MapProps) {
-  const mapboxAccessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-
   return (
     <div style={{ height: '500px', width: '100%', position: 'relative', top: 0 }}>
       <MapContainer
@@ -23,10 +21,14 @@ export default function Map({ center, pharmacies }: MapProps) {
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom={true}
       >
+        {/* CartoDB Dark theme - similar to your current Mapbox dark theme */}
         <TileLayer
-          attribution='&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url={`https://api.mapbox.com/styles/v1/mapbox/navigation-night-v1/tiles/256/{z}/{x}/{y}@2x?access_token=${mapboxAccessToken}`}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          subdomains={['a', 'b', 'c', 'd']}
+          maxZoom={19}
         />
+        
         <PharmacyMarkers pharmacies={pharmacies} />
         <MapLegend />
       </MapContainer>

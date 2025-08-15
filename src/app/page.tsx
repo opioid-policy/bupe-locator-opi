@@ -110,38 +110,52 @@ export default function Home() {
     }
   }, [submitStatus]);
 
-  const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
-    setSubmitStatus('idle');
-    const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-    const endpoint = `https://api.mapbox.com/search/searchbox/v1/retrieve/${pharmacy.mapbox_id}?access_token=${accessToken}&session_token=${sessionToken}`;
-    try {
-      const response = await fetch(endpoint);
-      const data = await response.json();
-      const feature = data.features[0];
-      const street = feature.properties.address || '';
-      const city = feature.properties.context.place?.name || '';
-      const postcode = feature.properties.context.postcode?.name || '';
-      const state = feature.properties.context.region?.region_code?.replace('US-', '') || '';
-      const phone = feature.properties.phone || '';
-      const [longitude, latitude] = feature.geometry.coordinates;
-      setSelectedPharmacy({
-        mapbox_id: pharmacy.mapbox_id,
-        name: pharmacy.name,
-        full_address: pharmacy.full_address,
-        street_address: street,
-        city: city,
-        state: state,
-        zip_code: postcode,
-        latitude: latitude,
-        longitude: longitude,
-        phone_number: phone,
-      });
-      setSearchTerm('');
-      setResults([]);
-    } catch (error) {
-      console.error("Error retrieving pharmacy details:", error);
+const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
+  setSubmitStatus('idle');
+  
+  try {
+    // Use our new OSM-based pharmacy details API
+    const response = await fetch('/api/pharmacy-search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pharmacy_id: pharmacy.mapbox_id })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
-  };
+    
+    const data = await response.json();
+    const feature = data.features[0];
+    
+    const street = feature.properties.address || '';
+    const city = feature.properties.context.place?.name || '';
+    const postcode = feature.properties.context.postcode?.name || '';
+    const state = feature.properties.context.region?.region_code?.replace('US-', '') || '';
+    const phone = feature.properties.phone || '';
+    const [longitude, latitude] = feature.geometry.coordinates;
+    
+    setSelectedPharmacy({
+      mapbox_id: pharmacy.mapbox_id, // Keep same field name for compatibility
+      name: pharmacy.name,
+      full_address: pharmacy.full_address,
+      street_address: street,
+      city: city,
+      state: state,
+      zip_code: postcode,
+      latitude: latitude,
+      longitude: longitude,
+      phone_number: phone,
+    });
+    
+    setSearchTerm('');
+    setResults([]);
+  } catch (error) {
+    console.error("Error retrieving pharmacy details:", error);
+    // Show user-friendly error message
+    alert('Unable to load pharmacy details. Please try selecting a different pharmacy.');
+  }
+};
 
   // --- Reset error if user changes key form fields ---
   useEffect(() => {
@@ -328,22 +342,22 @@ export default function Home() {
 // --- Confetti effect ---
 useEffect(() => {
   if (submitStatus === 'success' && mode === 'report') {
-    const duration = 1.5 * 1000;
+    const duration = 2 * 1000;
     const end = Date.now() + duration;
-    const colors = ['#f71824', '#2c7721', '#2c7721', '#f71824'];
+    const colors = ['#ff007a', '#00ff85', '#8500ff', '#ff8500'];
 
     const frame = () => {
       if (Date.now() > end) return;
 
       confetti({
-        particleCount: 2,
+        particleCount: 4,
         angle: 60,
         spread: 55,
         origin: { x: 0, y: 0.7 },
         colors: colors
       });
       confetti({
-        particleCount: 2,
+        particleCount: 4,
         angle: 120,
         spread: 55,
         origin: { x: 1, y: 0.7 },
@@ -357,31 +371,31 @@ useEffect(() => {
   }
 }, [submitStatus, mode]);
 
-  // --- Mapbox pharmacy suggest search ---
-  useEffect(() => {
-    if (!locationCoords) return;
-    if (!sessionToken) setSessionToken(crypto.randomUUID());
-    if (searchTerm.length <= 2) {
-      setResults([]);
-      return;
-    }
-    const timer = setTimeout(() => {
-      const fetchPharmacies = async () => {
-        const accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-        const [lat, lon] = locationCoords;
-        const endpoint = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${searchTerm}&access_token=${accessToken}&language=en&session_token=${sessionToken}&proximity=${lon},${lat}&types=poi`;
-        try {
-          const response = await fetch(endpoint);
-          const data = await response.json();
-          setResults(data.suggestions || []);
-        } catch (error) {
-          console.error("Error fetching pharmacies:", error);
-        }
-      };
-      fetchPharmacies();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchTerm, locationCoords, sessionToken]);
+  // --- OSM pharmacy suggest search ---
+useEffect(() => {
+  if (!locationCoords) return;
+  if (!sessionToken) setSessionToken(crypto.randomUUID());
+  if (searchTerm.length <= 2) {
+    setResults([]);
+    return;
+  }
+  const timer = setTimeout(() => {
+    const fetchPharmacies = async () => {
+      const [lat, lon] = locationCoords;
+      const endpoint = `/api/pharmacy-search?q=${encodeURIComponent(searchTerm)}&lat=${lat}&lon=${lon}`;
+      try {
+        const response = await fetch(endpoint);
+        const data = await response.json();
+        setResults(data.suggestions || []);
+      } catch (error) {
+        console.error("Error fetching pharmacies:", error);
+        setResults([]);
+      }
+    };
+    fetchPharmacies();
+  }, 500); // Slightly longer delay to be respectful to Nominatim
+  return () => clearTimeout(timer);
+}, [searchTerm, locationCoords, sessionToken]);
 
   // --- Form helpers ---
   const handleFormulationChange = (option: string) => {
