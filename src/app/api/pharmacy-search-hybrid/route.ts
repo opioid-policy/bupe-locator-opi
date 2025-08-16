@@ -27,7 +27,8 @@ interface SearchSuggestion {
 }
 
 // Cache Airtable results for 5 minutes to improve speed
-const airtableCache = new NodeCache({ stdTTL: 300 });
+const airtableCache = new NodeCache({ stdTTL: 600 }); // 10 minutes instead of 5
+const osmCache = new NodeCache({ stdTTL: 300 }); // Cache OSM results too
 
 // Get unique pharmacies from Airtable (manual entries + reported ones)
 async function getAirtablePharmacies(lat: number, lon: number): Promise<AirtablePharmacy[]> {

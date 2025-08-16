@@ -7,6 +7,7 @@ import styles from "./Home.module.css";
 import PharmacyListItem from './components/PharmacyListItem';
 import TrendIndicator from './components/TrendIndicator';
 import confetti from "canvas-confetti";
+import ManualPharmacyEntry from './components/ManualPharmacyEntry';
 
 // --- Types ---
 interface SearchSuggestion { name: string; mapbox_id: string; full_address: string; }
@@ -84,6 +85,7 @@ export default function Home() {
   const [dateFilter, setDateFilter] = useState<number | null>(30);
   const turnstile = useTurnstile();
   const [isSearching, setIsSearching] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
 
   // Client-side rate limiting state
   const [lastRequestTime, setLastRequestTime] = useState(0);
@@ -114,6 +116,14 @@ export default function Home() {
 const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
   setSubmitStatus('idle');
   
+  // Check if this is the manual entry option
+  if (pharmacy.mapbox_id === 'manual_entry') {
+    setShowManualEntry(true);
+    setSearchTerm('');
+    setResults([]);
+    return;
+  }
+  
   try {
     // Use our new OSM-based pharmacy details API
     const response = await fetch('/api/pharmacy-search', {
@@ -127,6 +137,13 @@ const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
     }
     
     const data = await response.json();
+    
+    // Handle manual entry response
+    if (data.features[0].properties.manual) {
+      setShowManualEntry(true);
+      return;
+    }
+    
     const feature = data.features[0];
     
     const street = feature.properties.address || '';
@@ -137,7 +154,7 @@ const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
     const [longitude, latitude] = feature.geometry.coordinates;
     
     setSelectedPharmacy({
-      mapbox_id: pharmacy.mapbox_id, // Keep same field name for compatibility
+      mapbox_id: pharmacy.mapbox_id,
       name: pharmacy.name,
       full_address: pharmacy.full_address,
       street_address: street,
@@ -153,11 +170,15 @@ const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
     setResults([]);
   } catch (error) {
     console.error("Error retrieving pharmacy details:", error);
-    // Show user-friendly error message
     alert('Unable to load pharmacy details. Please try selecting a different pharmacy.');
   }
 };
 
+// Add handler for manual pharmacy submission
+const handleManualPharmacySubmit = (pharmacyData: SelectedPharmacy) => {
+  setSelectedPharmacy(pharmacyData);
+  setShowManualEntry(false);
+};
   // --- Reset error if user changes key form fields ---
   useEffect(() => {
     if (submitStatus === 'error') {
@@ -608,148 +629,155 @@ useEffect(() => {
                 <button type="button" className={styles.submitButton} onClick={handleShare}>{copied ? 'Copied to Clipboard!' : 'Share with a Friend 🚀'}</button>
                 <p style={{marginTop: '1.5rem', fontStyle: 'italic', fontSize: '0.9rem'}}><Link href="/bulk-upload" className={styles.styledLink}>If you&apos;re interested in submitting multiple reports, check out our bulk reporting tool.</Link></p>
               </div>
-            ) : (
+) : (
               <form onSubmit={handleSubmit}>
                 <h2>Update Pharmacy&apos;s Bupe Status</h2>
-                {!selectedPharmacy ? (
-                  <>
-                    <div className={styles.formGroup}>
-                      <label htmlFor="pharmacy-search">Search for a Pharmacy</label>
-                      <input
-                        type="text"
-                        id="pharmacy-search"
-                        placeholder="e.g., CVS"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                    <div className={styles.resultsList}>
-                      {searchTerm.length > 2 && isSearching && (
-                        <div className={styles.loadingIndicator}>
-                          <div className={styles.spinner}></div>
-                          <span>Searching pharmacies...</span>
-                        </div>
-                      )}
-                      
-                      {!isSearching && searchTerm.length > 2 && results.length === 0 && (
-                        <div className={styles.noResults}>
-                          No pharmacies found. Try a different search term.
-                        </div>
-                      )}
-                      
-                      {!isSearching && results.map((result) => (
-                        <button
-                          key={result.mapbox_id}
-                          type="button"
-                          className={styles.resultItem}
-                          onClick={() => handleSelectPharmacy(result)}
-                        >
-                          <strong>{result.name}</strong>
-                          <small>{result.full_address}</small>
-                        </button>
-                      ))}
-                    </div>
-                  </>
+                {showManualEntry ? (
+                  <ManualPharmacyEntry
+                    onBack={() => setShowManualEntry(false)}
+                    onSubmit={handleManualPharmacySubmit}
+                    turnstileToken={turnstileToken}
+                  />
                 ) : (
                   <>
-                    <div className={styles.selectedPharmacy}>
-                      <p><strong>{selectedPharmacy.name}</strong><br />{selectedPharmacy.full_address}</p>
-                      <button type="button" onClick={() => setSelectedPharmacy(null)}>Change pharmacy</button>
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>What was the outcome?</label>
-                      <hr className={styles.formDivider} />
-                      <div className={styles.radioGroup}>
-                        <label>
+                    {!selectedPharmacy ? (
+                      <>
+                        <div className={styles.formGroup}>
+                          <label htmlFor="pharmacy-search">Search for a Pharmacy</label>
                           <input
-                            type="radio"
-                            name="reportType"
-                            value="success"
-                            checked={reportType === 'success'}
-                            onChange={(e) => setReportType(e.target.value as 'success' | 'denial')}
-                          /> Success
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name="reportType"
-                            value="denial"
-                            checked={reportType === 'denial'}
-                            onChange={(e) => setReportType(e.target.value as 'success' | 'denial')}
-                          /> Denial / Refusal
-                        </label>
-                      </div>
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>Formulation (optional, check all that apply)</label>
-                      <hr className={styles.formDivider} />
-                      <div className={styles.checkboxGroup}>
-                        {formulationOptions.map(option => (
-                          <label key={option} className={styles.checkboxLabel}>
+                            type="text"
+                            id="pharmacy-search"
+                            placeholder="e.g., CVS"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                          />
+                        </div>
+                          <div className={styles.resultsList}>
+                            {results.filter(r => r.mapbox_id !== 'manual_entry').map((result) => (
+                              <button
+                                key={result.mapbox_id}
+                                type="button"
+                                className={styles.resultItem}
+                                onClick={() => handleSelectPharmacy(result)}
+                              >
+                                <strong>{result.name}</strong>
+                                <small>{result.full_address}</small>
+                              </button>
+                            ))}
+                          </div>
+                          {isSearching && <p style={{textAlign: 'center', padding: '0.5rem'}}>Searching...</p>}
+                          {searchTerm && (
+                            <button
+                              type="button"
+                              className={styles.manualEntryButton}
+                              onClick={() => setShowManualEntry(true)}
+                            >
+                              + Can&apos;t find your pharmacy? Add it manually
+                            </button>
+                          )}
+                      </>
+                    ) : (
+                      <>
+                        <div className={styles.selectedPharmacy}>
+                          <p><strong>{selectedPharmacy.name}</strong><br />{selectedPharmacy.full_address}</p>
+                          <button type="button" onClick={() => setSelectedPharmacy(null)}>Change pharmacy</button>
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>What was the outcome?</label>
+                          <hr className={styles.formDivider} />
+                          <div className={styles.radioGroup}>
+                            <label>
+                              <input
+                                type="radio"
+                                name="reportType"
+                                value="success"
+                                checked={reportType === 'success'}
+                                onChange={(e) => setReportType(e.target.value as 'success' | 'denial')}
+                              /> Success
+                            </label>
+                            <label>
+                              <input
+                                type="radio"
+                                name="reportType"
+                                value="denial"
+                                checked={reportType === 'denial'}
+                                onChange={(e) => setReportType(e.target.value as 'success' | 'denial')}
+                              /> Denial / Refusal
+                            </label>
+                          </div>
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>Formulation (optional, check all that apply)</label>
+                          <hr className={styles.formDivider} />
+                          <div className={styles.checkboxGroup}>
+                            {formulationOptions.map(option => (
+                              <label key={option} className={styles.checkboxLabel}>
+                                <input
+                                  type="checkbox"
+                                  value={option}
+                                  checked={formulations.includes(option)}
+                                  onChange={() => handleFormulationChange(option)}
+                                />
+                                {option}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label>Common Observations (optional)</label>
+                          <hr className={styles.formDivider} />
+                          <div className={styles.checkboxGroup}>
+                            {standardizedNoteOptions.map(option => (
+                              <label key={option} className={styles.checkboxLabel}>
+                                <input
+                                  type="checkbox"
+                                  value={option}
+                                  checked={standardizedNotes.includes(option)}
+                                  onChange={() => handleStandardizedNoteChange(option)}
+                                />
+                                {option}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label htmlFor="notes">Other Notes (optional)</label>
+                          <hr className={styles.formDivider} />
+                          <textarea
+                            id="notes"
+                            placeholder="e.g., 'Out of business.'"
+                            rows={4}
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                          ></textarea>
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label className={styles.checkboxLabel}>
                             <input
                               type="checkbox"
-                              value={option}
-                              checked={formulations.includes(option)}
-                              onChange={() => handleFormulationChange(option)}
+                              checked={consentMap}
+                              onChange={(e) => setConsentMap(e.target.checked)}
+                              required
                             />
-                            {option}
+                            I understand my anonymous report will be used to update the public map (REQUIRED).
                           </label>
-                        ))}
-                      </div>
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>Common Observations (optional)</label>
-                      <hr className={styles.formDivider} />
-                      <div className={styles.checkboxGroup}>
-                        {standardizedNoteOptions.map(option => (
-                          <label key={option} className={styles.checkboxLabel}>
-                            <input
-                              type="checkbox"
-                              value={option}
-                              checked={standardizedNotes.includes(option)}
-                              onChange={() => handleStandardizedNoteChange(option)}
-                            />
-                            {option}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label htmlFor="notes">Other Notes (optional)</label>
-                      <hr className={styles.formDivider} />
-                      <textarea
-                        id="notes"
-                        placeholder="e.g., 'Out of business.'"
-                        rows={4}
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                      ></textarea>
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label className={styles.checkboxLabel}>
-                        <input
-                          type="checkbox"
-                          checked={consentMap}
-                          onChange={(e) => setConsentMap(e.target.checked)}
-                          required
+                        </div>
+                        <Turnstile
+                          sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                          onVerify={(token) => setTurnstileToken(token)}
                         />
-                        I understand my anonymous report will be used to update the public map (REQUIRED).
-                      </label>
-                    </div>
-                    <Turnstile
-                      sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-                      onVerify={(token) => setTurnstileToken(token)}
-                    />
-                    <button
-                      type="submit"
-                      className={styles.submitButton}
-                      style={{ marginTop: '1rem' }}
-                      disabled={!canSubmit}
-                    >
-                      {isSubmitting ? 'Submitting...' : 'Submit Report'}
-                    </button>
-                    {submitStatus === 'error' && (
-                      <p className={styles.errorText}>Submission failed. Please try again.</p>
+                        <button
+                          type="submit"
+                          className={styles.submitButton}
+                          style={{ marginTop: '1rem' }}
+                          disabled={!canSubmit}
+                        >
+                          {isSubmitting ? 'Submitting...' : 'Submit Report'}
+                        </button>
+                        {submitStatus === 'error' && (
+                          <p className={styles.errorText}>Submission failed. Please try again.</p>
+                        )}
+                      </>
                     )}
                   </>
                 )}

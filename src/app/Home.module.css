@@ -829,3 +829,28 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+.manualEntryButton {
+  width: 100%;
+  padding: 1rem;
+  margin-top: 1rem;
+  background-color: var(--accent-green);
+  color: var(--accent-navy);
+  border: 2px dashed var(--accent-navy);
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.manualEntryButton:hover {
+  background-color: var(--accent-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.manualEntryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
