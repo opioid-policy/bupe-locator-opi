@@ -175,9 +175,31 @@ const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
 };
 
 // Add handler for manual pharmacy submission
-const handleManualPharmacySubmit = (pharmacyData: SelectedPharmacy) => {
-  setSelectedPharmacy(pharmacyData);
-  setShowManualEntry(false);
+// Update handler for manual pharmacy submission
+const handleManualPharmacySubmit = async (pharmacyData: SelectedPharmacy, turnstileToken: string) => {
+  // Submit to your API with the turnstile token
+  try {
+    const response = await fetch('/api/submit-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pharmacy: pharmacyData,
+        reportType: 'success', // Default to success for manual entries
+        formulations: [],
+        standardizedNotes: [],
+        notes: 'Manually added pharmacy',
+        turnstileToken: turnstileToken
+      }),
+    });
+    
+    if (response.ok) {
+      setSelectedPharmacy(pharmacyData);
+      setShowManualEntry(false);
+      // Optionally show success message
+    }
+  } catch (error) {
+    console.error('Error submitting manual pharmacy:', error);
+  }
 };
   // --- Reset error if user changes key form fields ---
   useEffect(() => {
@@ -636,7 +658,6 @@ useEffect(() => {
                   <ManualPharmacyEntry
                     onBack={() => setShowManualEntry(false)}
                     onSubmit={handleManualPharmacySubmit}
-                    turnstileToken={turnstileToken}
                   />
                 ) : (
                   <>
