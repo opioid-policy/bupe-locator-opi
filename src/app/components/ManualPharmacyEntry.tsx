@@ -1,17 +1,39 @@
-import { useState, useEffect } from 'react';
-import styles from './Home.module.css';
+// src/app/components/ManualPharmacyEntry.tsx
+import { useState } from 'react';
+import styles from '../Home.module.css';
+
+interface PharmacyData {
+  mapbox_id: string;
+  name: string;
+  full_address: string;
+  street_address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  latitude: number;
+  longitude: number;
+  phone_number: string;
+  manual_entry: boolean;
+  verified_address: boolean;
+}
 
 interface ManualPharmacyEntryProps {
   onBack: () => void;
-  onSubmit: (pharmacyData: any) => void;
-  zipCode: string;
+  onSubmit: (pharmacyData: PharmacyData) => void;
   turnstileToken: string | null;
+}
+
+interface AddressSuggestion {
+  full_address: string;
+  street: string;
+  city: string;
+  state: string;
+  zip: string;
 }
 
 export default function ManualPharmacyEntry({ 
   onBack, 
   onSubmit, 
-  zipCode,
   turnstileToken 
 }: ManualPharmacyEntryProps) {
   const [pharmacyName, setPharmacyName] = useState('');
@@ -22,7 +44,7 @@ export default function ManualPharmacyEntry({
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState('');
-  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
   
   // Common pharmacy keywords for validation
   const pharmacyKeywords = [
@@ -33,14 +55,14 @@ export default function ManualPharmacyEntry({
 
   // Format phone number as user types
   const formatPhoneNumber = (value: string) => {
-    const phoneNumber = value.replace(/\D/g, '');
-    const phoneNumberLength = phoneNumber.length;
+    const phoneNumberDigits = value.replace(/\D/g, '');
+    const phoneNumberLength = phoneNumberDigits.length;
     
-    if (phoneNumberLength < 4) return phoneNumber;
+    if (phoneNumberLength < 4) return phoneNumberDigits;
     if (phoneNumberLength < 7) {
-      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+      return `(${phoneNumberDigits.slice(0, 3)}) ${phoneNumberDigits.slice(3)}`;
     }
-    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+    return `(${phoneNumberDigits.slice(0, 3)}) ${phoneNumberDigits.slice(3, 6)}-${phoneNumberDigits.slice(6, 10)}`;
   };
 
   // Validate that this is likely a pharmacy
@@ -100,11 +122,13 @@ export default function ManualPharmacyEntry({
     try {
       // Validate address using geocoding
       const fullAddress = `${streetAddress}, ${city}, ${state} ${pharmacyZip}`;
-      const response = await fetch(`/api/validate-address?address=${encodeURIComponent(fullAddress)}`);
+      const response = await fetch(
+        `/api/validate-address?address=${encodeURIComponent(fullAddress)}&name=${encodeURIComponent(pharmacyName)}`
+      );
       const data = await response.json();
       
       if (!data.valid) {
-        setValidationError('Address could not be verified. Please check and try again.');
+        setValidationError(data.error || 'Address could not be verified. Please check and try again.');
         
         // Show suggestions if available
         if (data.suggestions && data.suggestions.length > 0) {
@@ -115,7 +139,7 @@ export default function ManualPharmacyEntry({
       }
       
       // Address is valid, prepare pharmacy data
-      const pharmacyData = {
+      const pharmacyData: PharmacyData = {
         mapbox_id: `manual_${Date.now()}`, // Unique ID for manual entries
         name: pharmacyName,
         full_address: fullAddress,
@@ -133,7 +157,7 @@ export default function ManualPharmacyEntry({
       onSubmit(pharmacyData);
       return true;
       
-    } catch (error) {
+    } catch {
       setValidationError('Unable to validate address. Please try again.');
       setIsValidating(false);
       return false;
@@ -141,13 +165,18 @@ export default function ManualPharmacyEntry({
   };
 
   // Handle suggestion selection
-  const selectSuggestion = (suggestion: any) => {
+  const selectSuggestion = (suggestion: AddressSuggestion) => {
     setStreetAddress(suggestion.street || '');
     setCity(suggestion.city || '');
     setState(suggestion.state || '');
     setPharmacyZip(suggestion.zip || '');
     setAddressSuggestions([]);
     setValidationError('');
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    validateAddress();
   };
 
   const canSubmit = 
@@ -171,14 +200,11 @@ export default function ManualPharmacyEntry({
       
       <h2 className={styles.subheading}>Add a Pharmacy</h2>
       <p className={styles.helper}>
-        If you couldn't find your pharmacy in the search results, you can add it manually.
+        If you couldn&apos;t find your pharmacy in the search results, you can add it manually.
         Please ensure this is a licensed pharmacy that dispenses prescription medications.
       </p>
 
-      <form className={styles.reportForm} onSubmit={(e) => {
-        e.preventDefault();
-        validateAddress();
-      }}>
+      <form className={styles.reportForm} onSubmit={handleSubmit}>
         <label htmlFor="pharmacyName">
           Pharmacy Name <span className={styles.required}>*</span>
         </label>
@@ -192,7 +218,7 @@ export default function ManualPharmacyEntry({
           required
         />
         <small className={styles.helper}>
-          Include "Pharmacy" if it's part of the name
+          Include &quot;Pharmacy&quot; if it&apos;s part of the name
         </small>
 
         <label htmlFor="streetAddress">
@@ -312,6 +338,7 @@ export default function ManualPharmacyEntry({
       <div className={styles.privacyNote}>
         <strong>Privacy Note:</strong> This pharmacy information will be added to our 
         database to help others find it. No personal information about you is stored.
+        Manual entries require approval before appearing in search results.
       </div>
     </div>
   );

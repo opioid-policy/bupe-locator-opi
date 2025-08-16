@@ -14,6 +14,7 @@ interface AirtablePharmacy {
   longitude: number;
   phone_number?: string;
   manual_entry: boolean;
+  live_manual_entry: boolean;
   last_report?: string;
 }
 
@@ -43,7 +44,7 @@ async function getAirtablePharmacies(lat: number, lon: number): Promise<Airtable
       fields: [
         'pharmacy_id', 'pharmacy_name', 'street_address', 
         'city', 'state', 'zip_code', 'latitude', 'longitude', 
-        'phone_number', 'manual_entry', 'submission_time'
+        'phone_number', 'manual_entry', 'live_manual_entry', 'submission_time'
       ],
       filterByFormula: `AND(NOT({latitude} = ''), NOT({longitude} = ''))`
     }).all();
@@ -55,6 +56,13 @@ async function getAirtablePharmacies(lat: number, lon: number): Promise<Airtable
       const pharmacyId = record.get('pharmacy_id') as string;
       const lat = record.get('latitude') as number;
       const lon = record.get('longitude') as number;
+      const isManualEntry = record.get('manual_entry') === true;
+      const isLiveManualEntry = record.get('live_manual_entry') === true;
+      
+      // Skip manual entries that aren't approved (live)
+      if (isManualEntry && !isLiveManualEntry) {
+        return; // Skip this record
+      }
       
       // Skip if no valid coordinates
       if (!lat || !lon) return;
@@ -73,7 +81,8 @@ async function getAirtablePharmacies(lat: number, lon: number): Promise<Airtable
           latitude: lat,
           longitude: lon,
           phone_number: record.get('phone_number') as string || '',
-          manual_entry: record.get('manual_entry') === true,
+          manual_entry: isManualEntry,
+          live_manual_entry: isLiveManualEntry,
           last_report: record.get('submission_time') as string
         });
       }
@@ -249,8 +258,8 @@ export async function GET(request: Request) {
       return aPriority - bPriority;
     });
 
-    // Limit to 15 results before adding the manual entry option
-    const topResults = mergedSuggestions.slice(0, 15);
+    // Limit to 5 results before adding the manual entry option (reduced from 15)
+    const topResults = mergedSuggestions.slice(0, 5);
 
     // Always add manual entry option at the end
     topResults.push({
@@ -281,8 +290,7 @@ export async function GET(request: Request) {
       const fallbackData = await fallbackResponse.json();
       
       // Ensure manual entry option is present
-      if (!fallbackData.suggestions.some((s: any) => s.mapbox_id === 'manual_entry')) {
-        fallbackData.suggestions.push({
+            if (!fallbackData.suggestions.some((s: SearchSuggestion) => s.mapbox_id === 'manual_entry')) {        fallbackData.suggestions.push({
           name: '+ Add a pharmacy not listed',
           mapbox_id: 'manual_entry',
           full_address: 'Can\'t find your pharmacy? Add it to help others',

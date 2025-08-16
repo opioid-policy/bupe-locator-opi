@@ -35,21 +35,6 @@ const PHARMACY_KEYWORDS = [
   'care', 'script', 'pharm', 'med', 'health', 'drug mart', 'drug fair'
 ];
 
-interface AddressValidationResult {
-  valid: boolean;
-  coordinates?: [number, number];
-  normalized_address?: string;
-  suggestions?: Array<{
-    full_address: string;
-    street: string;
-    city: string;
-    state: string;
-    zip: string;
-  }>;
-  error?: string;
-  is_pharmacy?: boolean;
-}
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
