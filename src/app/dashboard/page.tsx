@@ -111,53 +111,64 @@ export default function Dashboard() {
           // Process state data
           const byState: Record<string, StateStats> = {};
           reports.forEach(report => {
-            if (!report.state) return;
-
-            if (!byState[report.state]) {
-              byState[report.state] = { success: 0, denied: 0, lastUpdated: '' };
+            const state = report.state || 'Unknown';
+            if (!byState[state]) {
+              byState[state] = { success: 0, denied: 0, lastUpdated: '' };
             }
-
+            
             if (report.reportType === 'success') {
-              byState[report.state].success++;
+              byState[state].success++;
             } else {
-              byState[report.state].denied++;
+              byState[state].denied++;
             }
-
-            if (report.submissionTime &&
-                (!byState[report.state].lastUpdated ||
-                 new Date(report.submissionTime) > new Date(byState[report.state].lastUpdated))) {
-              byState[report.state].lastUpdated = report.submissionTime;
+            
+            // Track most recent submission
+            if (!byState[state].lastUpdated || 
+                new Date(report.submissionTime) > new Date(byState[state].lastUpdated)) {
+              byState[state].lastUpdated = report.submissionTime;
             }
           });
 
           // Process formulation data
-          const formulations = formulationOptions.map(form => ({
-            name: form,
-            success: reports.filter(r =>
-              r.reportType === 'success' &&
-              r.formulations &&
-              r.formulations.includes(form)
-            ).length,
-            denied: reports.filter(r =>
-              r.reportType === 'denial' &&
-              r.formulations &&
-              r.formulations.includes(form)
-            ).length
-          }));
+          const formulations = formulationOptions.map(name => ({ name, success: 0, denied: 0 }));
+          reports.forEach(report => {
+            report.formulations?.forEach(formulation => {
+              const idx = formulations.findIndex(f => f.name === formulation);
+              if (idx !== -1) {
+                if (report.reportType === 'success') {
+                  formulations[idx].success++;
+                } else {
+                  formulations[idx].denied++;
+                }
+              }
+            });
+          });
 
           // Process barrier data
-          const barriers = standardizedNoteOptions.map(note => ({
-            note,
-            count: reports.filter(r =>
-              r.standardizedNotes &&
-              r.standardizedNotes.includes(note)
-            ).length
-          })).sort((a, b) => b.count - a.count);
+          const barriers = standardizedNoteOptions.map(note => ({ note, count: 0 }));
+          reports.forEach(report => {
+            if (report.reportType === 'denial' && report.standardizedNotes) {
+              report.standardizedNotes.forEach(note => {
+                const idx = barriers.findIndex(b => b.note === note);
+                if (idx !== -1) {
+                  barriers[idx].count++;
+                }
+              });
+            }
+          });
+
+          // Sort barriers by count
+          barriers.sort((a, b) => b.count - a.count);
+
+          // Calculate totals
+          const total = reports.length;
+          const success = reports.filter(r => r.reportType === 'success').length;
+          const denied = reports.filter(r => r.reportType === 'denial').length;
 
           return {
-            total: reports.length,
-            success: reports.filter(r => r.reportType === 'success').length,
-            denied: reports.filter(r => r.reportType === 'denial').length,
+            total,
+            success,
+            denied,
             byState,
             formulations,
             barriers
@@ -216,6 +227,18 @@ export default function Dashboard() {
 
     fetchData();
   }, []);
+
+  // Scroll to top when component mounts (immediate)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Scroll to top when data finishes loading
+  useEffect(() => {
+    if (!loading && !error) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [loading, error]);
 
   if (loading) return <div className={styles.loading}>Loading dashboard...</div>;
   if (error) return <div className={styles.error}>Error: {error}</div>;

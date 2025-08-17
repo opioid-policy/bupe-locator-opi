@@ -19,17 +19,20 @@ function formatDate(dateString: string) {
   });
 }
 
-
 export default function PharmacyMarkers({ pharmacies }: PharmacyMarkersProps) {
   return (
     <>
-      {Object.values(pharmacies).map((pharmacy) => {
+      {Object.values(pharmacies).map((pharmacy, index) => {
         const [latitude, longitude] = pharmacy.coords;
         const directionsUrl = getDirectionsUrl(latitude, longitude);
+        
+        // Use pharmacy.id as key, with index fallback
+        // Both OSM IDs and manual IDs should be unique
+        const markerKey = pharmacy.id || `pharmacy-fallback-${index}`;
 
         return (
           <Marker
-            key={pharmacy.id}
+            key={markerKey}
             position={pharmacy.coords}
             icon={pharmacy.status === 'success' ? greenIcon : redIcon}
           >
@@ -48,19 +51,28 @@ export default function PharmacyMarkers({ pharmacies }: PharmacyMarkersProps) {
               >
                 {pharmacy.full_address}
               </a>
-              {pharmacy.phone_number && ( <><br /><a href={`tel:${pharmacy.phone_number}`}>{pharmacy.phone_number}</a></> )}
+              {pharmacy.phone_number && ( 
+                <>
+                  <br />
+                  <a href={`tel:${pharmacy.phone_number}`}>{pharmacy.phone_number}</a>
+                </> 
+              )}
               <br /><br />
               Success Reports: {pharmacy.successCount}
               <br />
               Denial Reports: {pharmacy.denialCount}
               <br />
-              {pharmacy.lastUpdated && ( <em>Last Successful Report: {formatDate(pharmacy.lastUpdated)}</em> )}
+              {pharmacy.lastUpdated && ( 
+                <em>Last Successful Report: {formatDate(pharmacy.lastUpdated)}</em> 
+              )}
               {pharmacy.standardizedNotes && pharmacy.standardizedNotes.length > 0 && (
                 <>
                   <br /><br />
                   <strong>Notes:</strong>
                   <ul>
-                    {pharmacy.standardizedNotes.map(note => ( <li key={note}>{note}</li> ))}
+                    {pharmacy.standardizedNotes.map((note, noteIndex) => ( 
+                      <li key={`${markerKey}-note-${noteIndex}`}>{note}</li> 
+                    ))}
                   </ul>
                 </>
               )}
