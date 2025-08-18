@@ -10,7 +10,9 @@ export default function AboutPage() {
       <div className={styles.content}>
         
         <h2>About This Project</h2>
-        
+
+<hr style={{ margin: '3rem 0', border: 'none', borderTop: '1px solid var(--border-color)' }} />
+
         <h3>The Problem</h3>
             <p>
             There are two primary ways to reduce opioid morbidity and mortality: medications for opioid use disorder (MOUD; e.g., buprenorphine, methadone, naltrexone) and naloxone (an opioid overdose reversal medication). MOUD are the gold-standard, FDA-approved medications used to treat people with an opioid addiction. However, barriers to MOUD are persistent and include structural and societal/racism, classism, an overactive criminal justice response to MOUD, stigma, and discrimination towards people who use drugs.
@@ -34,6 +36,8 @@ export default function AboutPage() {
             We&apos;ll never forget the experience of patients in West Virginia rushing to a specific pharmacy to get their meds before it closed because it was the only one in town that filled bupe. But filling a script for opioid pain medication...that was as easy as walking into any pharmacy. It wasn&apos;t right then. It&apos;s not right now.
             </p>
 
+<hr style={{ margin: '3rem 0', border: 'none', borderTop: '1px solid var(--border-color)' }} />
+
         <h3>Our Solution</h3>
           <p>
           This tool is designed to help people find bupe. That should be simple, but it&apos;s not. By crowd-sourcing data related to bupe access, we help the people facing these issues navigate challenges and helping others in their community. We do hope that one day, every pharmacy will stock this medication. However, the reality is that few do. In the meantime, we hope this tool will help.
@@ -45,14 +49,16 @@ export default function AboutPage() {
           We hope that this platform will help people help people get medicine and break the cycle of discrimination against people who use drugs or have an addiction. 
           </p>
 
+ <hr style={{ margin: '3rem 0', border: 'none', borderTop: '1px solid var(--border-color)' }} />
 
         <h3>Our Funding</h3>
           <p>
           lol. 
           </p>
           <p>
-          Like with our other projects we&apos;re doing this in response to a need without any financial support. Like we said up top, bupe access has been something that bugged us for a while. We have done some research and advocacy related to these problems and hope that has an impact, but we think it&apos;s time for direct action.
+          Like with our other projects, we built this in response to a need without any financial support. We also don&apos;t wait for external validation from granting organizations. If it needs to be done, we&apos;ll do it.
           </p>
+          <p>Like we said up top, bupe access has been something that bugged us for a while. We have done some research and advocacy related to these problems and hope that has an impact...but we think it&apos;s time for direct action.</p>
           <p>
           Setting up this service is fairly low cost, we think... If successful with lots of people using it to report or find a pharmacy, it will cost some money. If successful and pharmacies actually start consistently and widely stocking bupe, we can shut down. In the meantime, we hope you&apos;ll consider donating resources to our effort (in the footer).
           </p>

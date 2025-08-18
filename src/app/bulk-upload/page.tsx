@@ -35,6 +35,7 @@ export default function BulkUploadPage() {
           Access the Template
         </a>
 
+        <br/>
         <a 
           href="https://cryptpad.fr/doc/#/2/doc/view/6zuDknr3O2U6EBOUPQiC+JCR7wVRudzOaIHuyYeYcJY/" 
           target="_blank" 
@@ -62,6 +63,8 @@ export default function BulkUploadPage() {
           <li>Email that single link to us at: <strong>code[at]opioidpolicy[dot]org</strong></li>
           <li>NB - the file link is only active for 24hrs so I might ask you to resend it. Apologies in advanced!</li>
         </ol>
+
+ <hr style={{ margin: '3rem 0', border: 'none', borderTop: '1px solid var(--border-color)' }} />
 
         <h4 style={{ marginTop: '2rem' }}>Questions?</h4>
           <p>

@@ -12,7 +12,9 @@ export default function MethadoneNaltrexonePage() {
         <p>
           You may notice that other medications for Opioid Use Disorder (OUD) -  methadone, naltrexone, long-acting injectable bupe - are not included in our search tool. This is intentional and reflects the project&apos;s specific focus on pharmacy-based access to buprenorphine.
         </p>
-        
+
+ <hr style={{ margin: '3rem 0', border: 'none', borderTop: '1px solid var(--border-color)' }} />
+
         {/* --- Methadone Section --- */}
         <h3>More about Methadone</h3>
 
@@ -22,6 +24,8 @@ export default function MethadoneNaltrexonePage() {
         <p>
           Restricting methadone access is a policy choice, not a medical necessity. Many other countries have safely integrated methadone dispensing into community pharmacies, including <strong>the United Kingdom, Canada, and Australia.</strong> In these places, a patient can pick up their medication from their local pharmacist, <strong>just like any other prescription.</strong> While we advocate for reduce methadone restrctions, this project is focused on improving access to buprenorphine through pharmacies.
         </p>
+        
+ <hr style={{ margin: '3rem 0', border: 'none', borderTop: '1px solid var(--border-color)' }} />
 
         {/* --- Naltrexone Section --- */}
         <h3>More about Naltrexone and Long-acting Injectable Bupe</h3>

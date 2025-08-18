@@ -63,6 +63,11 @@ export default function RootLayout({
                 What About Other Treatments?
               </Link>
             </p>
+             <p style={{marginTop: '0.5rem'}}>
+              <Link href="/bulk-upload" className={styles.styledLink}>
+                Bulk Reporting Tool
+              </Link>
+            </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="https://news.opioidpolicy.org/#/portal" className={styles.styledLink}>
                 Join Our Newsletter
@@ -70,7 +75,7 @@ export default function RootLayout({
             </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/privacy" className={styles.styledLink}>
-                Privacy Practices
+                 🔒 Privacy Info & Tips 🔒
               </Link>
             </p>
             <a 
