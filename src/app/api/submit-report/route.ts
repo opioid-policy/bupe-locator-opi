@@ -1,6 +1,7 @@
 // src/app/api/submit-report/route.ts
 import { table } from '@/lib/airtable';
 import { NextRequest, NextResponse } from 'next/server';
+import { sanitizeInput, sanitizePharmacyData } from '@/lib/sanitize';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -39,30 +40,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Pharmacy data is missing.' }, { status: 400 });
     }
 
-    // Determine if this is a manual entry
-    const isManualEntry = 
-      reportData.pharmacy.manual_entry === true || 
-      reportData.pharmacy.mapbox_id?.startsWith('manual_') ||
-      reportData.isManualEntry === true;
+    // Sanitize the pharmacy data to prevent XSS
+    const sanitizedPharmacy = sanitizePharmacyData(reportData.pharmacy);
+    const sanitizedNotes = sanitizeInput(reportData.notes || '');
 
     await table.create([
       {
         fields: {
-          pharmacy_id: reportData.pharmacy.mapbox_id,
-          pharmacy_name: reportData.pharmacy.name,
-          street_address: reportData.pharmacy.street_address,
-          city: reportData.pharmacy.city,
-          state: reportData.pharmacy.state,
-          zip_code: reportData.pharmacy.zip_code,
-          latitude: reportData.pharmacy.latitude,
+          pharmacy_id: sanitizedPharmacy.mapbox_id || sanitizedPharmacy.id, // Handle both ID types
+          pharmacy_name: sanitizedPharmacy.name,
+          street_address: sanitizedPharmacy.street_address,
+          city: sanitizedPharmacy.city,
+          state: sanitizedPharmacy.state,
+          zip_code: sanitizedPharmacy.zip_code,
+          latitude: reportData.pharmacy.latitude, // Numbers don't need sanitization
           longitude: reportData.pharmacy.longitude,
-          phone_number: reportData.pharmacy.phone_number,
+          phone_number: sanitizedPharmacy.phone_number,
           report_type: reportData.reportType,
           formulation: reportData.formulations,
-          standardized_notes: reportData.standardizedNotes,
-          notes: reportData.notes,
-          // Set the manual_entry checkbox in Airtable
-          manual_entry: isManualEntry
+          standardized_notes: reportData.standardizedNotes, // These are from checkboxes, already safe
+          notes: sanitizedNotes, // Sanitize free text field
         },
       },
     ]);

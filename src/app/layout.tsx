@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Raleway, Merriweather } from 'next/font/google';
 import styles from "./Layout.module.css";
 import "./globals.css";
+import PrivacyBanner from './components/PrivacyBanner';
 
 // UPDATED: Initialize both fonts and assign them to CSS variables
 const raleway = Raleway({
@@ -35,6 +36,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={`${raleway.variable} ${merriweather.variable}`}>
       <body>
         <div className={styles.appContainer}>
+          <PrivacyBanner />
+          {/* UPDATED: Use CSS variables for font styles */}
           <header className={styles.header}>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/" className={styles.styledLink}>

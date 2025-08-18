@@ -1,4 +1,4 @@
-// lib/sanitize.ts - Create this new file for input sanitization
+// src/lib/sanitize.ts - Fixed version without the example code
 
 /**
  * Sanitize user input to prevent XSS attacks
@@ -41,7 +41,16 @@ export function sanitizeInput(input: string): string {
 /**
  * Sanitize pharmacy name and address fields
  */
-export function sanitizePharmacyData(data: any) {
+export function sanitizePharmacyData(data: {
+  name?: string;
+  full_address?: string;
+  street_address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  phone_number?: string;
+  [key: string]: any;
+}) {
   return {
     ...data,
     name: sanitizeInput(data.name || ''),
@@ -53,31 +62,3 @@ export function sanitizePharmacyData(data: any) {
     phone_number: sanitizeInput(data.phone_number || '').replace(/\D/g, '').substring(0, 15),
   };
 }
-
-// Updated API route - api/submit-report/route.ts
-// Add this import at the top:
-import { sanitizeInput, sanitizePharmacyData } from '@/lib/sanitize';
-
-// In the POST function, before saving to Airtable:
-const sanitizedPharmacy = sanitizePharmacyData(reportData.pharmacy);
-const sanitizedNotes = sanitizeInput(reportData.notes || '');
-
-await table.create([
-  {
-    fields: {
-      pharmacy_id: sanitizedPharmacy.mapbox_id, // Keep original ID
-      pharmacy_name: sanitizedPharmacy.name,
-      street_address: sanitizedPharmacy.street_address,
-      city: sanitizedPharmacy.city,
-      state: sanitizedPharmacy.state,
-      zip_code: sanitizedPharmacy.zip_code,
-      latitude: reportData.pharmacy.latitude, // Numbers don't need sanitization
-      longitude: reportData.pharmacy.longitude,
-      phone_number: sanitizedPharmacy.phone_number,
-      report_type: reportData.reportType,
-      formulation: reportData.formulations,
-      standardized_notes: reportData.standardizedNotes, // These are from checkboxes, already safe
-      notes: sanitizedNotes, // Sanitize free text field
-    },
-  },
-]);

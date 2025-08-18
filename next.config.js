@@ -1,15 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['react-leaflet', '@react-leaflet/core'],
-};
-
-module.exports = nextConfig;
-
-// next.config.js - Add comprehensive security headers
-
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  // Disable Vercel Analytics and Speed Insights
+  // Disable Vercel Analytics and Speed Insights completely
   analytics: false,
   
   // Security headers
@@ -77,39 +68,17 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'no-store, no-cache, must-revalidate, proxy-revalidate'
-          },
-          
-          // Disable FLoC tracking
-          {
-            key: 'Permissions-Policy',
-            value: 'interest-cohort=()'
           }
         ]
       }
     ];
   },
   
-  // Disable telemetry and analytics
-analytics: false,
-telemetry: false,  
-
+  // Disable telemetry
+  telemetry: false,
+  
   // Additional privacy settings
   poweredByHeader: false,
-  
-  // Strict cookie settings
-  experimental: {
-    // Enable strict mode for better security
-    strictNextHead: true
-  }
 };
 
 module.exports = nextConfig;
-
-
-// In next.config.js
-headers: [
-  {
-    key: 'Set-Cookie',
-    value: 'SameSite=Strict; Secure; HttpOnly'
-  }
-]
