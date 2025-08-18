@@ -1,22 +1,11 @@
-// src/app/layout.tsx
-
+// src/app/layout.tsx - COMPLETE FIXED FILE
 import type { Metadata } from "next";
 import Link from 'next/link';
 import { Raleway, Merriweather } from 'next/font/google';
 import styles from "./Layout.module.css";
 import "./globals.css";
-import PrivacyBanner from './components/PrivacyBanner';
 
-// src/app/layout.tsx
-export const metadata: Metadata = {
-  title: "OPI Pharmacy Bupe Access Tool",
-  description: "Crowd-sourced bupe access",
-  manifest: "/manifest.json",
-  themeColor: "var(--accent-green)",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
-};
-
-// UPDATED: Initialize both fonts and assign them to CSS variables
+// Initialize both fonts and assign them to CSS variables
 const raleway = Raleway({
   subsets: ['latin'],
   display: 'swap',
@@ -30,9 +19,13 @@ const merriweather = Merriweather({
   variable: '--font-merriweather',
 });
 
+// Single metadata declaration with PWA support
 export const metadata: Metadata = {
   title: "Pharmacy Bupe Access Tool",
-  description: "Crowd-sourced bupe access*",
+  description: "Crowd-sourced bupe access",
+  manifest: "/manifest.json",
+  themeColor: "#4A5D23",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
 };
 
 export default function RootLayout({
@@ -41,12 +34,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // UPDATED: Apply both font variables to the html tag
     <html lang="en" suppressHydrationWarning className={`${raleway.variable} ${merriweather.variable}`}>
       <body>
         <div className={styles.appContainer}>
-          <PrivacyBanner />
-          {/* UPDATED: Use CSS variables for font styles */}
           <header className={styles.header}>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/" className={styles.styledLink}>
@@ -58,7 +48,7 @@ export default function RootLayout({
           </main>
           <footer className={styles.footer}>
             <p>This is a crowd-source resource. This tool is not a guarantee of service.</p>
-               <p style={{marginTop: '0.5rem'}}>
+            <p style={{marginTop: '0.5rem'}}>
               <Link href="/about" className={styles.styledLink}>
                 About This Project
               </Link>
@@ -78,7 +68,7 @@ export default function RootLayout({
                 Join Our Newsletter
               </Link>
             </p>
-             <p style={{marginTop: '0.5rem'}}>
+            <p style={{marginTop: '0.5rem'}}>
               <Link href="/privacy" className={styles.styledLink}>
                 Privacy Practices
               </Link>

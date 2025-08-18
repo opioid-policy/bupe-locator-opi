@@ -53,10 +53,17 @@ export async function GET(request: Request) {
 
     // Check cache first
     const cachedData = cache.get<MapboxGeocodingResponse>(zipCode);
-    if (cachedData) {
-      console.log(`Cache hit for ZIP: ${zipCode}`);
-      return NextResponse.json(cachedData);
-    }
+      if (cachedData) {
+        console.log(`Cache hit for ZIP: ${zipCode}`);
+        return new NextResponse(JSON.stringify(cachedData), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'public, s-maxage=604800, immutable',
+            'X-Cache': 'HIT',
+          },
+        });
+      }
 
     // Query Nominatim for the ZIP code
     const nominatimUrl = `https://nominatim.openstreetmap.org/search?` +
@@ -101,7 +108,14 @@ export async function GET(request: Request) {
     // Cache the result
     cache.set(zipCode, formattedResponse);
 
-    return NextResponse.json(formattedResponse);
+return new NextResponse(JSON.stringify(formattedResponse), {
+  status: 200,
+  headers: {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'public, s-maxage=604800, immutable',
+    'X-Cache': 'MISS',
+  },
+});
 
   } catch (error) {
     console.error('ZIP lookup error:', error);

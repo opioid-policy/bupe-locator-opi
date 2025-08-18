@@ -265,9 +265,13 @@ export async function GET(request: Request) {
     const cacheKey = `search_${query}_${lat}_${lon}`;
     const cachedResults = searchCache.get<SearchSuggestion[]>(cacheKey);
     if (cachedResults) {
-      return NextResponse.json({ 
-        suggestions: cachedResults,
-        cached: true
+      return new NextResponse(JSON.stringify({ suggestions: cachedResults }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=3600',
+          'X-Cache': 'HIT',
+        },
       });
     }
 
@@ -416,11 +420,15 @@ export async function GET(request: Request) {
     // Cache the results
     searchCache.set(cacheKey, pharmacySuggestions);
 
-    return NextResponse.json({ 
-      suggestions: pharmacySuggestions,
-      cached: false
+    return new NextResponse(JSON.stringify({ suggestions: pharmacySuggestions }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=3600',
+        'X-Cache': 'MISS',
+      },
     });
-
+    
   } catch (error) {
     // Privacy: Don't leak error details to client
     if (process.env.NODE_ENV === 'development') {

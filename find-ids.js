@@ -1,12 +1,16 @@
+/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-unused-vars */
 // find-ids.js - Nominatim version (no Mapbox dependency)
+// This is a Node.js script, not a Next.js component, so require() is appropriate
+
 const fs = require('fs');
-const path = require('path');
+const path = require('path'); // Path is included for potential future use
 
 // --- Configuration ---
 const INPUT_FILE = 'input.tsv';
 const OUTPUT_FILE = 'output.csv';
 // --- End Configuration ---
 
+// Rest of the file remains the same...
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Generate a manual ID for bulk uploads
