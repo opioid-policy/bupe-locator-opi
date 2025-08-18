@@ -262,74 +262,164 @@ const handleManualPharmacySubmit = async (pharmacyData: SelectedPharmacy, turnst
   }, [mode, locationCoords]);
 
   // --- Aggregate reports by pharmacy ---
-  useEffect(() => {
-    if (allReports.length === 0 && !isLoadingPharmacies) {
-      setAggregatedPharmacies({});
-      return;
+// Enhanced aggregation logic for page.tsx
+// Replace the existing aggregation useEffect with this enhanced version
+
+useEffect(() => {
+  if (allReports.length === 0 && !isLoadingPharmacies) {
+    setAggregatedPharmacies({});
+    return;
+  }
+  
+  const summary: Record<string, AggregatedPharmacy> = {};
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const now = new Date();
+  
+  // Enhanced report interface to track timestamps
+  interface TimestampedNote {
+    note: string;
+    timestamp: string;
+    reportType: 'success' | 'denial';
+  }
+  
+  // Track notes with timestamps for each pharmacy
+  const pharmacyNotesWithTime: Record<string, TimestampedNote[]> = {};
+  
+  for (const report of allReports) {
+    if (!summary[report.pharmacyId]) {
+      const fullAddress = `${report.streetAddress}, ${report.city}, ${report.state} ${report.zipCode}`;
+      summary[report.pharmacyId] = {
+        id: report.pharmacyId,
+        name: report.pharmacyName,
+        coords: [report.latitude, report.longitude],
+        status: 'denial',
+        successCount: 0,
+        denialCount: 0,
+        lastUpdated: '',
+        full_address: fullAddress,
+        phone_number: report.phoneNumber,
+        standardizedNotes: [],
+        trend: 'neutral',
+      };
+      pharmacyNotesWithTime[report.pharmacyId] = [];
     }
     
-    const summary: Record<string, AggregatedPharmacy> = {};
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    for (const report of allReports) {
-      if (!summary[report.pharmacyId]) {
-        const fullAddress = `${report.streetAddress}, ${report.city}, ${report.state} ${report.zipCode}`;
-        summary[report.pharmacyId] = {
-          id: report.pharmacyId,
-          name: report.pharmacyName,
-          coords: [report.latitude, report.longitude],
-          status: 'denial',
-          successCount: 0,
-          denialCount: 0,
-          lastUpdated: '',
-          full_address: fullAddress,
-          phone_number: report.phoneNumber,
-          standardizedNotes: [],
-          trend: 'neutral',
-        };
+    // Track counts
+    if (report.reportType === 'success') {
+      summary[report.pharmacyId].successCount++;
+      if (
+        !summary[report.pharmacyId].lastUpdated ||
+        new Date(report.submissionTime) > new Date(summary[report.pharmacyId].lastUpdated)
+      ) {
+        summary[report.pharmacyId].lastUpdated = report.submissionTime;
       }
-      if (report.reportType === 'success') {
-        summary[report.pharmacyId].successCount++;
-        if (
-          !summary[report.pharmacyId].lastUpdated ||
-          new Date(report.submissionTime) > new Date(summary[report.pharmacyId].lastUpdated)
-        ) {
-          summary[report.pharmacyId].lastUpdated = report.submissionTime;
+    } else {
+      summary[report.pharmacyId].denialCount++;
+    }
+    
+    // Collect notes with timestamps
+    if (report.standardizedNotes) {
+      report.standardizedNotes.forEach(note => {
+        pharmacyNotesWithTime[report.pharmacyId].push({
+          note,
+          timestamp: report.submissionTime,
+          reportType: report.reportType
+        });
+      });
+    }
+  }
+  
+  // Process each pharmacy's notes
+  for (const pharmacyId in summary) {
+    const pharmacy = summary[pharmacyId];
+    const notesWithTime = pharmacyNotesWithTime[pharmacyId] || [];
+    
+    // Determine status
+    if (pharmacy.successCount > pharmacy.denialCount) {
+      pharmacy.status = 'success';
+    } else {
+      pharmacy.status = 'denial';
+    }
+    
+    // Calculate trend
+    const recentSuccesses = allReports.filter(
+      r =>
+        r.pharmacyId === pharmacyId &&
+        r.reportType === 'success' &&
+        new Date(r.submissionTime) > sevenDaysAgo
+    ).length;
+    const recentDenials = allReports.filter(
+      r =>
+        r.pharmacyId === pharmacyId &&
+        r.reportType === 'denial' &&
+        new Date(r.submissionTime) > sevenDaysAgo
+    ).length;
+    
+    if (recentSuccesses > recentDenials) {
+      pharmacy.trend = 'up';
+    } else if (recentDenials > recentSuccesses) {
+      pharmacy.trend = 'down';
+    }
+    
+    // Process notes with enhanced stock status handling
+    const processedNotes = new Map<string, string>();
+    
+    // Sort notes by timestamp (most recent first)
+    notesWithTime.sort((a, b) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+    
+    // Find most recent stock-related reports
+    const stockOutReport = notesWithTime.find(n => 
+      n.note === 'Will order, but not in stock'
+    );
+    const stockInReport = notesWithTime.find(n => 
+      n.reportType === 'success' && 
+      new Date(n.timestamp) > (stockOutReport ? new Date(stockOutReport.timestamp) : new Date(0))
+    );
+    
+    // Add stock status with recency
+    if (stockOutReport) {
+      const daysAgo = Math.floor((now.getTime() - new Date(stockOutReport.timestamp).getTime()) / (1000 * 60 * 60 * 24));
+      if (stockInReport) {
+        const stockInDaysAgo = Math.floor((now.getTime() - new Date(stockInReport.timestamp).getTime()) / (1000 * 60 * 60 * 24));
+        processedNotes.set('stock', `✅ In stock (${stockInDaysAgo} days ago) • Previously out (${daysAgo} days ago)`);
+      } else {
+        if (daysAgo === 0) {
+          processedNotes.set('stock', `⚠️ Out of stock (today)`);
+        } else if (daysAgo === 1) {
+          processedNotes.set('stock', `⚠️ Out of stock (yesterday)`);
+        } else if (daysAgo <= 7) {
+          processedNotes.set('stock', `⚠️ Out of stock (${daysAgo} days ago)`);
+        } else {
+          processedNotes.set('stock', `⚠️ Out of stock (${Math.floor(daysAgo / 7)} weeks ago)`);
         }
-      } else {
-        summary[report.pharmacyId].denialCount++;
-      }
-      if (report.standardizedNotes) {
-        summary[report.pharmacyId].standardizedNotes.push(...report.standardizedNotes);
       }
     }
-    for (const pharmacyId in summary) {
-      const pharmacy = summary[pharmacyId];
-      if (pharmacy.successCount > pharmacy.denialCount) {
-        pharmacy.status = 'success';
-      } else {
-        pharmacy.status = 'denial';
+    
+    // Process other notes (most recent of each type)
+    const seenNotes = new Set<string>();
+    for (const noteData of notesWithTime) {
+      if (noteData.note !== 'Will order, but not in stock' && !seenNotes.has(noteData.note)) {
+        seenNotes.add(noteData.note);
+        const daysAgo = Math.floor((now.getTime() - new Date(noteData.timestamp).getTime()) / (1000 * 60 * 60 * 24));
+        
+        // Only show recency for time-sensitive notes
+        const timeSensitiveNotes = ['Long wait times', 'Best to call ahead'];
+        if (timeSensitiveNotes.includes(noteData.note) && daysAgo > 0) {
+          processedNotes.set(noteData.note, `${noteData.note} (${daysAgo} days ago)`);
+        } else {
+          processedNotes.set(noteData.note, noteData.note);
+        }
       }
-      const recentSuccesses = allReports.filter(
-        r =>
-          r.pharmacyId === pharmacyId &&
-          r.reportType === 'success' &&
-          new Date(r.submissionTime) > sevenDaysAgo
-      ).length;
-      const recentDenials = allReports.filter(
-        r =>
-          r.pharmacyId === pharmacyId &&
-          r.reportType === 'denial' &&
-          new Date(r.submissionTime) > sevenDaysAgo
-      ).length;
-      if (recentSuccesses > recentDenials) {
-        pharmacy.trend = 'up';
-      } else if (recentDenials > recentSuccesses) {
-        pharmacy.trend = 'down';
-      }
-      summary[pharmacyId].standardizedNotes = [...new Set(summary[pharmacyId].standardizedNotes)];
     }
-    setAggregatedPharmacies(summary);
-  }, [allReports, isLoadingPharmacies]);
+    
+    // Convert processed notes to array
+    summary[pharmacyId].standardizedNotes = Array.from(processedNotes.values());
+  }
+  
+  setAggregatedPharmacies(summary);
+}, [allReports, isLoadingPharmacies]);
 
   // --- Mapbox ZIP code submit with client-side rate limiting and server-side API ---
   const handleZipCodeSubmit = async (e: FormEvent) => {
