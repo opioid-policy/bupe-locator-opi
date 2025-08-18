@@ -19,12 +19,16 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
+              // ADD 'unsafe-eval' for canvas-confetti to work
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://cdnjs.cloudflare.com",
               "style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https://nominatim.openstreetmap.org https://challenges.cloudflare.com https://*.basemaps.cartocdn.com",
+              // ADD blob: for canvas-confetti animations
+              "connect-src 'self' blob: https://nominatim.openstreetmap.org https://challenges.cloudflare.com https://*.basemaps.cartocdn.com",
               "frame-src https://challenges.cloudflare.com",
+              // ADD blob: for canvas worker
+              "worker-src 'self' blob:",
               "base-uri 'self'",
               "form-action 'self'",
               "frame-ancestors 'none'",

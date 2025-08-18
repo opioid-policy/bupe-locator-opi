@@ -47,7 +47,7 @@ export default function BulkUploadPage() {
 
         <h3 style={{ marginTop: '2rem' }}>Step 2: Fill Out Your Data</h3>
         <p>
-          The only required fields are pharmacy_address, report_type (success or denied), formulation, standardized_notes, and notes.
+          The only required fields are pharmacy_address, report_type (success or denied). Information about formulation, standardized_notes, and notes are optional (but useful!).
         </p>
 
         <h3 style={{ marginTop: '2rem' }}>Step 3: Securely Submit Your File</h3>

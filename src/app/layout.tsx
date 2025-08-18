@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from 'next/link';
 import { Raleway, Merriweather } from 'next/font/google';
 import styles from "./Layout.module.css";
+import PrivacyBanner from './components/PrivacyBanner'; // ADD THIS IMPORT
 import "./globals.css";
 
 // Initialize both fonts and assign them to CSS variables
@@ -28,6 +29,15 @@ export const metadata: Metadata = {
   viewport: "width=device-width, initial-scale=1, maximum-scale=5",
 };
 
+
+export const viewport = {
+  themeColor: '#001c3a',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -36,6 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${raleway.variable} ${merriweather.variable}`}>
       <body>
+       <PrivacyBanner /> {/* ADD THIS LINE - Banner at top of page */}
         <div className={styles.appContainer}>
           <header className={styles.header}>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
