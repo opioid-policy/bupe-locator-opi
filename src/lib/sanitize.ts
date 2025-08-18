@@ -1,5 +1,3 @@
-// src/lib/sanitize.ts - Fixed version without the example code
-
 /**
  * Sanitize user input to prevent XSS attacks
  * Removes dangerous HTML/JS while preserving safe text
@@ -38,10 +36,8 @@ export function sanitizeInput(input: string): string {
   return sanitized.trim();
 }
 
-/**
- * Sanitize pharmacy name and address fields
- */
-export function sanitizePharmacyData(data: {
+// Define proper interface for pharmacy data
+interface PharmacyData {
   name?: string;
   full_address?: string;
   street_address?: string;
@@ -49,8 +45,15 @@ export function sanitizePharmacyData(data: {
   state?: string;
   zip_code?: string;
   phone_number?: string;
-  [key: string]: any;
-}) {
+  mapbox_id?: string; // Add this for compatibility
+  id?: string; // Add this for manual entries
+  [key: string]: unknown; // Allow other properties but be specific about known ones
+}
+
+/**
+ * Sanitize pharmacy name and address fields
+ */
+export function sanitizePharmacyData(data: PharmacyData): PharmacyData {
   return {
     ...data,
     name: sanitizeInput(data.name || ''),

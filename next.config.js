@@ -1,4 +1,24 @@
 /** @type {import('next').NextConfig} */
+
+// next.config.js - Add image optimization
+module.exports = {
+  images: {
+    domains: [],
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60,
+  },
+  // ... rest of config
+};
+
+// next.config.js - Add bundle optimizations
+module.exports = {
+  swcMinify: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  // ... rest of config
+};
+
 const nextConfig = {
   // Disable Vercel Analytics and Speed Insights completely
   analytics: false,

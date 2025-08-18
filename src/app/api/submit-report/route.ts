@@ -1,4 +1,3 @@
-// src/app/api/submit-report/route.ts
 import { table } from '@/lib/airtable';
 import { NextRequest, NextResponse } from 'next/server';
 import { sanitizeInput, sanitizePharmacyData } from '@/lib/sanitize';
@@ -43,11 +42,14 @@ export async function POST(request: NextRequest) {
     // Sanitize the pharmacy data to prevent XSS
     const sanitizedPharmacy = sanitizePharmacyData(reportData.pharmacy);
     const sanitizedNotes = sanitizeInput(reportData.notes || '');
+    
+    // Get the ID from either field (OSM or manual)
+    const pharmacyId = reportData.pharmacy.mapbox_id || reportData.pharmacy.id || '';
 
     await table.create([
       {
         fields: {
-          pharmacy_id: sanitizedPharmacy.mapbox_id || sanitizedPharmacy.id, // Handle both ID types
+          pharmacy_id: pharmacyId,
           pharmacy_name: sanitizedPharmacy.name,
           street_address: sanitizedPharmacy.street_address,
           city: sanitizedPharmacy.city,

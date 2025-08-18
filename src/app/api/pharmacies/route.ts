@@ -47,9 +47,16 @@ export async function GET(request: NextRequest) {
       return distance <= 50;
     });
 
-    return NextResponse.json(nearbyReports);
-
+    return new NextResponse(JSON.stringify(nearbyReports), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        // Cache for 5 minutes, allow stale content for 10 minutes while revalidating
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+      },
+    });
   } catch (error) {
+
     console.error("Error fetching pharmacy data from Airtable:", error);
     return NextResponse.json([], { status: 500 });
   }

@@ -7,6 +7,15 @@ import styles from "./Layout.module.css";
 import "./globals.css";
 import PrivacyBanner from './components/PrivacyBanner';
 
+// src/app/layout.tsx
+export const metadata: Metadata = {
+  title: "OPI Pharmacy Bupe Access Tool",
+  description: "Crowd-sourced bupe access",
+  manifest: "/manifest.json",
+  themeColor: "var(--accent-green)",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
+};
+
 // UPDATED: Initialize both fonts and assign them to CSS variables
 const raleway = Raleway({
   subsets: ['latin'],

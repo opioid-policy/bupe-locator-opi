@@ -62,77 +62,19 @@ export default function PrivacyBanner() {
       </div>
     </div>
   );
-}
 
-// src/app/components/PrivacyBanner.module.css
-/*
-.privacyBanner {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: var(--accent-yellow);
-  border-bottom: 2px solid var(--accent-green);
-  padding: 0.75rem 1rem;
-  z-index: 1000;
-  animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    transform: translateY(-100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-.content {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
-.content p {
-  margin: 0;
-  flex: 1;
-  color: var(--font-color-dark);
-  font-size: 0.9rem;
-}
-
-.learnMore {
-  color: var(--accent-green);
-  text-decoration: underline;
-}
-
-.dismissButton {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--font-color-dark);
-  padding: 0.25rem;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-}
-
-.dismissButton:hover {
-  opacity: 1;
-}
-
-@media (max-width: 640px) {
-  .content {
-    flex-direction: column;
-    text-align: center;
-  }
+  useEffect(() => {
+  // Check if DNT is enabled
+  const dntEnabled = navigator.doNotTrack === "1" || 
+                     window.doNotTrack === "1" || 
+                     navigator.msDoNotTrack === "1";
   
-  .dismissButton {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
+  if (dntEnabled) {
+    // Show a small notice that DNT is respected
+    console.log('Your Do Not Track preference is respected');
   }
+}, []);
 }
-*/
+
+
+
