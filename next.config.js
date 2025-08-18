@@ -1,27 +1,11 @@
 /** @type {import('next').NextConfig} */
-
-// next.config.js - Add image optimization
-module.exports = {
-  images: {
-    domains: [],
-    formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 60,
-  },
-  // ... rest of config
-};
-
-// next.config.js - Add bundle optimizations
-module.exports = {
-  swcMinify: true,
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-  },
-  // ... rest of config
-};
-
 const nextConfig = {
-  // Disable Vercel Analytics and Speed Insights completely
-  analytics: false,
+  // Remove analytics and telemetry - these aren't valid Next.js config options
+  // analytics: false, // REMOVED - not a valid option
+  // telemetry: false, // REMOVED - not a valid option
+  
+  // Additional privacy settings
+  poweredByHeader: false,
   
   // Security headers
   async headers() {
@@ -93,12 +77,6 @@ const nextConfig = {
       }
     ];
   },
-  
-  // Disable telemetry
-  telemetry: false,
-  
-  // Additional privacy settings
-  poweredByHeader: false,
 };
 
 module.exports = nextConfig;
