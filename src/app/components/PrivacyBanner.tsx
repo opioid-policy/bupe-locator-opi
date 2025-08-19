@@ -63,7 +63,7 @@ export default function PrivacyBanner() {
           {dntEnabled ? (
             <> Do Not Track detected - we respect your privacy preference. </>
           ) : hasTrackers ? (
-            <> For maximum privacy, consider using incognito/private browsing mode or a privacy-focused browser like Brave or Tor. </>
+            <> For maximum privacy, consider clearing your browser history and switching to incognito/private browsing mode or a privacy-focused browser like Brave or Tor. </>
           ) : (
             <> Good job using privacy protections! Remember to clear your history when done. </>
           )}

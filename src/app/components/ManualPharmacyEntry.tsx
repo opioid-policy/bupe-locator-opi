@@ -153,6 +153,7 @@ export default function ManualPharmacyEntry({
         If you couldn&apos;t find your pharmacy in the search results, you can add it manually.
         Please ensure this is a licensed pharmacy that dispenses prescription medications.
       </p>
+      <br/>
 
       <div className={styles.formGroup}>
         <label htmlFor="pharmacyName">
