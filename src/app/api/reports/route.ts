@@ -91,7 +91,6 @@ async function writeCache(timeframe: string, data: CleanReport[]): Promise<void>
     await fs.writeFile(cacheFile, JSON.stringify(cacheData, null, 2));
   } catch {
     console.error('Error writing cache - proceeding without cache');
-    // Don't throw - we can still return data even if caching fails
   }
 }
 

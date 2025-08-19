@@ -1,4 +1,4 @@
-// src/app/api/zip/route.ts - Fully replaced with Nominatim
+// src/app/api/zip/route.ts
 import { NextResponse } from 'next/server';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import NodeCache from 'node-cache';
@@ -13,8 +13,8 @@ interface NominatimResult {
   addresstype?: string;
 }
 
-// Keep your existing response format for compatibility
-interface MapboxGeocodingResponse {
+// Response format for ZIP code lookup
+interface ZipCodeResponse {
   type: string;
   features: Array<{
     center: [number, number];
@@ -32,104 +32,108 @@ const globalRateLimiter = new RateLimiterMemory({
 const cache = new NodeCache({ stdTTL: 86400 });
 
 function validateZipCode(zipCode: string | null): zipCode is string {
-  return !!(zipCode && /^\d{5}$/.test(zipCode));
+  return !!zipCode && /^\d{5}$/.test(zipCode);
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const zipCode = searchParams.get('zipCode');
-
-  // Validate ZIP code format
-  if (!validateZipCode(zipCode)) {
-    return NextResponse.json(
-      { message: 'Invalid ZIP code format. Please provide a 5-digit ZIP code.' },
-      { status: 400 }
-    );
-  }
-
   try {
-    // Apply rate limiting
-    await globalRateLimiter.consume('global');
+    // Apply respectful rate limiting
+    await globalRateLimiter.consume('nominatim');
+
+    const { searchParams } = new URL(request.url);
+    const zipCode = searchParams.get('zipCode');
+
+    if (!validateZipCode(zipCode)) {
+      return NextResponse.json(
+        { error: 'Please provide a valid 5-digit ZIP code' }, 
+        { status: 400 }
+      );
+    }
 
     // Check cache first
-    const cachedData = cache.get<MapboxGeocodingResponse>(zipCode);
-      if (cachedData) {
-        console.log(`Cache hit for ZIP: ${zipCode}`);
-        return new NextResponse(JSON.stringify(cachedData), {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'public, s-maxage=604800, immutable',
-            'X-Cache': 'HIT',
-          },
-        });
-      }
+    const cachedData = cache.get<ZipCodeResponse>(zipCode);
+    if (cachedData) {
+      return NextResponse.json(cachedData, {
+        headers: {
+          'Cache-Control': 'public, max-age=86400',
+          'X-Data-Source': 'cache'
+        }
+      });
+    }
 
-    // Query Nominatim for the ZIP code
-    const nominatimUrl = `https://nominatim.openstreetmap.org/search?` +
-      `postalcode=${zipCode}&` +
-      `country=United States&` +
+    // Query Nominatim for ZIP code
+    const endpoint = `https://nominatim.openstreetmap.org/search?` +
       `format=json&` +
-      `limit=1`;
-
-    const response = await fetch(nominatimUrl, {
+      `addressdetails=1&` +
+      `limit=5&` +
+      `countrycodes=us&` +
+      `postalcode=${zipCode}&` +
+      `addressdetails=1`;
+    
+    console.log(`Querying Nominatim for ZIP: ${zipCode}`);
+    
+    const response = await fetch(endpoint, {
       headers: {
-        'User-Agent': 'BupeLocator/1.0 (https://bupe.opioidpolicy.org; contact@opioidpolicy.org)',
+        'User-Agent': 'BupeLocator/1.0 (https://bupe.opioidpolicy.org; code@opioidpolicy.org)',
         'Accept': 'application/json'
       }
     });
 
     if (!response.ok) {
-      console.error('Nominatim API error:', response.status);
+      console.error(`Nominatim API error: ${response.status} ${response.statusText}`);
       return NextResponse.json(
-        { message: 'Failed to fetch location data.' },
-        { status: 500 }
+        { error: 'Failed to fetch location data' }, 
+        { status: response.status }
       );
     }
 
     const data: NominatimResult[] = await response.json();
 
     if (!data || data.length === 0) {
-      return NextResponse.json({
-        type: 'FeatureCollection',
-        features: []
-      });
-    }
-
-    // Format response to match existing Mapbox format
-    const formattedResponse: MapboxGeocodingResponse = {
-      type: 'FeatureCollection',
-      features: [{
-        center: [parseFloat(data[0].lon), parseFloat(data[0].lat)],
-        place_name: data[0].display_name
-      }]
-    };
-
-    // Cache the result
-    cache.set(zipCode, formattedResponse);
-
-return new NextResponse(JSON.stringify(formattedResponse), {
-  status: 200,
-  headers: {
-    'Content-Type': 'application/json',
-    'Cache-Control': 'public, s-maxage=604800, immutable',
-    'X-Cache': 'MISS',
-  },
-});
-
-  } catch (error) {
-    console.error('ZIP lookup error:', error);
-    
-    // Check for rate limiting
-    if (error instanceof Error && error.message.includes('Too Many Requests')) {
       return NextResponse.json(
-        { message: 'Too many requests. Please try again in a minute.' },
-        { status: 429 }
+        { error: 'No location found for that ZIP code' }, 
+        { status: 404 }
       );
     }
 
+    // Find the best match (usually first result, but filter for postal codes)
+    const bestMatch = data.find(result => 
+      result.addresstype === 'postcode' || 
+      result.display_name.toLowerCase().includes('postal')
+    ) || data[0];
+
+    // Format response
+    const responseData: ZipCodeResponse = {
+      type: "FeatureCollection",
+      features: [{
+        center: [parseFloat(bestMatch.lon), parseFloat(bestMatch.lat)],
+        place_name: bestMatch.display_name
+      }]
+    };
+
+    // Cache the response
+    cache.set(zipCode, responseData);
+
+    return NextResponse.json(responseData, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, max-age=86400',
+        'X-Data-Source': 'nominatim'
+      }
+    });
+
+  } catch (error) {
+    console.error('ZIP Code API Error:', error);
+    
+    if (error instanceof Error && error.message.includes('Cannot consume')) {
+      return NextResponse.json(
+        { error: 'Please wait a moment before trying again' }, 
+        { status: 429 }
+      );
+    }
+    
     return NextResponse.json(
-      { message: 'Failed to fetch location data.' },
+      { error: 'Internal Server Error' }, 
       { status: 500 }
     );
   }

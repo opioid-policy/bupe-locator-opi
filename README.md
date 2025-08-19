@@ -10,7 +10,7 @@ We were driven to action by the frustration faced by people seeking meds and hav
 
 When trying to find ways to address this issue were inspired by the McFlurry Down Detector (https://github.com/filippofinke/mcbroken) from back in the day, but obviously that wouldn’t work for a controlled substance at a pharmacy. So we hit a wall. To break this barrier, we used various AI tools to help with code (just kinda rotated, pretty sure it took way longer than it should have…). 
 
-We're using vercel, mapbox, airtable, github, codeberg as our tech stack (codeberg and vercel didn’t play nice together, but I still wanted to use it). We tried to make it perform well on mobile, because a lot of folks don’t have a computer or limited access. Because addiction is a protected health condition, we attempted to make this maximally privacy preserving for people reporting pharmacies, finding pharmacies, or just visiting the site.
+We're using vercel, open street maps, cloudflare, airtable, github, codeberg as our tech stack (codeberg and vercel didn’t play nice together, but I still wanted to use it). We tried to make it perform well on mobile, because a lot of folks don’t have a computer or limited access. Because addiction is a protected health condition, we attempted to make this maximally privacy preserving for people reporting pharmacies, finding pharmacies, or just visiting the site.
 
 Any one of these things might have been messed up. We’ve never done a project like this from scratch (usually use WYSIWYG web tools), so I’m sure the code is a mess and we might have missed something. This effort is not funded so we tried to keep costs down while still accomplishing our end goals. 
 

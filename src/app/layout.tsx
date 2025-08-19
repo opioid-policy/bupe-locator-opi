@@ -1,10 +1,15 @@
 // src/app/layout.tsx - COMPLETE FIXED FILE
-import type { Metadata } from "next";
+"use client";
+
+import type { Metadata, Viewport } from "next";
 import Link from 'next/link';
 import { Raleway, Merriweather } from 'next/font/google';
 import styles from "./Layout.module.css";
 import PrivacyBanner from './components/PrivacyBanner'; // ADD THIS IMPORT
 import "./globals.css";
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+
 
 // Initialize both fonts and assign them to CSS variables
 const raleway = Raleway({
@@ -20,23 +25,16 @@ const merriweather = Merriweather({
   variable: '--font-merriweather',
 });
 
-// Single metadata declaration with PWA support
-export const metadata: Metadata = {
-  title: "Pharmacy Bupe Access Tool",
-  description: "Crowd-sourced bupe access",
-  manifest: "/manifest.json",
-  themeColor: "#4A5D23",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
-};
 
+export function ScrollToTop() {
+  const pathname = usePathname();
 
-export const viewport = {
-  themeColor: '#001c3a',
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false
-};
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  return null;
+}
 
 export default function RootLayout({
   children,

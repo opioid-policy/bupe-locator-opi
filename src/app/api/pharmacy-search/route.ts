@@ -37,7 +37,7 @@ interface NominatimSearchResult {
 
 interface SearchSuggestion {
   name: string;
-  mapbox_id: string; // Keep for compatibility
+  osm_id: string;
   full_address: string;
 }
 
@@ -307,7 +307,7 @@ export async function GET(request: Request) {
 
       const response = await fetch(endpoint, {
         headers: {
-          'User-Agent': 'BupeLocator/1.0 (https://bupe.opioidpolicy.org; contact@opioidpolicy.org)',
+          'User-Agent': 'BupeLocator/1.0 (https://bupe.opioidpolicy.org; code@opioidpolicy.org)',
           'Accept': 'application/json'
         },
         signal: AbortSignal.timeout(5000) // 5 second timeout
@@ -403,7 +403,7 @@ export async function GET(request: Request) {
 
         return {
           name: name || 'Pharmacy',
-          mapbox_id: `osm_${result.osm_type}_${result.osm_id}`,
+          osm_id: `osm_${result.osm_type}_${result.osm_id}`,
           full_address: formatAddress()
         };
       });
@@ -412,7 +412,7 @@ export async function GET(request: Request) {
     if (pharmacySuggestions.length < 3) {
       pharmacySuggestions.push({
         name: '+ Add a pharmacy not listed',
-        mapbox_id: 'manual_entry',
+        osm_id: 'manual_entry',
         full_address: 'Enter pharmacy details manually'
       });
     }

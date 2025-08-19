@@ -10,7 +10,6 @@ export async function GET(request: Request) {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const sevenDaysAgoStr = sevenDaysAgo.toISOString();
 
-    // Use const instead of let (fixes ESLint error)
     const weeklyFilter = `IS_AFTER({submission_time}, "${sevenDaysAgoStr}")`;
     const zipFilter = zipCode ? `{zip_code} = "${zipCode}"` : '';
     

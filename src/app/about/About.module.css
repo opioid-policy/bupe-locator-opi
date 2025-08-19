@@ -1,9 +1,7 @@
 /* src/app/about/About.module.css */
 
-/* Find and replace this rule in About.module.css */
-
 .aboutContainer {
-  padding: 2rem 1.5rem; /* UPDATED: Increased side padding */
+  padding: 2rem 1.5rem;
   display: flex;
   justify-content: center;
   width: 100%;
@@ -14,10 +12,9 @@
 .content {
   max-width: 800px;
   line-height: 1.6;
-  color: var(--accent-cream); /* Use your brand's dark font color */
+  color: var(--accent-cream);
 }
 
-/* This targets the subheadings like "The Problem" */
 .content h3 {
   margin-top: 2rem;
   margin-bottom: 1rem;
@@ -26,10 +23,9 @@
 }
 
 .content p {
-  margin-bottom: 1rem; /* Adds a 16px gap below each paragraph */
+  margin-bottom: 1rem;
 }
 
-/* Add this to the bottom of your About.module.css file */
 .styledLink {
   color: inherit;
   text-decoration-line: underline;

@@ -4,7 +4,7 @@ import styles from '../Home.module.css';
 import Turnstile from 'react-turnstile';
 
 interface PharmacyData {
-  mapbox_id: string;
+  osm_id: string;
   name: string;
   full_address: string;
   street_address: string;
@@ -110,7 +110,7 @@ export default function ManualPharmacyEntry({
     // Prepare pharmacy data without geocoding
     const fullAddress = `${streetAddress}, ${city}, ${state} ${pharmacyZip}`;
     const pharmacyData: PharmacyData = {
-      mapbox_id: `manual_${Date.now()}`, // Unique ID for manual entries
+      osm_id: `manual_${Date.now()}`, // Unique ID for manual entries
       name: pharmacyName,
       full_address: fullAddress,
       street_address: streetAddress,
@@ -150,8 +150,9 @@ export default function ManualPharmacyEntry({
       
       <h2 className={styles.subheading}>Add a Pharmacy</h2>
       <p className={styles.helper}>
-        If you couldn&apos;t find your pharmacy in the search results, you can add it manually.
+        If you couldn&apos;t find your pharmacy in the search results, you can add it here.
         Please ensure this is a licensed pharmacy that dispenses prescription medications.
+        We will review your submission before it appears on the map.
       </p>
       <br/>
 
@@ -252,7 +253,7 @@ export default function ManualPharmacyEntry({
           className={styles.inputField}
         />
         <small className={styles.helper}>
-          Including a phone number helps others call ahead
+          Including a phone number helps others call ahead or change pharmacies.
         </small>
       </div>
 
@@ -285,7 +286,7 @@ export default function ManualPharmacyEntry({
 
       <div className={styles.privacyNote} style={{ marginTop: '1.5rem' }}>
         <strong>Privacy Note:</strong> This pharmacy information will be added to our 
-        database to help others find it. No personal information about you is stored.
+        database to help others find it.
         Manual entries require approval before appearing in search results.
       </div>
     </div>

@@ -59,7 +59,7 @@ export default function PrivacyBanner() {
     <div className={styles.privacyBanner}>
       <div className={styles.content}>
         <p>
-          🔒 <strong>Privacy Tip:</strong>
+          🕵️ <strong>Privacy Tip:</strong>
           {dntEnabled ? (
             <> Do Not Track detected - we respect your privacy preference. </>
           ) : hasTrackers ? (

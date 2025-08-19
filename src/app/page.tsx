@@ -9,10 +9,26 @@ import TrendIndicator from './components/TrendIndicator';
 import confetti from "canvas-confetti";
 import ManualPharmacyEntry from './components/ManualPharmacyEntry';
 
+const STATE_ABBR_TO_NAME: Record<string, string> = {
+  'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
+  'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+  'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
+  'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+  'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+  'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+  'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
+  'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+  'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
+  'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+  'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
+  'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
+  'WI': 'Wisconsin', 'WY': 'Wyoming'
+};
+
 // --- Types ---
-interface SearchSuggestion { name: string; mapbox_id: string; full_address: string; }
+interface SearchSuggestion { name: string; osm_id: string; full_address: string; }
 interface SelectedPharmacy {
-  mapbox_id: string;
+  osm_id: string;
   name: string;
   full_address: string;
   street_address: string;
@@ -30,18 +46,20 @@ interface Stats {
   zipCodeCount?: number;
 }
 export interface AggregatedPharmacy {
-  id: string;
-  name: string;
+  id: string;  // Keep as 'id'
+  name: string;  // Keep as 'name'
   coords: Coords;
   status: 'success' | 'denial';
   successCount: number;
   denialCount: number;
   lastUpdated: string;
-  full_address: string;
-  phone_number: string;
+  full_address: string;  // Keep as 'full_address'
+  phone_number: string;  // Keep as 'phone_number'
   standardizedNotes: string[];
   trend: 'up' | 'down' | 'neutral';
 }
+
+
 interface Report {
   pharmacyId: string;
   pharmacyName: string;
@@ -117,7 +135,7 @@ const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
   setSubmitStatus('idle');
   
   // Check if this is the manual entry option
-  if (pharmacy.mapbox_id === 'manual_entry') {
+  if (pharmacy.osm_id === 'manual_entry') {
     setShowManualEntry(true);
     setSearchTerm('');
     setResults([]);
@@ -125,11 +143,10 @@ const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
   }
   
   try {
-    // Use our new OSM-based pharmacy details API
     const response = await fetch('/api/pharmacy-search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pharmacy_id: pharmacy.mapbox_id })
+      body: JSON.stringify({ pharmacy_id: pharmacy.osm_id })
     });
     
     if (!response.ok) {
@@ -138,7 +155,6 @@ const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
     
     const data = await response.json();
     
-    // Handle manual entry response
     if (data.features[0].properties.manual) {
       setShowManualEntry(true);
       return;
@@ -149,17 +165,20 @@ const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
     const street = feature.properties.address || '';
     const city = feature.properties.context.place?.name || '';
     const postcode = feature.properties.context.postcode?.name || '';
-    const state = feature.properties.context.region?.region_code?.replace('US-', '') || '';
+    const stateAbbr = feature.properties.context.region?.region_code?.replace('US-', '') || '';
     const phone = feature.properties.phone || '';
     const [longitude, latitude] = feature.geometry.coordinates;
     
+    // ADD THIS: Convert state abbreviation to full name
+    const stateName = STATE_ABBR_TO_NAME[stateAbbr.toUpperCase()] || stateAbbr;
+    
     setSelectedPharmacy({
-      mapbox_id: pharmacy.mapbox_id,
+      osm_id: pharmacy.osm_id,
       name: pharmacy.name,
       full_address: pharmacy.full_address,
       street_address: street,
       city: city,
-      state: state,
+      state: stateName, // USE FULL STATE NAME HERE
       zip_code: postcode,
       latitude: latitude,
       longitude: longitude,
@@ -275,29 +294,29 @@ useEffect(() => {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const now = new Date();
   
-  // Enhanced report interface to track timestamps
   interface TimestampedNote {
     note: string;
     timestamp: string;
     reportType: 'success' | 'denial';
   }
   
-  // Track notes with timestamps for each pharmacy
   const pharmacyNotesWithTime: Record<string, TimestampedNote[]> = {};
   
   for (const report of allReports) {
     if (!summary[report.pharmacyId]) {
+      // Create the full address string
       const fullAddress = `${report.streetAddress}, ${report.city}, ${report.state} ${report.zipCode}`;
+      
       summary[report.pharmacyId] = {
-        id: report.pharmacyId,
-        name: report.pharmacyName,
+        id: report.pharmacyId,  // Use 'id' not 'pharmacyId'
+        name: report.pharmacyName,  // Use 'name' not 'pharmacyName'
         coords: [report.latitude, report.longitude],
         status: 'denial',
         successCount: 0,
         denialCount: 0,
-        lastUpdated: '',
-        full_address: fullAddress,
-        phone_number: report.phoneNumber,
+        lastUpdated: report.submissionTime,
+        full_address: fullAddress,  // Use 'full_address' not separate fields
+        phone_number: report.phoneNumber,  // Use 'phone_number' not 'phoneNumber'
         standardizedNotes: [],
         trend: 'neutral',
       };
@@ -307,10 +326,8 @@ useEffect(() => {
     // Track counts
     if (report.reportType === 'success') {
       summary[report.pharmacyId].successCount++;
-      if (
-        !summary[report.pharmacyId].lastUpdated ||
-        new Date(report.submissionTime) > new Date(summary[report.pharmacyId].lastUpdated)
-      ) {
+      // Update last updated time for successful reports
+      if (new Date(report.submissionTime) > new Date(summary[report.pharmacyId].lastUpdated)) {
         summary[report.pharmacyId].lastUpdated = report.submissionTime;
       }
     } else {
@@ -337,22 +354,21 @@ useEffect(() => {
     // Determine status
     if (pharmacy.successCount > pharmacy.denialCount) {
       pharmacy.status = 'success';
-    } else {
+    } else if (pharmacy.denialCount > pharmacy.successCount) {
       pharmacy.status = 'denial';
     }
     
     // Calculate trend
     const recentSuccesses = allReports.filter(
-      r =>
-        r.pharmacyId === pharmacyId &&
-        r.reportType === 'success' &&
-        new Date(r.submissionTime) > sevenDaysAgo
+      r => r.pharmacyId === pharmacyId &&
+           r.reportType === 'success' &&
+           new Date(r.submissionTime) > sevenDaysAgo
     ).length;
+    
     const recentDenials = allReports.filter(
-      r =>
-        r.pharmacyId === pharmacyId &&
-        r.reportType === 'denial' &&
-        new Date(r.submissionTime) > sevenDaysAgo
+      r => r.pharmacyId === pharmacyId &&
+           r.reportType === 'denial' &&
+           new Date(r.submissionTime) > sevenDaysAgo
     ).length;
     
     if (recentSuccesses > recentDenials) {
@@ -361,7 +377,7 @@ useEffect(() => {
       pharmacy.trend = 'down';
     }
     
-    // Process notes with enhanced stock status handling
+    // Keep your existing enhanced note processing logic here...
     const processedNotes = new Map<string, string>();
     
     // Sort notes by timestamp (most recent first)
@@ -369,7 +385,7 @@ useEffect(() => {
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
     
-    // Find most recent stock-related reports
+    // Your existing stock status logic...
     const stockOutReport = notesWithTime.find(n => 
       n.note === 'Will order, but not in stock'
     );
@@ -378,7 +394,6 @@ useEffect(() => {
       new Date(n.timestamp) > (stockOutReport ? new Date(stockOutReport.timestamp) : new Date(0))
     );
     
-    // Add stock status with recency
     if (stockOutReport) {
       const daysAgo = Math.floor((now.getTime() - new Date(stockOutReport.timestamp).getTime()) / (1000 * 60 * 60 * 24));
       if (stockInReport) {
@@ -397,14 +412,13 @@ useEffect(() => {
       }
     }
     
-    // Process other notes (most recent of each type)
+    // Process other notes
     const seenNotes = new Set<string>();
     for (const noteData of notesWithTime) {
       if (noteData.note !== 'Will order, but not in stock' && !seenNotes.has(noteData.note)) {
         seenNotes.add(noteData.note);
         const daysAgo = Math.floor((now.getTime() - new Date(noteData.timestamp).getTime()) / (1000 * 60 * 60 * 24));
         
-        // Only show recency for time-sensitive notes
         const timeSensitiveNotes = ['Long wait times', 'Best to call ahead'];
         if (timeSensitiveNotes.includes(noteData.note) && daysAgo > 0) {
           processedNotes.set(noteData.note, `${noteData.note} (${daysAgo} days ago)`);
@@ -414,14 +428,13 @@ useEffect(() => {
       }
     }
     
-    // Convert processed notes to array
     summary[pharmacyId].standardizedNotes = Array.from(processedNotes.values());
   }
   
   setAggregatedPharmacies(summary);
 }, [allReports, isLoadingPharmacies]);
 
-  // --- Mapbox ZIP code submit with client-side rate limiting and server-side API ---
+  // --- OSM ZIP code submit with client-side rate limiting and server-side API ---
   const handleZipCodeSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const now = Date.now();
@@ -443,7 +456,7 @@ useEffect(() => {
     setLocationError("");
 
     try {
-      // Call your new API route instead of Mapbox directly
+      // Call your new API route instead of OSM directly
       const response = await fetch(`/api/zip?zipCode=${zipCode}`);
 
       if (!response.ok) {
@@ -549,49 +562,64 @@ useEffect(() => {
   };
 
   // --- Report submit ---
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setSubmitStatus('idle');
-    const reportData = {
-      pharmacy: selectedPharmacy,
-      reportType,
-      formulations,
-      standardizedNotes,
-      notes,
-      turnstileToken,
-    };
-    try {
-      const response = await fetch('/api/submit-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reportData),
-      });
-      if (!response.ok) throw new Error('Submission failed');
-      // Reset Turnstile on submit for a new token on next attempt
-      if (turnstile && typeof turnstile.reset === 'function') {
-        turnstile.reset();
-        setTurnstileToken(null);
-      }
-      const statsResponse = await fetch(`/api/stats?zip_code=${selectedPharmacy?.zip_code || ''}`);
-      const statsData = await statsResponse.json();
-      setFinalStats(statsData);
-      setSubmitStatus('success');
-    } catch (error) {
-      console.error('Submission error:', error);
-      setSubmitStatus('error');
-      // Reset Turnstile on error so user can retry
-      if (turnstile && typeof turnstile.reset === 'function') {
-        turnstile.reset();
-        setTurnstileToken(null);
-      }
-    }
-    setIsSubmitting(false);
+const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  setSubmitStatus('idle');
+  
+  const reportData = {
+    pharmacy: selectedPharmacy,
+    reportType,
+    formulations,
+    standardizedNotes,
+    notes,
+    turnstileToken,
   };
+  
+  try {
+    const response = await fetch('/api/submit-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reportData),
+    });
+    
+    if (!response.ok) throw new Error('Submission failed');
+    
+    // Reset Turnstile
+    if (turnstile && typeof turnstile.reset === 'function') {
+      turnstile.reset();
+      setTurnstileToken(null);
+    }
+    
+    // Fetch updated stats
+    const statsResponse = await fetch(`/api/stats?zip_code=${selectedPharmacy?.zip_code || ''}`);
+    const statsData = await statsResponse.json();
+    setFinalStats(statsData);
+    
+    // Refresh pharmacy data to show the new submission
+    if (locationCoords) {
+      const [lat, lon] = locationCoords;
+      const refreshResponse = await fetch(`/api/pharmacies?lat=${lat}&lon=${lon}&t=${Date.now()}`);
+      const refreshedData: Report[] = await refreshResponse.json();
+      setAllReports(refreshedData);
+    }
+    
+    setSubmitStatus('success');
+  } catch (error) {
+    console.error('Submission error:', error);
+    setSubmitStatus('error');
+    if (turnstile && typeof turnstile.reset === 'function') {
+      turnstile.reset();
+      setTurnstileToken(null);
+    }
+  }
+  
+  setIsSubmitting(false);
+};
 
   // --- Sharing helper ---
   const handleShare = () => {
-    const shareText = `Know a pharmacy's status for buprenorphine? Help map access in our community: ${window.location.origin}`;
+    const shareText = `Need to find bupe? Know a pharmacies bupe availability? Help map access in our community: ${window.location.origin}`;
     navigator.clipboard.writeText(shareText).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -696,8 +724,8 @@ useEffect(() => {
                 {isLoadingPharmacies ? (
                   <p>Loading pharmacies...</p>
                 ) : successfulPharmacies.length > 0 ? (
-                  successfulPharmacies.map(pharmacy => (
-                    <PharmacyListItem key={pharmacy.id} pharmacy={pharmacy} />
+                successfulPharmacies.map(pharmacy => (
+                  <PharmacyListItem key={pharmacy.id} pharmacy={pharmacy} />
                   ))
                 ) : (
                   <p>No successful reports found for the selected time period. Try a wider date range or select &quot;All Time&quot;.</p>
@@ -772,9 +800,9 @@ useEffect(() => {
                           />
                         </div>
                           <div className={styles.resultsList}>
-                            {results.filter(r => r.mapbox_id !== 'manual_entry').map((result) => (
+                            {results.filter(r => r.osm_id !== 'manual_entry').map((result) => (
                               <button
-                                key={result.mapbox_id}
+                                key={result.osm_id}
                                 type="button"
                                 className={styles.resultItem}
                                 onClick={() => handleSelectPharmacy(result)}

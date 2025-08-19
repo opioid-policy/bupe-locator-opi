@@ -21,7 +21,7 @@ interface AirtablePharmacy {
 
 interface SearchSuggestion {
   name: string;
-  mapbox_id: string;
+  osm_id: string;
   full_address: string;
   source?: 'osm' | 'manual' | 'reported' | 'action';
   phone_number?: string;
@@ -262,7 +262,7 @@ export async function GET(request: Request) {
     let suggestions: SearchSuggestion[] = [];
     if (osmResult.status === 'fulfilled' && osmResult.value.suggestions) {
       suggestions = osmResult.value.suggestions
-        .filter((s: SearchSuggestion) => s.mapbox_id !== 'manual_entry')
+        .filter((s: SearchSuggestion) => s.osm_id !== 'manual_entry')
         .map((s: SearchSuggestion) => ({
           ...s,
           source: s.source || 'osm'
@@ -283,7 +283,7 @@ export async function GET(request: Request) {
         })
         .map((pharmacy: AirtablePharmacy) => ({
           name: pharmacy.name,
-          mapbox_id: pharmacy.id,
+          osm_id: pharmacy.id,
           full_address: `${pharmacy.street_address}, ${pharmacy.city}, ${pharmacy.state} ${pharmacy.zip_code}`.replace(/^,\s*/, ''),
           source: pharmacy.manual_entry ? 'manual' : 'reported' as 'manual' | 'reported',
           phone_number: pharmacy.phone_number
@@ -320,7 +320,7 @@ export async function GET(request: Request) {
     // Add manual entry option
     topResults.push({
       name: '+ Add a pharmacy not listed',
-      mapbox_id: 'manual_entry',
+      osm_id: 'manual_entry',
       full_address: 'Can\'t find your pharmacy? Add it to help others',
       source: 'action'
     });
@@ -352,7 +352,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       suggestions: [{
         name: '+ Add a pharmacy not listed',
-        mapbox_id: 'manual_entry',
+        osm_id: 'manual_entry',
         full_address: 'Search temporarily unavailable - you can still add manually',
         source: 'action'
       }],

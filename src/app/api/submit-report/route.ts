@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     const sanitizedNotes = sanitizeInput(reportData.notes || '');
     
     // Get the ID from either field (OSM or manual)
-    const pharmacyId = reportData.pharmacy.mapbox_id || reportData.pharmacy.id || '';
+    const pharmacyId = reportData.pharmacy.osm_id || reportData.pharmacy.id || '';
     
     // If DNT is enabled, minimize data collection
     const fieldsToSave = {
@@ -64,8 +64,7 @@ export async function POST(request: NextRequest) {
       report_type: reportData.reportType,
       formulation: reportData.formulations,
       standardized_notes: reportData.standardizedNotes,
-      // Don't save free text notes if DNT is enabled (extra privacy)
-      notes: respectDNT ? '' : sanitizedNotes,
+      notes: sanitizedNotes,
     };
     
     // Log less if DNT is enabled

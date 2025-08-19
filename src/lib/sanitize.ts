@@ -45,7 +45,7 @@ interface PharmacyData {
   state?: string;
   zip_code?: string;
   phone_number?: string;
-  mapbox_id?: string; // Add this for compatibility
+  osm_id?: string; // Add this for compatibility
   id?: string; // Add this for manual entries
   [key: string]: unknown; // Allow other properties but be specific about known ones
 }

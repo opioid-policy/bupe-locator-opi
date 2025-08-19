@@ -1,85 +1,129 @@
-"use client";
+// src/app/components/PharmacyMarkers.tsx
+import { Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import { AggregatedPharmacy } from './page';
 
-import { Marker, Popup } from "react-leaflet";
-import { greenIcon, redIcon } from "@/lib/mapIcons";
-import { AggregatedPharmacy } from "../page";
-import TrendIndicator from "./TrendIndicator";
-import { getDirectionsUrl } from '../lib/directions';
-
+function decodeHtmlEntities(text: string): string {
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  return textarea.value;
+}
 interface PharmacyMarkersProps {
   pharmacies: Record<string, AggregatedPharmacy>;
 }
 
-function formatDate(dateString: string) {
-  if (!dateString) return null;
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
+const PharmacyMarkers: React.FC<PharmacyMarkersProps> = ({ pharmacies }) => {
+  // Create custom icons for success and denial
+  const createIcon = (status: 'success' | 'denial') => {
+    const color = status === 'success' ? '#4CAF50' : '#f44336';
+    return L.divIcon({
+      html: `
+        <div style="
+          background-color: ${color};
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        "></div>
+      `,
+      className: 'pharmacy-marker-icon',
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
+      popupAnchor: [0, -12]
+    });
+  };
 
-export default function PharmacyMarkers({ pharmacies }: PharmacyMarkersProps) {
   return (
     <>
-      {Object.values(pharmacies).map((pharmacy, index) => {
-        const [latitude, longitude] = pharmacy.coords;
-        const directionsUrl = getDirectionsUrl(latitude, longitude);
-        
-        // Use pharmacy.id as key, with index fallback
-        // Both OSM IDs and manual IDs should be unique
-        const markerKey = pharmacy.id || `pharmacy-fallback-${index}`;
-
-        return (
-          <Marker
-            key={markerKey}
-            position={pharmacy.coords}
-            icon={pharmacy.status === 'success' ? greenIcon : redIcon}
-          >
-            <Popup>
-              <strong>
-                {pharmacy.name}
-                <TrendIndicator trend={pharmacy.trend} />
-              </strong>
-              <br />
-              {/* Address as clickable directions link */}
-              <a
-                href={directionsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ textDecoration: "underline", color: "#0074CC" }}
-              >
-                {pharmacy.full_address}
-              </a>
-              {pharmacy.phone_number && ( 
+      {Object.values(pharmacies).map((pharmacy) => (
+        <Marker
+          key={pharmacy.pharmacyId}
+          position={[pharmacy.coords[0], pharmacy.coords[1]]}
+          icon={createIcon(pharmacy.status)}
+        >
+          <Popup maxWidth={250}>
+            <div style={{ padding: '5px' }}>
+              <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>
+                {decodeHtmlEntities(pharmacy.name)}
+              </h3>
+              <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                <strong>Status:</strong> {pharmacy.status === 'success' ? '✓ Available' : '✗ Denied/Issues'}
+              </p>
+              <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                <strong>Reports:</strong> {pharmacy.successCount} successful, {pharmacy.denialCount} denied
+              </p>
+              <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                <strong>Address:</strong><br/>
+                {pharmacy.streetAddress && `${pharmacy.streetAddress}, `}
+                {pharmacy.city}, {pharmacy.state} {pharmacy.zipCode}
+              </p>
+              {pharmacy.phoneNumber && (
                 <>
-                  <br />
-                  <a href={`tel:${pharmacy.phone_number}`}>{pharmacy.phone_number}</a>
-                </> 
-              )}
-              <br /><br />
-              Success Reports: {pharmacy.successCount}
-              <br />
-              Denial Reports: {pharmacy.denialCount}
-              <br />
-              {pharmacy.lastUpdated && ( 
-                <em>Last Successful Report: {formatDate(pharmacy.lastUpdated)}</em> 
+                  <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                    <strong>Phone:</strong>{' '}
+                    <a href={`tel:${pharmacy.phoneNumber}`} style={{ color: '#1976d2' }}>
+                      {pharmacy.phoneNumber}
+                    </a>
+                  </p>
+                  <button
+                    onClick={() => {
+                      // Create address string for directions
+                      const address = encodeURIComponent(
+                        `${pharmacy.streetAddress || ''} ${pharmacy.city}, ${pharmacy.state} ${pharmacy.zipCode}`.trim()
+                      );
+                      
+                      // Check if mobile device
+                      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                      
+                      if (isMobile) {
+                        // Try to open in maps app
+                        window.location.href = `maps://maps.google.com/maps?daddr=${address}`;
+                        // Fallback to Google Maps web after a short delay
+                        setTimeout(() => {
+                          window.open(`https://www.google.com/maps/dir/?api=1&destination=${address}`, '_blank');
+                        }, 500);
+                      } else {
+                        // Desktop: open Google Maps in new tab
+                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${address}`, '_blank');
+                      }
+                    }}
+                    style={{
+                      marginTop: '10px',
+                      padding: '5px 10px',
+                      backgroundColor: '#1976d2',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Get Directions
+                  </button>
+                </>
               )}
               {pharmacy.standardizedNotes && pharmacy.standardizedNotes.length > 0 && (
                 <>
-                  <br /><br />
-                  <strong>Notes:</strong>
-                  <ul>
-                    {pharmacy.standardizedNotes.map((note, noteIndex) => ( 
-                      <li key={`${markerKey}-note-${noteIndex}`}>{note}</li> 
+                  <p style={{ margin: '10px 0 5px 0', fontSize: '14px' }}>
+                    <strong>Notes:</strong>
+                  </p>
+                  <ul style={{ margin: '0', paddingLeft: '20px', fontSize: '13px' }}>
+                    {pharmacy.standardizedNotes.map((note, index) => (
+                      <li key={index}>{note}</li>
                     ))}
                   </ul>
                 </>
               )}
-            </Popup>
-          </Marker>
-        );
-      })}
+              <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: '#666' }}>
+                Last updated: {new Date(pharmacy.lastUpdated).toLocaleDateString()}
+              </p>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
     </>
   );
-}
+};
+
+export default PharmacyMarkers;

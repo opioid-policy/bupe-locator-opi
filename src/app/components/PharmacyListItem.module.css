@@ -1,0 +1,17 @@
+.timing {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: var(--background-light);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.lastSuccess {
+  color: var(--success-color);
+  margin: 0.25rem 0;
+}
+
+.lastDenial {
+  color: var(--error-color);
+  margin: 0.25rem 0;
+}
