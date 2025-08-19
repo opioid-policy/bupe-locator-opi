@@ -1,12 +1,24 @@
 /** @type {import('next').NextConfig} */
+// Monkey patch for url.parse() deprecation warning
+import { URL } from 'url';
+import url from 'url';
+
+const originalParse = url.parse;
+
+// Override url.parse() to use the modern URL API
+url.parse = (urlString, parseQueryString, slashesDenoteHost) => {
+  try {
+    return new URL(urlString);
+  } catch {
+    // Fallback to original for invalid URLs (e.g., relative paths)
+    return originalParse(urlString, parseQueryString, slashesDenoteHost);
+  }
+};
+
 const nextConfig = {
-  // Remove analytics and telemetry - these aren't valid Next.js config options
-  // analytics: false, // REMOVED - not a valid option
-  // telemetry: false, // REMOVED - not a valid option
-  
   // Additional privacy settings
   poweredByHeader: false,
-  
+
   // Security headers
   async headers() {
     return [
@@ -35,43 +47,43 @@ const nextConfig = {
               "upgrade-insecure-requests"
             ].join('; ')
           },
-          
+
           // Prevent clickjacking
           {
             key: 'X-Frame-Options',
             value: 'DENY'
           },
-          
+
           // Prevent MIME type sniffing
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff'
           },
-          
+
           // Control referrer information
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin'
           },
-          
+
           // Prevent XSS attacks
           {
             key: 'X-XSS-Protection',
             value: '1; mode=block'
           },
-          
+
           // Control permissions/features
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(self), interest-cohort=()'
           },
-          
+
           // Strict Transport Security (HTTPS only)
           {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains; preload'
           },
-          
+
           // Prevent caching of sensitive pages
           {
             key: 'Cache-Control',

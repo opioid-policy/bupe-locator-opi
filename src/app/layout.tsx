@@ -1,14 +1,11 @@
 // src/app/layout.tsx - COMPLETE FIXED FILE
 "use client";
 
-import type { Metadata, Viewport } from "next";
 import Link from 'next/link';
 import { Raleway, Merriweather } from 'next/font/google';
 import styles from "./Layout.module.css";
 import PrivacyBanner from './components/PrivacyBanner'; // ADD THIS IMPORT
 import "./globals.css";
-import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
 
 
 // Initialize both fonts and assign them to CSS variables
@@ -25,16 +22,6 @@ const merriweather = Merriweather({
   variable: '--font-merriweather',
 });
 
-
-export function ScrollToTop() {
-  const pathname = usePathname();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  return null;
-}
 
 export default function RootLayout({
   children,
