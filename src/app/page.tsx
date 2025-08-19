@@ -55,6 +55,9 @@ export interface AggregatedPharmacy {
   lastUpdated: string;
   full_address: string;  // Keep as 'full_address'
   phone_number: string;  // Keep as 'phone_number'
+  city: string;  
+  state: string;  
+  zip: number;  
   standardizedNotes: string[];
   trend: 'up' | 'down' | 'neutral';
 }
@@ -317,6 +320,9 @@ useEffect(() => {
         lastUpdated: report.submissionTime,
         full_address: fullAddress,  // Use 'full_address' not separate fields
         phone_number: report.phoneNumber,  // Use 'phone_number' not 'phoneNumber'
+        city: report.city,  // Add city
+        state: report.state,  // Add state
+        zip: parseInt(report.zipCode, 10),  // Add zip as number
         standardizedNotes: [],
         trend: 'neutral',
       };

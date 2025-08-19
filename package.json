@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "next start",
+    "start": "node --trace-deprecation ./node_modules/next/dist/bin/next start",
     "lint": "next lint"
   },
   "dependencies": {
@@ -16,11 +16,11 @@
     "dotenv": "^17.2.1",
     "drizzle-orm": "^0.44.4",
     "leaflet": "^1.9.4",
-    "next": "15.4.5",
+    "next": "^15.4.7",
     "node-cache": "^5.1.2",
     "rate-limiter-flexible": "^7.2.0",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "react-leaflet": "^5.0.0",
     "react-turnstile": "^1.1.4"
   },

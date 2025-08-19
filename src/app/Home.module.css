@@ -556,7 +556,7 @@
   .filterGroup,
   .findHeader,
   .trendLegend,
-  .privacyButton
+  .privacyButton,
   .filterButton {
     display: none !important;
   }

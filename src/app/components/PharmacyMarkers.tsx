@@ -1,7 +1,7 @@
 // src/app/components/PharmacyMarkers.tsx
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { AggregatedPharmacy } from './page';
+import { AggregatedPharmacy } from "../page";
 
 function decodeHtmlEntities(text: string): string {
   const textarea = document.createElement('textarea');
@@ -38,7 +38,7 @@ const PharmacyMarkers: React.FC<PharmacyMarkersProps> = ({ pharmacies }) => {
     <>
       {Object.values(pharmacies).map((pharmacy) => (
         <Marker
-          key={pharmacy.pharmacyId}
+          key={pharmacy.id}
           position={[pharmacy.coords[0], pharmacy.coords[1]]}
           icon={createIcon(pharmacy.status)}
         >
@@ -55,22 +55,22 @@ const PharmacyMarkers: React.FC<PharmacyMarkersProps> = ({ pharmacies }) => {
               </p>
               <p style={{ margin: '5px 0', fontSize: '14px' }}>
                 <strong>Address:</strong><br/>
-                {pharmacy.streetAddress && `${pharmacy.streetAddress}, `}
-                {pharmacy.city}, {pharmacy.state} {pharmacy.zipCode}
+                {pharmacy.full_address && `${pharmacy.full_address}, `}
+                {pharmacy.city}, {pharmacy.state} {pharmacy.zip}
               </p>
-              {pharmacy.phoneNumber && (
+              {pharmacy.phone_number && (
                 <>
                   <p style={{ margin: '5px 0', fontSize: '14px' }}>
                     <strong>Phone:</strong>{' '}
-                    <a href={`tel:${pharmacy.phoneNumber}`} style={{ color: '#1976d2' }}>
-                      {pharmacy.phoneNumber}
+                    <a href={`tel:${pharmacy.phone_number}`} style={{ color: '#1976d2' }}>
+                      {pharmacy.phone_number}
                     </a>
                   </p>
                   <button
                     onClick={() => {
                       // Create address string for directions
                       const address = encodeURIComponent(
-                        `${pharmacy.streetAddress || ''} ${pharmacy.city}, ${pharmacy.state} ${pharmacy.zipCode}`.trim()
+                        `${pharmacy.full_address || ''} ${pharmacy.city}, ${pharmacy.state} ${pharmacy.zip}`.trim()
                       );
                       
                       // Check if mobile device
