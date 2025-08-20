@@ -1,4 +1,4 @@
-import { table } from '@/lib/airtable';
+import { table } from '@/lib/airtableAPI'
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {

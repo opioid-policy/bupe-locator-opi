@@ -1,6 +1,6 @@
 // src/app/api/pharmacies/route.ts
 
-import { table } from '@/lib/airtable';
+import { table } from '@/lib/airtable-api';
 import { NextRequest, NextResponse } from 'next/server';
 
 function getDistanceInMiles(lat1: number, lon1: number, lat2: number, lon2: number) {

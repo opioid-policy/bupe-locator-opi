@@ -78,7 +78,7 @@ interface Report {
   standardizedNotes: string[];
 }
 const formulationOptions = [ 'Suboxone Film', 'Suboxone Tablet', 'Zubsolv Tablet', 'Buprenorphine/Naloxone Film (generic)', 'Buprenorphine/Naloxone Tablet (generic)', 'Buprenorphine Tablet (generic)', ];
-const standardizedNoteOptions = [ 'Will order, but not in stock', 'Best to call ahead', 'Only fills for existing patients', 'Only fills from prescribers "close-by"', 'Requires specific diagnosis code', 'Long wait times', 'Won\'t accept cash', 'Helpful staff', 'Unhelpful staff' ];
+const standardizedNoteOptions = [ 'Will order, but not in stock', 'Partial fill (did not fill the full prescription)', 'Best to call ahead', 'Only fills for existing patients', 'Only fills from prescribers "close-by"', 'Requires specific diagnosis code', 'Long wait times', 'Won\'t accept cash', 'Helpful staff', 'Unhelpful staff' ];
 export default function Home() {
   const [zipCode, setZipCode] = useState("");
   const [locationCoords, setLocationCoords] = useState<Coords | null>(null);

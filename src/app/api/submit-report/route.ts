@@ -1,16 +1,18 @@
-// src/app/api/submit-report/route.ts - COMPLETE FILE WITH DNT
-import { table } from '@/lib/airtable';
+// src/app/api/submit-report/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { sanitizeInput, sanitizePharmacyData } from '@/lib/sanitize';
+
+// Direct Airtable API configuration
+const AIRTABLE_API_URL = `https://api.airtable.com/v0/${process.env.NEXT_PUBLIC_AIRTABLE_BASE_ID}/${process.env.NEXT_PUBLIC_AIRTABLE_TABLE_NAME}`;
+const AIRTABLE_HEADERS = {
+  'Authorization': `Bearer ${process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN}`,
+  'Content-Type': 'application/json',
+};
 
 export async function POST(request: NextRequest) {
-  // Check for Do Not Track header (set by middleware)
-  const respectDNT = request.headers.get('X-DNT-Respected') === 'true';
-  
   const body = await request.json();
   const { turnstileToken, ...reportData } = body;
 
-  // --- Start Turnstile Verification ---
+  // --- Start Turnstile Verification (unchanged) ---
   if (!turnstileToken) {
     console.error('Turnstile token missing from request.');
     return NextResponse.json({ error: 'Turnstile token missing.' }, { status: 400 });
@@ -43,55 +45,69 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Pharmacy data is missing.' }, { status: 400 });
     }
 
-    // Sanitize the pharmacy data to prevent XSS
-    const sanitizedPharmacy = sanitizePharmacyData(reportData.pharmacy);
-    const sanitizedNotes = sanitizeInput(reportData.notes || '');
-    
-    // Get the ID from either field (OSM or manual)
-    const pharmacyId = reportData.pharmacy.osm_id || reportData.pharmacy.id || '';
-    
-    // If DNT is enabled, minimize data collection
-    const fieldsToSave = {
-      pharmacy_id: pharmacyId,
-      pharmacy_name: sanitizedPharmacy.name,
-      street_address: sanitizedPharmacy.street_address,
-      city: sanitizedPharmacy.city,
-      state: sanitizedPharmacy.state,
-      zip_code: sanitizedPharmacy.zip_code,
-      latitude: reportData.pharmacy.latitude,
-      longitude: reportData.pharmacy.longitude,
-      phone_number: sanitizedPharmacy.phone_number,
-      report_type: reportData.reportType,
-      formulation: reportData.formulations,
-      standardized_notes: reportData.standardizedNotes,
-      notes: sanitizedNotes,
+    // Prepare the record for Airtable
+    const airtableRecord = {
+      records: [
+        {
+          fields: {
+            pharmacy_id: reportData.pharmacy.osm_id,
+            pharmacy_name: reportData.pharmacy.name,
+            street_address: reportData.pharmacy.street_address,
+            city: reportData.pharmacy.city,
+            state: reportData.pharmacy.state,
+            zip_code: reportData.pharmacy.zip_code,
+            latitude: reportData.pharmacy.latitude,
+            longitude: reportData.pharmacy.longitude,
+            phone_number: reportData.pharmacy.phone_number,
+            report_type: reportData.reportType,
+            formulation: reportData.formulations,
+            standardized_notes: reportData.standardizedNotes,
+            notes: reportData.notes,
+          },
+        },
+      ],
     };
-    
-    // Log less if DNT is enabled
-    if (!respectDNT) {
-      console.log('Report submitted for pharmacy:', pharmacyId);
+
+    // Log for debugging (remove in production)
+    console.log('Report submitted for pharmacy:', reportData.pharmacy.osm_id);
+
+    // Make direct API call to Airtable
+    const response = await fetch(AIRTABLE_API_URL, {
+      method: 'POST',
+      headers: AIRTABLE_HEADERS,
+      body: JSON.stringify(airtableRecord),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Airtable API error:', errorData);
+      
+      // Enhanced error handling for common issues
+      if (response.status === 401) {
+        console.error('Invalid Airtable API token');
+        return NextResponse.json({ error: 'Configuration error' }, { status: 500 });
+      }
+      if (response.status === 404) {
+        console.error('Airtable base or table not found');
+        return NextResponse.json({ error: 'Configuration error' }, { status: 500 });
+      }
+      if (response.status === 422) {
+        console.error('Invalid field data:', errorData.error);
+        return NextResponse.json({ error: 'Invalid data format' }, { status: 400 });
+      }
+      
+      throw new Error(`Airtable API returned ${response.status}`);
     }
 
-    await table.create([{ fields: fieldsToSave }]);
+    const result = await response.json();
     
-    // Include DNT status in response
-    const response = NextResponse.json({ 
-      success: true,
-      privacy_mode: respectDNT ? 'enhanced' : 'standard'
-    }, { status: 200 });
+    // Log success (remove in production)
+    console.log('Successfully created record:', result.records[0]?.id);
     
-    // Add header to confirm DNT was respected
-    if (respectDNT) {
-      response.headers.set('X-DNT-Status', 'Respected');
-    }
-    
-    return response;
+    return NextResponse.json({ success: true }, { status: 200 });
 
   } catch (error) {
-    // Only log errors if DNT is not enabled
-    if (!respectDNT) {
-      console.error('Error saving to Airtable:', error);
-    }
+    console.error('Error saving to Airtable:', error);
     return NextResponse.json({ error: 'Failed to save report.' }, { status: 500 });
   }
 }

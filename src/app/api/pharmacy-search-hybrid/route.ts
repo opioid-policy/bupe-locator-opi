@@ -1,6 +1,6 @@
 // src/app/api/pharmacy-search-hybrid/route.ts
 import { NextResponse } from 'next/server';
-import { table } from '@/lib/airtable';
+import { table } from '@/lib/airtable-api';
 import NodeCache from 'node-cache';
 
 // ============= TYPES =============
