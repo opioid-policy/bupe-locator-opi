@@ -64,11 +64,16 @@ export default function RootLayout({
                 Bulk Reporting Tool
               </Link>
             </p>
-            <p style={{marginTop: '0.5rem'}}>
-              <Link href="https://news.opioidpolicy.org/#/portal" className={styles.styledLink}>
-                Join Our Newsletter
-              </Link>
-            </p>
+              <p style={{marginTop: '0.5rem'}}>
+                <a 
+                  href="https://news.opioidpolicy.org/#/portal" 
+                  className={styles.styledLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Join Our Newsletter
+                </a>
+              </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/privacy" className={styles.styledLink}>
                  🔒 Privacy Info & Tips 🔒

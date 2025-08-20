@@ -55,9 +55,9 @@ export interface AggregatedPharmacy {
   lastUpdated: string;
   full_address: string;  // Keep as 'full_address'
   phone_number: string;  // Keep as 'phone_number'
-  city: string;  
-  state: string;  
-  zip: number;  
+  city?: string;  
+  state?: string;  
+  zip?: number;  
   standardizedNotes: string[];
   trend: 'up' | 'down' | 'neutral';
 }

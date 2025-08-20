@@ -1,21 +1,9 @@
 /** @type {import('next').NextConfig} */
-// Monkey patch for url.parse() deprecation warning
-import { URL } from 'url';
-import url from 'url';
-
-const originalParse = url.parse;
-
-// Override url.parse() to use the modern URL API
-url.parse = (urlString, parseQueryString, slashesDenoteHost) => {
-  try {
-    return new URL(urlString);
-  } catch {
-    // Fallback to original for invalid URLs (e.g., relative paths)
-    return originalParse(urlString, parseQueryString, slashesDenoteHost);
-  }
-};
 
 const nextConfig = {
+  // Add react-leaflet transpilation
+  transpilePackages: ['react-leaflet', '@react-leaflet/core'],
+  
   // Additional privacy settings
   poweredByHeader: false,
 
@@ -36,8 +24,8 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              // ADD blob: for canvas-confetti animations
-              "connect-src 'self' blob: https://nominatim.openstreetmap.org https://challenges.cloudflare.com https://*.basemaps.cartocdn.com",
+              // ADD blob: for canvas-confetti animations and Airtable API
+              "connect-src 'self' blob: https://nominatim.openstreetmap.org https://challenges.cloudflare.com https://*.basemaps.cartocdn.com https://api.airtable.com",
               "frame-src https://challenges.cloudflare.com",
               // ADD blob: for canvas worker
               "worker-src 'self' blob:",
