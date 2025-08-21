@@ -48,7 +48,11 @@ const formulationOptions = [
 ];
 
 const standardizedNoteOptions = [
-'Will order, but not in stock', 'Partial fill (did not fill the full prescription)', 'Best to call ahead', 'Only fills for existing patients', 'Only fills from prescribers "close-by"', 'Requires specific diagnosis code', 'Long wait times', 'Won\'t accept cash', 'Helpful staff', 'Unhelpful staff'
+'Will order, but not in stock', 'Partial fill (did not fill the full prescription)', 
+'Best to call ahead', 'Only fills for existing patients', 
+'Only fills from prescribers "close-by"',
+ 'Requires specific diagnosis code', 'Long wait times',
+  'Won\'t accept cash', 'Helpful staff', 'Unhelpful staff'
 ];
 
 export default function ManualPharmacyEntry({ 
