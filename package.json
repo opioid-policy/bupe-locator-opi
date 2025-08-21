@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "airtable": "^0.12.2",
     "axios": "^1.11.0",
     "can": "^6.6.3",
     "canvas-confetti": "^1.9.3",

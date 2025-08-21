@@ -1,4 +1,4 @@
-import { table } from '@/lib/airtableAPI'
+import { airtableAPI } from '@/lib/airtable-api';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -14,24 +14,24 @@ export async function GET(request: Request) {
     const zipFilter = zipCode ? `{zip_code} = "${zipCode}"` : '';
     
     // Get weekly count
-    const weeklyRecords = await table.select({
+    const weeklyRecords = await airtableAPI.select({
       fields: ['submission_time'],
       filterByFormula: weeklyFilter,
-    }).all();
+    });
 
     // Get total count - need to actually fetch all records to count them
-    const allRecords = await table.select({
+    const allRecords = await airtableAPI.select({
       fields: ['submission_time'],
       pageSize: 100, // Fetch in batches
-    }).all();
+    });
     
     // Get ZIP code count if provided
     let zipCodeCount = 0;
     if (zipCode && zipFilter) {
-      const zipRecords = await table.select({
+      const zipRecords = await airtableAPI.select({
         fields: ['zip_code'],
         filterByFormula: zipFilter,
-      }).all();
+      });
       zipCodeCount = zipRecords.length;
     }
 

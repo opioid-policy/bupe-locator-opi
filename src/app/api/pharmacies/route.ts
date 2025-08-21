@@ -1,6 +1,6 @@
 // src/app/api/pharmacies/route.ts
 
-import { table } from '@/lib/airtable-api';
+import { airtableAPI } from '@/lib/airtable-api';
 import { NextRequest, NextResponse } from 'next/server';
 
 function getDistanceInMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
   const userLon = parseFloat(lon);
 
   try {
-    const allRecords = await table.select({
+    const allRecords = await airtableAPI.select({
       fields: [
         'pharmacy_id', 'pharmacy_name', 'report_type', 
         'latitude', 'longitude', 'submission_time', 
@@ -44,22 +44,22 @@ export async function GET(request: NextRequest) {
         'phone_number', 'standardized_notes'
       ],
       filterByFormula: `AND(NOT({latitude} = ''), NOT({longitude} = ''))`
-    }).all();
+    });
 
-    const allReports = allRecords.map(record => ({
-      pharmacyId: record.get('pharmacy_id'),
-      pharmacyName: record.get('pharmacy_name'),
-      reportType: record.get('report_type'),
-      latitude: record.get('latitude'),
-      longitude: record.get('longitude'),
-      submissionTime: record.get('submission_time'),
-      streetAddress: record.get('street_address'),
-      city: record.get('city'),
-      state: record.get('state'),
-      zipCode: record.get('zip_code'),
-      phoneNumber: record.get('phone_number'),
-      standardizedNotes: record.get('standardized_notes') || [],
-    }));
+      const allReports = allRecords.map(record => ({
+        pharmacyId: record.fields.pharmacy_id,
+        pharmacyName: record.fields.pharmacy_name,
+        reportType: record.fields.report_type,
+        latitude: record.fields.latitude,
+        longitude: record.fields.longitude,
+        submissionTime: record.fields.submission_time,
+        streetAddress: record.fields.street_address,
+        city: record.fields.city,
+        state: record.fields.state,
+        zipCode: record.fields.zip_code,
+        phoneNumber: record.fields.phone_number,
+        standardizedNotes: record.fields.standardized_notes || [],
+      }));
     
     const nearbyReports = allReports.filter(report => {
       const distance = getDistanceInMiles(

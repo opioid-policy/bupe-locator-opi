@@ -1,25 +1,8 @@
 import { NextResponse } from 'next/server';
-import Airtable, { FieldSet } from 'airtable';
+import { airtableAPI } from '@/lib/airtable-api';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-// Initialize Airtable with your environment variables
-const airtable = new Airtable({
-  apiKey: process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN || '',
-});
-
-const base = airtable.base(process.env.NEXT_PUBLIC_AIRTABLE_BASE_ID || '');
-const tableName = process.env.NEXT_PUBLIC_AIRTABLE_TABLE_NAME || 'Reports';
-
-// Define types for Airtable records - extends FieldSet to satisfy Airtable constraints
-interface AirtableRecordFields extends FieldSet {
-  report_type: 'success' | 'denial';
-  formulation?: string[];
-  standardized_notes?: string[];
-  zip_code?: string;
-  state?: string;
-  submission_time: string;
-}
 
 interface CleanReport {
   reportType: 'success' | 'denial';
@@ -145,52 +128,33 @@ async function fetchFromAirtable(timeframe: string): Promise<CleanReport[]> {
   console.log(`Fetching fresh data from Airtable for timeframe: ${timeframe}`);
 
   // Fetch records from Airtable
-  const records: CleanReport[] = await new Promise<CleanReport[]>((resolve, reject) => {
-    const allRecords: CleanReport[] = [];
-    
-    base(tableName)
-      .select({
-        filterByFormula: filterFormula,
-        view: 'Grid view',
-        // No maxRecords limit - get all data
-      })
-      .eachPage(
-        (records, fetchNextPage) => {
-          // Process each page of records
-          records.forEach((record) => {
-            const fields = record.fields as AirtableRecordFields;
-            
-            // Validate required fields
-            if (!fields.report_type || !fields.submission_time) {
-              console.warn('Skipping record with missing required fields:', record.id);
-              return;
-            }
+const records = await airtableAPI.select({
+  filterByFormula: filterFormula,
+  view: 'Grid view',
+});
 
-            allRecords.push({
-              reportType: fields.report_type,
-              formulations: fields.formulation || [],
-              standardizedNotes: fields.standardized_notes || [],
-              zipCode: fields.zip_code || '',
-              state: fields.state || '',
-              submissionTime: fields.submission_time,
-            });
-          });
-          
-          // Fetch the next page
-          fetchNextPage();
-        },
-        (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            console.log(`Fetched ${allRecords.length} records for timeframe: ${timeframe}`);
-            resolve(allRecords);
-          }
-        }
-      );
+const allRecords: CleanReport[] = [];
+for (const record of records) {
+  const fields = record.fields;
+  
+  // Validate required fields
+  if (!fields.report_type || !fields.submission_time) {
+    console.warn('Skipping record with missing required fields:', record.id);
+    continue;
+  }
+
+  allRecords.push({
+    reportType: fields.report_type as 'success' | 'denial',
+    formulations: (fields.formulation as string[]) || [],
+    standardizedNotes: (fields.standardized_notes as string[]) || [],
+    zipCode: (fields.zip_code as string) || '',
+    state: (fields.state as string) || '',
+    submissionTime: fields.submission_time as string,
   });
+}
 
-  return records;
+console.log(`Fetched ${allRecords.length} records for timeframe: ${timeframe}`);
+return allRecords;
 }
 
 export async function GET(request: Request) {
