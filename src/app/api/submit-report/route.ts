@@ -68,8 +68,9 @@ export async function POST(request: NextRequest) {
       ],
     };
 
-    // Log for debugging (remove in production)
-    console.log('Report submitted for pharmacy:', reportData.pharmacy.osm_id);
+// Debug: Check for duplicate submissions
+console.log(`[${new Date().toISOString()}] Submitting report for: ${reportData.pharmacy.osm_id || reportData.pharmacy.mapbox_id}`);
+console.log('Call stack:', new Error().stack?.split('\n').slice(1, 4).join('\n'));
 
     // Make direct API call to Airtable
     const response = await fetch(AIRTABLE_API_URL, {

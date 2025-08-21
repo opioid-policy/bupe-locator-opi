@@ -572,6 +572,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   setIsSubmitting(true);
   setSubmitStatus('idle');
+  console.log('handleSubmit called'); // ADD THIS
   
   const reportData = {
     pharmacy: selectedPharmacy,

@@ -19,7 +19,14 @@ interface PharmacyData {
 
 interface ManualPharmacyEntryProps {
   onBack: () => void;
-  onSubmit: (pharmacyData: PharmacyData, turnstileToken: string) => void;
+  onSubmit: (
+    pharmacyData: PharmacyData, 
+    reportType: 'success' | 'denial',
+    formulations: string[],
+    standardizedNotes: string[],
+    notes: string,
+    turnstileToken: string
+  ) => void;
 }
 
 // US States list (full names)
@@ -34,16 +41,35 @@ const US_STATES = [
   'Wisconsin', 'Wyoming'
 ];
 
+const formulationOptions = [
+  'Suboxone Film', 'Suboxone Tablet', 'Zubsolv Tablet',
+  'Buprenorphine/Naloxone Film (generic)', 'Buprenorphine/Naloxone Tablet (generic)',
+  'Buprenorphine Tablet (generic)'
+];
+
+const standardizedNoteOptions = [
+'Will order, but not in stock', 'Partial fill (did not fill the full prescription)', 'Best to call ahead', 'Only fills for existing patients', 'Only fills from prescribers "close-by"', 'Requires specific diagnosis code', 'Long wait times', 'Won\'t accept cash', 'Helpful staff', 'Unhelpful staff'
+];
+
 export default function ManualPharmacyEntry({ 
   onBack, 
   onSubmit
 }: ManualPharmacyEntryProps) {
+  // Pharmacy fields
   const [pharmacyName, setPharmacyName] = useState('');
   const [streetAddress, setStreetAddress] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [pharmacyZip, setPharmacyZip] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  
+  // Report fields
+  const [reportType, setReportType] = useState<'success' | 'denial' | ''>('');
+  const [formulations, setFormulations] = useState<string[]>([]);
+  const [standardizedNotes, setStandardizedNotes] = useState<string[]>([]);
+  const [notes, setNotes] = useState('');
+  
+  // Form state
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -60,9 +86,8 @@ export default function ManualPharmacyEntry({
     return `(${phoneNumberDigits.slice(0, 3)}) ${phoneNumberDigits.slice(3, 6)}-${phoneNumberDigits.slice(6, 10)}`;
   };
 
-  // Basic field validation (removed pharmacy name validation)
+  // Basic field validation
   const validateFields = () => {
-    // Basic validation for required fields
     if (!pharmacyName || pharmacyName.length < 2) {
       return 'Please enter a pharmacy name.';
     }
@@ -87,10 +112,14 @@ export default function ManualPharmacyEntry({
       return 'Please enter a valid 10-digit phone number or leave it blank.';
     }
     
+    if (!reportType) {
+      return 'Please select whether you were able to fill your prescription.';
+    }
+    
     return null;
   };
 
-  // Submit without validation (manual review)
+  // Handle form submission
   const handleSubmit = () => {
     if (!turnstileToken) {
       setValidationError('Please complete the security check.');
@@ -107,7 +136,7 @@ export default function ManualPharmacyEntry({
       return;
     }
     
-    // Prepare pharmacy data without geocoding
+    // Prepare pharmacy data
     const fullAddress = `${streetAddress}, ${city}, ${state} ${pharmacyZip}`;
     const pharmacyData: PharmacyData = {
       osm_id: `manual_${Date.now()}`, // Unique ID for manual entries
@@ -120,13 +149,35 @@ export default function ManualPharmacyEntry({
       latitude: 0, // Will be geocoded automatically in Airtable
       longitude: 0, // Will be geocoded automatically in Airtable
       phone_number: phoneNumber.replace(/\D/g, ''),
-      manual_entry: true // This will check the box in Airtable
+      manual_entry: true
     };
     
-    onSubmit(pharmacyData, turnstileToken);
+    onSubmit(
+      pharmacyData, 
+      reportType as 'success' | 'denial',
+      formulations,
+      standardizedNotes,
+      notes,
+      turnstileToken
+    );
     setIsValidating(false);
   };
 
+  const handleFormulationChange = (option: string) => {
+    setFormulations(prev => 
+      prev.includes(option) 
+        ? prev.filter(item => item !== option) 
+        : [...prev, option]
+    );
+  };
+
+  const handleStandardizedNoteChange = (option: string) => {
+    setStandardizedNotes(prev => 
+      prev.includes(option) 
+        ? prev.filter(item => item !== option) 
+        : [...prev, option]
+    );
+  };
 
   const canSubmit = 
     pharmacyName && 
@@ -134,6 +185,7 @@ export default function ManualPharmacyEntry({
     city && 
     state && 
     pharmacyZip && 
+    reportType &&
     !isValidating &&
     turnstileToken;
 
@@ -148,14 +200,16 @@ export default function ManualPharmacyEntry({
         ← Back to search
       </button>
       
-      <h2 className={styles.subheading}>Add a Pharmacy</h2>
+      <h2 className={styles.subheading}>Add a Pharmacy & Report</h2>
       <p className={styles.helper}>
-        If you couldn&apos;t find your pharmacy in the search results, you can add it here.
-        Please ensure this is a licensed pharmacy that dispenses prescription medications.
-        We will review your submission before it appears on the map.
+        If you couldn&apos;t find your pharmacy in the search results, you can add it here 
+        along with your report about filling your prescription.
       </p>
       <br/>
 
+      {/* Pharmacy Information Section */}
+      <h3>Pharmacy Information</h3>
+      
       <div className={styles.formGroup}>
         <label htmlFor="pharmacyName">
           Pharmacy Name <span className={styles.required}>*</span>
@@ -253,15 +307,87 @@ export default function ManualPharmacyEntry({
           className={styles.inputField}
         />
         <small className={styles.helper}>
-          Including a phone number helps others call ahead or change pharmacies.
+          Including a phone number helps others call ahead
         </small>
       </div>
 
-      {validationError && (
-        <div className={styles.errorMessage}>
-          <strong>⚠️ {validationError}</strong>
+      {/* Report Information Section */}
+      <br />
+      <h3>Your Report</h3>
+      
+      <div className={styles.formGroup}>
+        <label>
+          What was the outcome of your visit? <span className={styles.required}>*</span>
+        </label>
+        <div className={styles.radioGroup}>
+          <label>
+            <input
+              type="radio"
+              name="reportType"
+              value="success"
+              checked={reportType === 'success'}
+              onChange={(e) => setReportType(e.target.value as 'success')}
+            />
+            ✅ I was able to fill my prescription
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="reportType"
+              value="denial"
+              checked={reportType === 'denial'}
+              onChange={(e) => setReportType(e.target.value as 'denial')}
+            />
+            ❌ I was not able to fill my prescription
+          </label>
         </div>
-      )}
+      </div>
+
+      <div className={styles.formGroup}>
+        <label>What formulation(s) did you try to fill?</label>
+        <div className={styles.checkboxGroup}>
+          {formulationOptions.map(option => (
+            <label key={option} className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={formulations.includes(option)}
+                onChange={() => handleFormulationChange(option)}
+              />
+              {option}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.formGroup}>
+        <label>Select any that apply:</label>
+        <div className={styles.checkboxGroup}>
+          {standardizedNoteOptions.map(option => (
+            <label key={option} className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={standardizedNotes.includes(option)}
+                onChange={() => handleStandardizedNoteChange(option)}
+              />
+              {option}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.formGroup}>
+        <label htmlFor="notes">
+          Additional notes <span className={styles.optional}>(optional)</span>
+        </label>
+        <textarea
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Any other details about your experience..."
+          rows={4}
+          className={styles.inputField}
+        />
+      </div>
 
       {validationError && (
         <div className={styles.errorMessage}>
@@ -281,13 +407,12 @@ export default function ManualPharmacyEntry({
         className={styles.submitButton}
         style={{ marginTop: '1rem' }}
       >
-        {isValidating ? 'Submitting...' : 'Add Pharmacy'}
+        {isValidating ? 'Submitting...' : 'Submit Report'}
       </button>
 
       <div className={styles.privacyNote} style={{ marginTop: '1.5rem' }}>
-        <strong>Privacy Note:</strong> This pharmacy information will be added to our 
-        database to help others find it.
-        Manual entries require approval before appearing in search results.
+        <strong>Privacy Note:</strong> This pharmacy information and your report will be added 
+        to our database to help others. Manual entries require approval before appearing in search results.
       </div>
     </div>
   );

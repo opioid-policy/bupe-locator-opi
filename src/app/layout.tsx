@@ -6,6 +6,7 @@ import { Raleway, Merriweather } from 'next/font/google';
 import styles from "./Layout.module.css";
 import PrivacyBanner from './components/PrivacyBanner'; // ADD THIS IMPORT
 import "./globals.css";
+import ScrollToTop from './components/ScrollToTop';
 
 
 // Initialize both fonts and assign them to CSS variables
@@ -30,7 +31,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={`${raleway.variable} ${merriweather.variable}`}>
-      <body>
+    <body className={`${merriweather.variable} ${raleway.variable} ${styles.body}`}>
+        <ScrollToTop />
        <PrivacyBanner /> {/* ADD THIS LINE - Banner at top of page */}
         <div className={styles.appContainer}>
           <header className={styles.header}>
