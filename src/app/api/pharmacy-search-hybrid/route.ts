@@ -1,6 +1,6 @@
 // src/app/api/pharmacy-search-hybrid/route.ts
 import { NextResponse } from 'next/server';
-import { table } from '@/lib/airtable-api';
+import { airtableAPI } from '@/lib/airtable-api';
 import NodeCache from 'node-cache';
 
 // ============= TYPES =============
@@ -126,7 +126,7 @@ async function getAirtablePharmacies(lat: number, lon: number): Promise<Airtable
         setTimeout(() => reject(new Error('Airtable timeout')), 5000)
       );
 
-      const recordsPromise = table.select({
+      const recordsPromise = airtableAPI.select ({
         fields: [
           'pharmacy_id', 'pharmacy_name', 'street_address', 
           'city', 'state', 'zip_code', 'latitude', 'longitude', 
@@ -135,43 +135,43 @@ async function getAirtablePharmacies(lat: number, lon: number): Promise<Airtable
         filterByFormula: filterFormula,
         maxRecords: 200, // Limit to prevent memory issues
         sort: [{field: 'submission_time', direction: 'desc'}]
-      }).all();
+      });
 
       const records = await Promise.race([recordsPromise, timeoutPromise]);
 
       // Process records into unique pharmacies
       const pharmacyMap = new Map<string, AirtablePharmacy>();
       
-      records.forEach(record => {
-        const pharmacyId = record.get('pharmacy_id') as string;
-        if (!pharmacyId) return;
-        
-        const lat = record.get('latitude') as number;
-        const lon = record.get('longitude') as number;
-        if (!lat || !lon) return;
-        
-        const submissionTime = record.get('submission_time') as string;
-        
-        // Keep only the most recent record for each pharmacy
-        if (!pharmacyMap.has(pharmacyId) || 
-            submissionTime > (pharmacyMap.get(pharmacyId)?.last_report || '')) {
-          
-          pharmacyMap.set(pharmacyId, {
-            id: pharmacyId,
-            name: record.get('pharmacy_name') as string || '',
-            street_address: record.get('street_address') as string || '',
-            city: record.get('city') as string || '',
-            state: record.get('state') as string || '',
-            zip_code: record.get('zip_code') as string || '',
-            latitude: lat,
-            longitude: lon,
-            phone_number: record.get('phone_number') as string || '',
-            manual_entry: record.get('manual_entry') === true,
-            live_manual_entry: record.get('live_manual_entry') === true,
-            last_report: submissionTime
-          });
-        }
-      });
+records.forEach((record) => {  // Add type annotation to fix implicit any
+  const pharmacyId = record.fields.pharmacy_id as string;
+  if (!pharmacyId) return;
+  
+  const lat = record.fields.latitude as number;
+  const lon = record.fields.longitude as number;
+  if (!lat || !lon) return;
+  
+  const submissionTime = record.fields.submission_time as string;
+  
+  // Keep only the most recent record for each pharmacy
+  if (!pharmacyMap.has(pharmacyId) || 
+      submissionTime > (pharmacyMap.get(pharmacyId)?.last_report || '')) {
+    
+    pharmacyMap.set(pharmacyId, {
+      id: pharmacyId,
+      name: record.fields.pharmacy_name as string || '',
+      street_address: record.fields.street_address as string || '',
+      city: record.fields.city as string || '',
+      state: record.fields.state as string || '',
+      zip_code: record.fields.zip_code as string || '',
+      latitude: lat,
+      longitude: lon,
+      phone_number: record.fields.phone_number as string || '',
+      manual_entry: record.fields.manual_entry === true,
+      live_manual_entry: record.fields.live_manual_entry === true,
+      last_report: submissionTime
+    });
+  }
+});
 
       const nearbyPharmacies = Array.from(pharmacyMap.values());
       

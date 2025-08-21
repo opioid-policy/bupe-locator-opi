@@ -876,7 +876,7 @@
   color: var(--font-color-dark);
   text-decoration: none;
   border-radius: 0.5rem;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.875rem;
   transition: all 0.2s ease-in-out;
   border: 1px solid var(--accent-orange);
@@ -884,7 +884,7 @@
 
 .privacyButton:hover {
   background-color: var(--font-color-dark);
-  border-color: var(--accent-green);
+  border-color: var(--accent-orange);
   color: var(--accent-cream);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

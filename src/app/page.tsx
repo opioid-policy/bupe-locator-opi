@@ -713,11 +713,16 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
               <div><TrendIndicator trend="neutral" /> <span>Neutral</span></div>
               <div><TrendIndicator trend="down" /> <span>More Denials</span></div>
             </div>
-            <div className={styles.privacyGuidanceSection}>
-              <Link href="/privacy" className={styles.privacyButton}>
-                🔒 Privacy & Safety Tips 🔒
-              </Link>
-            </div>
+              <div className={styles.privacyGuidanceSection}>
+                <a 
+                  href="/privacy" 
+                  className={styles.privacyButton}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  🔒 Privacy & Safety Tips 🔒
+                </a>
+              </div>
             <div className={styles.filterGroup}>
               <button onClick={() => handleFilterClick(7)} className={`${styles.filterButton} ${dateFilter === 7 ? styles.active : ''}`}>Last 7 Days</button>
               <button onClick={() => handleFilterClick(15)} className={`${styles.filterButton} ${dateFilter === 15 ? styles.active : ''}`}>Last 15 Days</button>

@@ -2,6 +2,8 @@
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { AggregatedPharmacy } from "../page";
+import TrendIndicator from './TrendIndicator';
+
 
 function decodeHtmlEntities(text: string): string {
   const textarea = document.createElement('textarea');
@@ -15,7 +17,7 @@ interface PharmacyMarkersProps {
 const PharmacyMarkers: React.FC<PharmacyMarkersProps> = ({ pharmacies }) => {
   // Create custom icons for success and denial
   const createIcon = (status: 'success' | 'denial') => {
-    const color = status === 'success' ? '#4CAF50' : '#f44336';
+    const color = status === 'success' ? 'var(--accent-green)' : 'var(--accent-red)';
     return L.divIcon({
       html: `
         <div style="
@@ -23,7 +25,7 @@ const PharmacyMarkers: React.FC<PharmacyMarkersProps> = ({ pharmacies }) => {
           width: 20px;
           height: 20px;
           border-radius: 50%;
-          border: 2px solid white;
+          border: 2px solid var(--accent-cream);
           box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         "></div>
       `,
@@ -45,7 +47,7 @@ const PharmacyMarkers: React.FC<PharmacyMarkersProps> = ({ pharmacies }) => {
           <Popup maxWidth={250}>
             <div style={{ padding: '5px' }}>
               <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>
-                {decodeHtmlEntities(pharmacy.name)}
+                {decodeHtmlEntities(pharmacy.name)}          <TrendIndicator trend={pharmacy.trend} />
               </h3>
               <p style={{ margin: '5px 0', fontSize: '14px' }}>
                 <strong>Status:</strong> {pharmacy.status === 'success' ? '✓ Available' : '✗ Denied/Issues'}
@@ -55,8 +57,7 @@ const PharmacyMarkers: React.FC<PharmacyMarkersProps> = ({ pharmacies }) => {
               </p>
               <p style={{ margin: '5px 0', fontSize: '14px' }}>
                 <strong>Address:</strong><br/>
-                {pharmacy.full_address && `${pharmacy.full_address}, `}
-                {pharmacy.city}, {pharmacy.state} {pharmacy.zip}
+                {pharmacy.full_address && `${pharmacy.full_address} `}
               </p>
               {pharmacy.phone_number && (
                 <>
@@ -98,6 +99,7 @@ const PharmacyMarkers: React.FC<PharmacyMarkersProps> = ({ pharmacies }) => {
                         border: 'none',
                         borderRadius: '4px',
                         cursor: 'pointer',
+                        fontWeight: 'bold',
                         fontSize: '14px'
                       }}
                     >
