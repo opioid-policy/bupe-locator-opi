@@ -64,7 +64,7 @@ const PHARMACY_KEYWORDS = new Set([
 ]);
 
 // 15 miles in degrees (~0.2 for latitude, ~0.2 for longitude at mid-latitudes)
-const BOUNDING_BOX_DELTA = 0.2;
+const BOUNDING_BOX_DELTA = 0.5;
 // ~500m in degrees (~0.005)
 
 // Token bucket rate limiter
@@ -266,10 +266,13 @@ format=json&
 q=${encodeURIComponent(combinedQuery)}&
 addressdetails=1&
 extratags=1&
-limit=20&
+limit=30&
 bounded=1&
 viewbox=${bbox.left},${bbox.top},${bbox.right},${bbox.bottom}&
-countrycodes=us`;
+countrycodes=us&  
+amenity=pharmacy&  // Specifically look for pharmacies
+ shop=pharmacy`;   // Specifically look for pharmacy amenities
+
 
     const response = await fetch(endpoint, {
       headers: {
@@ -303,7 +306,7 @@ countrycodes=us`;
 
     // Format results
     const pharmacySuggestions: SearchSuggestion[] = deduplicated
-      .slice(0, 15)
+      .slice(0, 50)
       .map(result => {
         let name = result.address?.name ||
                    result.address?.shop ||

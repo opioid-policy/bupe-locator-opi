@@ -30,9 +30,8 @@ interface SearchSuggestion {
 
 // ============= CONSTANTS =============
 const CACHE_PRECISION = 2; // decimal places for cache keys
-const BOUNDING_BOX_LAT_DELTA = 0.2; // ~15 miles
-const BOUNDING_BOX_LON_DELTA = 0.25; // ~15 miles
-const MAX_RESULTS = 5;
+const BOUNDING_BOX_LAT_DELTA = 0.5; // ~15 miles
+const BOUNDING_BOX_LON_DELTA = 0.5; // ~15 miles
 const CACHE_TTL = 1800; // 30 minutes
 const OSM_CACHE_TTL = 900; // 15 minutes
 const MAX_CACHE_ENTRIES = 1000; // Prevent unbounded memory growth
@@ -111,7 +110,23 @@ const airtableCircuit = new CircuitBreaker();
 
 // ============= OPTIMIZED AIRTABLE FETCHING =============
 async function getAirtablePharmacies(lat: number, lon: number): Promise<AirtablePharmacy[]> {
-  // More precise cache key
+  // Calculate bounding box (about 20 miles radius)
+  const latMin = lat - 0.3;
+  const latMax = lat + 0.3;
+  const lonMin = lon - 0.3;
+  const lonMax = lon + 0.3;
+
+  // Simple filter - only check location and valid coordinates
+  const filterFormula = `AND(
+    NOT({latitude} = ''),
+    NOT({longitude} = ''),
+    {latitude} >= ${latMin},
+    {latitude} <= ${latMax},
+    {longitude} >= ${lonMin},
+    {longitude} <= ${lonMax}
+  )`;
+
+// More precise cache key
   const cacheKey = generateCacheKey(lat.toFixed(CACHE_PRECISION), lon.toFixed(CACHE_PRECISION));
 
   // Check cache first
@@ -206,25 +221,15 @@ async function getAirtablePharmacies(lat: number, lon: number): Promise<Airtable
 }
 
 // ============= DEDUPLICATION =============
+// Update the similarPharmacy function to be more strict
 function similarPharmacy(a: SearchSuggestion, b: SearchSuggestion): boolean {
-  const clean = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const aName = clean(a.name);
-  const bName = clean(b.name);
-
-  // Quick check for identical names
-  if (aName === bName) return true;
-
-  // Check for similar names at same address
+  // Only consider them duplicates if they have the exact same address
+  // This allows multiple locations of the same chain (e.g., multiple CVS stores)
   const aNum = a.full_address.match(/^\d+/)?.[0];
   const bNum = b.full_address.match(/^\d+/)?.[0];
 
-  // Explicitly convert to boolean for each condition
-  const hasANum = !!aNum;
-  const hasBNum = !!bNum;
-  const numsMatch = aNum === bNum;
-  const namesSimilar = aName.includes(bName) || bName.includes(aName);
-
-  return hasANum && hasBNum && numsMatch && namesSimilar;
+  // Only consider them similar if they have the same street number AND same source
+  return !!aNum && !!bNum && aNum === bNum && a.source === b.source;
 }
 
 
@@ -235,6 +240,9 @@ export async function GET(request: Request) {
     'Access-Control-Allow-Methods': 'GET, POST'
   };
 
+
+
+  
   const startTime = Date.now();
 
   try {
@@ -335,7 +343,7 @@ export async function GET(request: Request) {
     });
 
     // Take top results
-    const topResults = mergedSuggestions.slice(0, MAX_RESULTS);
+    const topResults = mergedSuggestions.slice(0, 1);
 
     // Add manual entry option
     topResults.push({

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 
 // Constants
-const MAX_DISTANCE_MILES = 15;
+const MAX_DISTANCE_MILES = 30;
 const EARTH_RADIUS_MILES = 3959;
 const DEGREE_TO_RAD = Math.PI / 180;
 
