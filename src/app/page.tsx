@@ -105,7 +105,7 @@ export default function Home() {
   const [isLoadingPharmacies, setIsLoadingPharmacies] = useState(true);
   const [dateFilter, setDateFilter] = useState<number | null>(30);
   const turnstile = useTurnstile();
-  const [isSearching] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
 
   // Client-side rate limiting state
@@ -533,25 +533,21 @@ useEffect(() => {
     return;
   }
   const timer = setTimeout(() => {
-    const fetchPharmacies = async () => {
-      const [lat, lon] = locationCoords;
-      // CHANGE: Use hybrid endpoint instead of pharmacy-search
-      const endpoint = `/api/pharmacy-search-hybrid?q=${encodeURIComponent(searchTerm)}&lat=${lat}&lon=${lon}&zip=${zipCode}`;
-      
-      console.log('[Frontend] Fetching from:', endpoint); // Debug log
-      
-      try {
-        const response = await fetch(endpoint);
-        const data = await response.json();
-        
-        console.log('[Frontend] Received data:', data); // Debug log
-        
-        setResults(data.suggestions || []);
-      } catch (error) {
-        console.error("Error fetching pharmacies:", error);
-        setResults([]);
-      }
-    };
+const fetchPharmacies = async () => {
+  const [lat, lon] = locationCoords;
+  const endpoint = `/api/pharmacy-search?q=${encodeURIComponent(searchTerm)}&lat=${lat}&lon=${lon}`;
+  setIsSearching(true);  // ADD THIS
+  try {
+    const response = await fetch(endpoint);
+    const data = await response.json();
+    setResults(data.suggestions || []);
+  } catch (error) {
+    console.error("Error fetching pharmacies:", error);
+    setResults([]);
+  } finally {
+    setIsSearching(false);  // ADD THIS
+  }
+};
     fetchPharmacies();
   }, 500); // Slightly longer delay to be respectful
   return () => clearTimeout(timer);
@@ -807,7 +803,13 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
                             placeholder="e.g., CVS"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
+                              onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                              e.preventDefault();
+                              }
+                            }}
                           />
+                            {isSearching && <p>Searching...</p>}
                         </div>
                           <div className={styles.resultsList}>
                             {results.filter(r => r.osm_id !== 'manual_entry').map((result) => (
