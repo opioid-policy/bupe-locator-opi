@@ -15,6 +15,8 @@ interface PharmacyData {
   longitude: number;
   phone_number: string;
   manual_entry: boolean;
+  live_manual_entry?: boolean;  // ADD THIS
+
 }
 
 interface ManualPharmacyEntryProps {
@@ -56,6 +58,20 @@ const standardizedNoteOptions = [
   'Won\'t accept cash', 'Helpful staff', 'Unhelpful staff'
 ];
 
+// Sanitize input to prevent XSS
+const sanitizeInput = (input: string): string => {
+  return input
+    .replace(/[<>]/g, '') // Remove angle brackets
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .trim()
+};
+
+const sanitizeAddress = (input: string): string => {
+  return input
+    .replace(/[<>]/g, '') // Remove angle brackets to prevent HTML injection
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+};
+
 export default function ManualPharmacyEntry({ 
   onBack, 
   onSubmit
@@ -73,6 +89,8 @@ export default function ManualPharmacyEntry({
   const [formulations, setFormulations] = useState<string[]>([]);
   const [standardizedNotes, setStandardizedNotes] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
+  const [consentMap, setConsentMap] = useState(false);
+
   
   // Form state
   const [isValidating, setIsValidating] = useState(false);
@@ -93,15 +111,15 @@ export default function ManualPharmacyEntry({
 
   // Basic field validation
   const validateFields = () => {
-    if (!pharmacyName || pharmacyName.length < 2) {
-      return 'Please enter a pharmacy name.';
+   if (pharmacyName.includes('<') || pharmacyName.includes('>')) {
+    return 'Invalid characters in pharmacy name.';
+  }
+    
+    if (!streetAddress || streetAddress.trim().length < 2) {
+    return 'Please enter a street address.';
     }
     
-    if (!streetAddress || streetAddress.length < 5) {
-      return 'Please enter a valid street address.';
-    }
-    
-    if (!city || city.length < 2) {
+    if (!city || city.trim().length < 2) {
       return 'Please enter a valid city.';
     }
     
@@ -120,6 +138,10 @@ export default function ManualPharmacyEntry({
     if (!reportType) {
       return 'Please select whether you were able to fill your prescription.';
     }
+
+     if (!consentMap) {
+    return 'You must consent to sharing your report on the public map.';
+  }
     
     return null;
   };
@@ -144,18 +166,19 @@ export default function ManualPharmacyEntry({
     // Prepare pharmacy data
     const fullAddress = `${streetAddress}, ${city}, ${state} ${pharmacyZip}`;
     const pharmacyData: PharmacyData = {
-      osm_id: `manual_${Date.now()}`, // Unique ID for manual entries
-      name: pharmacyName,
-      full_address: fullAddress,
-      street_address: streetAddress,
-      city: city,
-      state: state,
-      zip_code: pharmacyZip,
-      latitude: 0, // Will be geocoded automatically in Airtable
-      longitude: 0, // Will be geocoded automatically in Airtable
-      phone_number: phoneNumber.replace(/\D/g, ''),
-      manual_entry: true
-    };
+  osm_id: `manual_${Date.now()}`,
+  name: pharmacyName.trim(),
+  full_address: fullAddress,
+  street_address: streetAddress.trim(),
+  city: city.trim(),
+  state: state,
+  zip_code: pharmacyZip,
+  latitude: 0,
+  longitude: 0,
+  phone_number: phoneNumber.replace(/\D/g, ''),
+  manual_entry: true,
+  live_manual_entry: false  // ADD THIS - requires approval before going live
+};
     
     onSubmit(
       pharmacyData, 
@@ -191,6 +214,7 @@ export default function ManualPharmacyEntry({
     state && 
     pharmacyZip && 
     reportType &&
+    consentMap &&
     !isValidating &&
     turnstileToken;
 
@@ -241,7 +265,7 @@ export default function ManualPharmacyEntry({
           type="text"
           id="streetAddress"
           value={streetAddress}
-          onChange={(e) => setStreetAddress(e.target.value)}
+          onChange={(e) => setStreetAddress(sanitizeAddress(e.target.value))}
           placeholder="e.g., 123 Main Street"
           className={styles.inputField}
           required
@@ -316,6 +340,8 @@ export default function ManualPharmacyEntry({
         </small>
       </div>
 
+
+
       {/* Report Information Section */}
       <br />
       <h3>Your Report</h3>
@@ -387,11 +413,24 @@ export default function ManualPharmacyEntry({
         <textarea
           id="notes"
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
           placeholder="Any other details about your experience..."
           rows={4}
           className={styles.inputField}
+          onChange={(e) => setNotes(sanitizeInput(e.target.value))}
         />
+      </div>
+
+       <div className={styles.formGroup}>
+        <label>
+          <input
+            type="checkbox"
+            checked={consentMap}
+            onChange={(e) => setConsentMap(e.target.checked)}
+            required
+            style={{marginRight: '0.5rem'}}
+          />
+           I understand my anonymous report will be used to update the public map (REQUIRED).
+        </label>
       </div>
 
       {validationError && (
@@ -400,11 +439,17 @@ export default function ManualPharmacyEntry({
         </div>
       )}
 
-      <Turnstile
-        sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-        onVerify={(token) => setTurnstileToken(token)}
-      />
-
+      {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? (
+        <Turnstile
+          sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+          onVerify={(token) => setTurnstileToken(token)}
+          onError={() => setValidationError('Security check failed. Please refresh and try again.')}
+        />
+      ) : (
+        <div className={styles.errorMessage}>
+          Security configuration error. Please contact support.
+        </div>
+      )}
       <button
         type="button"
         onClick={handleSubmit}

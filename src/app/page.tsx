@@ -192,31 +192,52 @@ const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
 
 // Add handler for manual pharmacy submission
 // Update handler for manual pharmacy submission
-const handleManualPharmacySubmit = async (pharmacyData: SelectedPharmacy, turnstileToken: string) => {
-  // Submit to your API with the turnstile token
+const handleManualPharmacySubmit = async (
+  pharmacyData: SelectedPharmacy, 
+  reportType: 'success' | 'denial',
+  formulations: string[],
+  standardizedNotes: string[],
+  notes: string,
+  turnstileToken: string
+) => {
   try {
     const response = await fetch('/api/submit-report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         pharmacy: pharmacyData,
-        reportType: 'success', // Default to success for manual entries
-        formulations: [],
-        standardizedNotes: [],
-        notes: 'Manually added pharmacy',
-        turnstileToken: turnstileToken
+        reportType,
+        formulations,
+        standardizedNotes,
+        notes,
+        consentMap: true,  // This is critical - was missing!
+        turnstileToken
       }),
     });
     
     if (response.ok) {
       setSelectedPharmacy(pharmacyData);
       setShowManualEntry(false);
-      // Optionally show success message
+      setSubmitStatus('success');  // Show success message
+      // Refresh pharmacy data
+      if (locationCoords) {
+        const [lat, lon] = locationCoords;
+        const refreshResponse = await fetch(`/api/pharmacies?lat=${lat}&lon=${lon}&t=${Date.now()}`);
+        const refreshedData: Report[] = await refreshResponse.json();
+        setAllReports(refreshedData);
+      }
+    } else {
+      console.error('Submit failed:', response.status);
+      const errorText = await response.text();
+      console.error('Error details:', errorText);
+      alert('Failed to submit. Please try again.');
     }
   } catch (error) {
     console.error('Error submitting manual pharmacy:', error);
+    alert('An error occurred. Please try again.');
   }
 };
+
   // --- Reset error if user changes key form fields ---
   useEffect(() => {
     if (submitStatus === 'error') {
@@ -809,7 +830,8 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
                                 value="success"
                                 checked={reportType === 'success'}
                                 onChange={(e) => setReportType(e.target.value as 'success' | 'denial')}
-                              /> Success
+                              />
+                            ✅ I was able to fill my prescription
                             </label>
                             <label>
                               <input
@@ -818,7 +840,8 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
                                 value="denial"
                                 checked={reportType === 'denial'}
                                 onChange={(e) => setReportType(e.target.value as 'success' | 'denial')}
-                              /> Denial / Refusal
+                              /> 
+                             ❌ I was not able to fill my prescription
                             </label>
                           </div>
                         </div>
