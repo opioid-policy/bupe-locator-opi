@@ -40,26 +40,26 @@ interface SearchSuggestion {
 }
 
 // Constants
-const PHARMACY_KEYWORDS = new Set([
-  'pharmacy', 'drug store', 'apothecary', 'chemist',
-  'cvs', 'walgreens', 'rite aid', 'duane reade',
-  'medicine shoppe', 'healthmart', 'genoa', 'capsule',
-  'walmart', 'wal-mart', 'target', 'kroger', 'safeway', 'albertsons',
-  'vons', 'pavilions', 'randalls', 'tom thumb', 'acme',
-  'jewel-osco', 'shaw\'s', 'star market', 'meijer',
-  'publix', 'wegmans', 'h-e-b', 'heb', 'hy-vee', 'giant',
-  'giant eagle', 'stop & shop', 'harris teeter', 'food lion',
-  'fred meyer', 'qfc', 'smith\'s', 'king soopers', 'city market',
-  'fry\'s', 'ralphs', 'dillons', 'baker\'s', 'gerbes',
-  'pick \'n save', 'metro market', 'mariano\'s', 'whole foods',
-  'sam\'s club', 'costco', 'bj\'s', 'price chopper', 'market basket',
-  'shoprite', 'winn-dixie', 'ingles', 'food city', 'brookshire\'s',
-  'united supermarkets', 'market street', 'amigos', 'albertsons market',
-  'carrs', 'pavilions', 'tom thumb', 'united', 'randalls',
-  'jewel', 'osco', 'sav-on', 'star', 'shaws', 'hannaford',
-  'price rite', 'tops', 'weis', 'giant food stores', 'martin\'s',
-  'food giant', 'piggly wiggly', 'bi-lo', 'harveys', 'fresco y más'
-]);
+// const PHARMACY_KEYWORDS = new Set([
+//  'pharmacy', 'drug store', 'apothecary', 'chemist',
+//  'cvs', 'walgreens', 'rite aid', 'duane reade',
+//  'medicine shoppe', 'healthmart', 'genoa', 'capsule',
+//  'walmart', 'wal-mart', 'target', 'kroger', 'safeway', 'albertsons',
+//  'vons', 'pavilions', 'randalls', 'tom thumb', 'acme',
+//  'jewel-osco', 'shaw\'s', 'star market', 'meijer',
+//  'publix', 'wegmans', 'h-e-b', 'heb', 'hy-vee', 'giant',
+//  'giant eagle', 'stop & shop', 'harris teeter', 'food lion',
+//  'fred meyer', 'qfc', 'smith\'s', 'king soopers', 'city market',
+//  'fry\'s', 'ralphs', 'dillons', 'baker\'s', 'gerbes',
+//  'pick \'n save', 'metro market', 'mariano\'s', 'whole foods',
+//  'sam\'s club', 'costco', 'bj\'s', 'price chopper', 'market basket',
+//  'shoprite', 'winn-dixie', 'ingles', 'food city', 'brookshire\'s',
+//  'united supermarkets', 'market street', 'amigos', 'albertsons market',
+//  'carrs', 'pavilions', 'tom thumb', 'united', 'randalls',
+//  'jewel', 'osco', 'sav-on', 'star', 'shaws', 'hannaford',
+//  'price rite', 'tops', 'weis', 'giant food stores', 'martin\'s',
+//  'food giant', 'piggly wiggly', 'bi-lo', 'harveys', 'fresco y más'
+// ]);
 
 // 15 miles in degrees (~0.2 for latitude, ~0.2 for longitude at mid-latitudes)
 const BOUNDING_BOX_DELTA = 0.5;
@@ -149,29 +149,6 @@ function deduplicatePharmacies(results: NominatimSearchResult[]): NominatimSearc
   return Array.from(seen.values());
 }
 
-// Pharmacy detection
-function isPharmacy(result: NominatimSearchResult): boolean {
-  // Direct pharmacy classification
-  if (result.class === 'amenity' && result.type === 'pharmacy') {
-    return true;
-  }
-
-  // Check various name fields
-  const namesToCheck = [
-    result.display_name,
-    result.address?.name,
-    result.extratags?.brand,
-    result.extratags?.operator
-  ].filter(Boolean).map(n => n!.toLowerCase());
-
-  // Check if any name contains pharmacy keywords
-  return namesToCheck.some(name =>
-    Array.from(PHARMACY_KEYWORDS).some(keyword =>
-      name.includes(keyword)
-    )
-  );
-}
-
 // GET endpoint for pharmacy search
 export async function GET(request: Request) {
   const corsHeaders = {
@@ -239,14 +216,15 @@ export async function GET(request: Request) {
       });
     }
 
-    // Determine search strategy
-    const isAddress = /\d/.test(sanitizedQuery) && (sanitizedQuery.includes(' ') || sanitizedQuery.length > 10);
-    const searches = isAddress
-      ? [sanitizedQuery]
-      : [`${sanitizedQuery} pharmacy`, sanitizedQuery];
+// Determine search strategy
+const searchQuery = sanitizedQuery;  // Just search for the name without any tag restrictions Add tag filter for non-address searches
+    
+    // If searching for a pharmacy name, add the amenity tag to the search
+//  const searchQuery = isAddress
+//  ? sanitizedQuery
+//  : `${sanitizedQuery} [amenity=pharmacy]`;
 
     // Combined API call with OR syntax
-    const combinedQuery = searches.join(' OR ');
     const bbox = {
       left: longitude - BOUNDING_BOX_DELTA,
       top: latitude + BOUNDING_BOX_DELTA,
@@ -254,16 +232,15 @@ export async function GET(request: Request) {
       bottom: latitude - BOUNDING_BOX_DELTA
     };
 
-    const endpoint = `https://nominatim.openstreetmap.org/search?
-
-format=json&
-q=${encodeURIComponent(combinedQuery)}&
-addressdetails=1&
-extratags=1&
-limit=30&
-bounded=1&
-viewbox=${bbox.left},${bbox.top},${bbox.right},${bbox.bottom}&
-countrycodes=us&`;   // Specifically look for pharmacy amenities
+const endpoint = `https://nominatim.openstreetmap.org/search?` +
+  `format=json&` +
+  `q=${encodeURIComponent(searchQuery)}&` +
+  `addressdetails=1&` +
+  `extratags=1&` +
+  `limit=30&` +
+  `bounded=1&` +
+  `viewbox=${bbox.left},${bbox.top},${bbox.right},${bbox.bottom}&` +
+  `countrycodes=us`;
 
 
     const response = await fetch(endpoint, {
@@ -281,8 +258,27 @@ countrycodes=us&`;   // Specifically look for pharmacy amenities
     const allResults: NominatimSearchResult[] = await response.json();
 
     // Filter for pharmacies and deduplicate
-    const pharmacyResults = allResults.filter(isPharmacy);
-    const deduplicated = deduplicatePharmacies(pharmacyResults);
+// Filter for pharmacies and deduplicate - now checking for partial matches
+const pharmacyResults = allResults.filter(result => {
+  // First check if it's tagged as a pharmacy
+  if (result.class === 'amenity' && result.type === 'pharmacy') {
+    return true;
+  }
+  
+  // Then check if the search query appears in the result
+  const queryLower = sanitizedQuery.toLowerCase();
+  const namesToCheck = [
+    result.display_name,
+    result.address?.name,
+    result.extratags?.brand,
+    result.extratags?.operator
+  ].filter(Boolean).map(n => n!.toLowerCase());
+  
+  // Return true if any name contains the search query (partial match)
+  return namesToCheck.some(name => name.includes(queryLower));
+});   
+
+const deduplicated = deduplicatePharmacies(pharmacyResults);
 
     // Sort by importance and distance
     deduplicated.sort((a, b) => {
@@ -333,7 +329,7 @@ countrycodes=us&`;   // Specifically look for pharmacy amenities
         };
 
         return {
-          name: name || 'Pharmacy',
+          name: name,
           osm_id: `osm_${result.osm_type}_${result.osm_id}`,
           full_address: formatAddress()
         };
