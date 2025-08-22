@@ -40,11 +40,7 @@ interface SelectedPharmacy {
   phone_number: string;
 }
 type Coords = [number, number];
-interface Stats {
-  weeklyCount: number;
-  totalCount?: number;
-  zipCodeCount?: number;
-}
+
 export interface AggregatedPharmacy {
   id: string;  // Keep as 'id'
   name: string;  // Keep as 'name'
@@ -97,8 +93,6 @@ export default function Home() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [finalStats, setFinalStats] = useState<Stats | null>(null);
   const [copied, setCopied] = useState(false);
   const [allReports, setAllReports] = useState<Report[]>([]);
   const [aggregatedPharmacies, setAggregatedPharmacies] = useState<Record<string, AggregatedPharmacy>>({});
@@ -247,21 +241,7 @@ const handleManualPharmacySubmit = async (pharmacyData: SelectedPharmacy, turnst
     };
   }, [mode, locationCoords]);
 
-  // --- Stats fetch ---
-  useEffect(() => {
-    if (locationCoords && !mode) {
-      const fetchStats = async () => {
-        try {
-          const response = await fetch('/api/stats');
-          const data = await response.json();
-          setStats(data);
-        } catch (error) {
-          console.error("Failed to fetch stats", error);
-        }
-      };
-      fetchStats();
-    }
-  }, [locationCoords, mode]);
+
 
   // --- Pharmacy reports fetch ---
   useEffect(() => {
@@ -592,10 +572,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
       setTurnstileToken(null);
     }
     
-    // Fetch updated stats
-    const statsResponse = await fetch(`/api/stats?zip_code=${selectedPharmacy?.zip_code || ''}`);
-    const statsData = await statsResponse.json();
-    setFinalStats(statsData);
+
     
     // Refresh pharmacy data to show the new submission
     if (locationCoords) {
@@ -672,12 +649,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
   if (!mode) {
     return (
       <div className={styles.choiceContainer}>
-        <h2>What would you like to do?</h2>
-        {stats && stats.weeklyCount > 0 && (
-          <p className={styles.statsTextOnDark}>
-            Join {stats.weeklyCount} {stats.weeklyCount === 1 ? 'person' : 'people'} who have submitted a report this week!
-          </p>
-        )}
+        <h2>What would you like to do today?</h2>
         <div className={styles.choiceButtons}>
           <button className={styles.choiceButton} onClick={() => setMode('report')}>Update a Pharmacy&apos;s Bupe Status</button>
           <button className={styles.choiceButton} onClick={() => setMode('find')}>Find a Bupe-Friendly Pharmacy</button>
@@ -748,25 +720,9 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
             {submitStatus === 'success' ? (
               <div className={styles.successMessage}>
                 <h3>🎉 Thank You! 🎉</h3>
-                {finalStats && (
-                  <p className={styles.statsTextOnLight}>
-                    {finalStats.zipCodeCount === 1 ? (
-                      <>
-                        Congratulations on being the first submission in your area!<br />
-                        This is an important step towards increasing bupe access in your community.
-                      </>
-                    ) : (
-                      <>
-                        You are part of {finalStats.totalCount} total reports to our database.<br />
-                        {finalStats.zipCodeCount && finalStats.zipCodeCount > 0 &&
-                          `In your area, ${finalStats.zipCodeCount} reports have been made!`
-                        }
-                      </>
-                    )}
-                  </p>
-                )}
                 <p>We know filling a bupe script isn&apos;t always easy. Your answers help others in your area find this lifesaving medication.</p>
-                <p><strong>The most helpful info is <em>new</em> info</strong>! So, the next time you try to fill a bupe script, tell us how it went. You can also help by sharing this website with friends who take bupe too.</p>
+                <br />
+                <p><strong>The most helpful info is <em>new</em> info</strong>! So, the next time you try to fill a bupe script, tell us how it went. You can also help by sharing this website with friends who take bupe.</p>
                 <br/>
                 <p style={{marginTop: '1.5rem', fontStyle: 'italic', fontSize: '0.9rem'}}><Link href="/privacy" className={styles.styledLink}><strong>Remember to clear your browser history.</strong> Learn more in our privacy tips.🔒</Link></p>
                 <br/>
