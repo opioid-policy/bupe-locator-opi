@@ -20,8 +20,6 @@ interface NominatimSearchResult {
     state?: string;
     postcode?: string;
     country?: string;
-    shop?: string;
-    amenity?: string;
     name?: string;
     town?: string;
     village?: string;
@@ -127,8 +125,6 @@ function generateCacheKey(...parts: string[]): string {
 // Simplified pharmacy name extraction
 function getPharmacyName(result: NominatimSearchResult): string {
   return (result.address?.name ||
-          result.address?.shop ||
-          result.address?.amenity ||
           result.extratags?.brand ||
           result.display_name.split(',')[0]).trim().toLowerCase();
 }
@@ -164,8 +160,6 @@ function isPharmacy(result: NominatimSearchResult): boolean {
   const namesToCheck = [
     result.display_name,
     result.address?.name,
-    result.address?.shop,
-    result.address?.amenity,
     result.extratags?.brand,
     result.extratags?.operator
   ].filter(Boolean).map(n => n!.toLowerCase());
@@ -269,9 +263,7 @@ extratags=1&
 limit=30&
 bounded=1&
 viewbox=${bbox.left},${bbox.top},${bbox.right},${bbox.bottom}&
-countrycodes=us&  
-amenity=pharmacy&  // Specifically look for pharmacies
- shop=pharmacy`;   // Specifically look for pharmacy amenities
+countrycodes=us&`;   // Specifically look for pharmacy amenities
 
 
     const response = await fetch(endpoint, {
@@ -309,8 +301,6 @@ amenity=pharmacy&  // Specifically look for pharmacies
       .slice(0, 50)
       .map(result => {
         let name = result.address?.name ||
-                   result.address?.shop ||
-                   result.address?.amenity ||
                    result.extratags?.brand ||
                    result.display_name.split(',')[0];
 

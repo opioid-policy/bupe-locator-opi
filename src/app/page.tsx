@@ -105,7 +105,7 @@ export default function Home() {
   const [isLoadingPharmacies, setIsLoadingPharmacies] = useState(true);
   const [dateFilter, setDateFilter] = useState<number | null>(30);
   const turnstile = useTurnstile();
-  const [isSearching, setIsSearching] = useState(false);
+  const [isSearching] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
 
   // Client-side rate limiting state
@@ -530,34 +530,32 @@ useEffect(() => {
   if (!sessionToken) setSessionToken(crypto.randomUUID());
   if (searchTerm.length <= 2) {
     setResults([]);
-    setIsSearching(false); // Add this state
     return;
   }
-
-  setIsSearching(true); // Add this state
-
   const timer = setTimeout(() => {
     const fetchPharmacies = async () => {
       const [lat, lon] = locationCoords;
-      const endpoint = `/api/pharmacy-search-hybrid?q=${encodeURIComponent(searchTerm)}&lat=${lat}&lon=${lon}`;      try {
+      // CHANGE: Use hybrid endpoint instead of pharmacy-search
+      const endpoint = `/api/pharmacy-search-hybrid?q=${encodeURIComponent(searchTerm)}&lat=${lat}&lon=${lon}&zip=${zipCode}`;
+      
+      console.log('[Frontend] Fetching from:', endpoint); // Debug log
+      
+      try {
         const response = await fetch(endpoint);
         const data = await response.json();
+        
+        console.log('[Frontend] Received data:', data); // Debug log
+        
         setResults(data.suggestions || []);
       } catch (error) {
         console.error("Error fetching pharmacies:", error);
         setResults([]);
-      } finally {
-        setIsSearching(false); // Always turn off loading
       }
     };
     fetchPharmacies();
-  }, 500);
-
-  return () => {
-    clearTimeout(timer);
-    setIsSearching(false);
-  };
-}, [searchTerm, locationCoords, sessionToken]);
+  }, 500); // Slightly longer delay to be respectful
+  return () => clearTimeout(timer);
+}, [searchTerm, locationCoords, sessionToken, zipCode]); // Add zipCode to dependencies
 
   // --- Form helpers ---
   const handleFormulationChange = (option: string) => {

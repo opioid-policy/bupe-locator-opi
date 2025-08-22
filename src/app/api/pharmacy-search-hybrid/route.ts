@@ -20,23 +20,32 @@ interface AirtablePharmacy {
   last_report?: string;
 }
 
+interface OsmSuggestion {
+  name: string;
+  osm_id?: string;
+  full_address: string;
+}
+
 interface SearchSuggestion {
   name: string;
   osm_id: string;
   full_address: string;
   source?: 'osm' | 'manual' | 'reported' | 'action';
   phone_number?: string;
+  distance?: number;
+  in_zip?: boolean;
 }
 
 // ============= CONSTANTS =============
-const CACHE_PRECISION = 2; // decimal places for cache keys
-const BOUNDING_BOX_LAT_DELTA = 0.5; // ~15 miles
-const BOUNDING_BOX_LON_DELTA = 0.5; // ~15 miles
-const CACHE_TTL = 1800; // 30 minutes
-const OSM_CACHE_TTL = 900; // 15 minutes
-const MAX_CACHE_ENTRIES = 1000; // Prevent unbounded memory growth
+const CACHE_PRECISION = 2;
+const BOUNDING_BOX_LAT_DELTA = 0.36; // ~25 miles
+const BOUNDING_BOX_LON_DELTA = 0.36; // ~25 miles
+const CACHE_TTL = 30; // REDUCED FOR DEBUGGING - 30 seconds instead of 30 minutes
+const OSM_CACHE_TTL = 30; // REDUCED FOR DEBUGGING - 30 seconds instead of 15 minutes
+const MAX_CACHE_ENTRIES = 1000;
+const MAX_RESULTS = 20; // Return up to 20 results
 
-// ============= PRODUCTION CACHING STRATEGY =============
+// ============= CACHING =============
 const airtableCache = new NodeCache({
   stdTTL: CACHE_TTL,
   checkperiod: 600,
@@ -52,7 +61,6 @@ const osmCache = new NodeCache({
 });
 
 // ============= UTILITY FUNCTIONS =============
-// Generate privacy-preserving cache keys
 function generateCacheKey(...parts: (string | number)[]): string {
   return createHash('sha256')
     .update(parts.join('_'))
@@ -60,18 +68,28 @@ function generateCacheKey(...parts: (string | number)[]): string {
     .substring(0, 16);
 }
 
-// Input sanitization
 function sanitizeInput(query: string): string {
   return query.replace(/[^\w\s\-(),.]/g, '').substring(0, 100);
 }
 
-// Circuit breaker for Airtable to prevent cascading failures
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 3959;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// Circuit breaker
 class CircuitBreaker {
   private failures = 0;
   private lastFailTime = 0;
   private state: 'closed' | 'open' | 'half-open' = 'closed';
-  private readonly threshold = 3; // Open after 3 failures
-  private readonly timeout = 60000; // Try again after 1 minute
+  private readonly threshold = 3;
+  private readonly timeout = 60000;
 
   async execute<T>(fn: () => Promise<T>, fallback: () => T): Promise<T> {
     if (this.state === 'open' && Date.now() - this.lastFailTime > this.timeout) {
@@ -108,41 +126,30 @@ class CircuitBreaker {
 
 const airtableCircuit = new CircuitBreaker();
 
-// ============= OPTIMIZED AIRTABLE FETCHING =============
-async function getAirtablePharmacies(lat: number, lon: number): Promise<AirtablePharmacy[]> {
-  // Calculate bounding box (about 20 miles radius)
-  const latMin = lat - 0.3;
-  const latMax = lat + 0.3;
-  const lonMin = lon - 0.3;
-  const lonMax = lon + 0.3;
+// ============= AIRTABLE FETCHING =============
+async function getAirtablePharmacies(lat: number, lon: number, searchZip?: string): Promise<AirtablePharmacy[]> {
+  console.log(`[DEBUG] getAirtablePharmacies called with lat=${lat}, lon=${lon}, zip=${searchZip}`);
+  
+  const cacheKey = generateCacheKey(
+    lat.toFixed(CACHE_PRECISION), 
+    lon.toFixed(CACHE_PRECISION),
+    searchZip || 'no-zip'
+  );
 
-  // Simple filter - only check location and valid coordinates
-  const filterFormula = `AND(
-    NOT({latitude} = ''),
-    NOT({longitude} = ''),
-    {latitude} >= ${latMin},
-    {latitude} <= ${latMax},
-    {longitude} >= ${lonMin},
-    {longitude} <= ${lonMax}
-  )`;
-
-// More precise cache key
-  const cacheKey = generateCacheKey(lat.toFixed(CACHE_PRECISION), lon.toFixed(CACHE_PRECISION));
-
-  // Check cache first
   const cached = airtableCache.get<AirtablePharmacy[]>(cacheKey);
   if (cached) {
+    console.log(`[DEBUG] Airtable cache hit, returning ${cached.length} pharmacies`);
     return cached;
   }
 
-  // Use circuit breaker for Airtable calls
   return airtableCircuit.execute(
     async () => {
-      // Calculate smaller bounding box (15 miles)
       const latMin = lat - BOUNDING_BOX_LAT_DELTA;
       const latMax = lat + BOUNDING_BOX_LAT_DELTA;
       const lonMin = lon - BOUNDING_BOX_LON_DELTA;
       const lonMax = lon + BOUNDING_BOX_LON_DELTA;
+
+      console.log(`[DEBUG] Airtable bounding box: lat ${latMin} to ${latMax}, lon ${lonMin} to ${lonMax}`);
 
       const filterFormula = `AND(
         NOT({latitude} = ''),
@@ -157,6 +164,8 @@ async function getAirtablePharmacies(lat: number, lon: number): Promise<Airtable
         )
       )`;
 
+      console.log(`[DEBUG] Airtable filter formula: ${filterFormula}`);
+
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error('Airtable timeout')), 5000)
       );
@@ -168,11 +177,13 @@ async function getAirtablePharmacies(lat: number, lon: number): Promise<Airtable
           'phone_number', 'manual_entry', 'live_manual_entry', 'submission_time'
         ],
         filterByFormula: filterFormula,
-        maxRecords: 200,
+        maxRecords: 500,
         sort: [{field: 'submission_time', direction: 'desc'}]
       });
 
       const records = await Promise.race([recordsPromise, timeoutPromise]);
+      console.log(`[DEBUG] Airtable returned ${records.length} raw records`);
+      
       const pharmacyMap = new Map<string, AirtablePharmacy>();
 
       records.forEach((record) => {
@@ -184,8 +195,6 @@ async function getAirtablePharmacies(lat: number, lon: number): Promise<Airtable
         if (!lat || !lon) return;
 
         const submissionTime = record.fields.submission_time as string | undefined;
-
-        // Convert to boolean safely
         const manualEntry = record.fields.manual_entry ? true : false;
         const liveManualEntry = record.fields.live_manual_entry ? true : false;
 
@@ -210,28 +219,48 @@ async function getAirtablePharmacies(lat: number, lon: number): Promise<Airtable
       });
 
       const nearbyPharmacies = Array.from(pharmacyMap.values());
+      console.log(`[DEBUG] After deduplication: ${nearbyPharmacies.length} unique pharmacies`);
+      
       airtableCache.set(cacheKey, nearbyPharmacies);
       return nearbyPharmacies;
     },
     () => {
-      console.log('Airtable unavailable - returning empty array');
+      console.log('[DEBUG] Airtable unavailable - returning empty array');
       return [];
     }
   );
 }
 
 // ============= DEDUPLICATION =============
-// Update the similarPharmacy function to be more strict
 function similarPharmacy(a: SearchSuggestion, b: SearchSuggestion): boolean {
-  // Only consider them duplicates if they have the exact same address
-  // This allows multiple locations of the same chain (e.g., multiple CVS stores)
-  const aNum = a.full_address.match(/^\d+/)?.[0];
-  const bNum = b.full_address.match(/^\d+/)?.[0];
+  const normalizeAddress = (addr: string) => {
+    return addr.toLowerCase()
+      .replace(/[^\w\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
 
-  // Only consider them similar if they have the same street number AND same source
-  return !!aNum && !!bNum && aNum === bNum && a.source === b.source;
+  const aAddr = normalizeAddress(a.full_address);
+  const bAddr = normalizeAddress(b.full_address);
+
+  const aNum = aAddr.match(/^\d+/)?.[0];
+  const bNum = bAddr.match(/^\d+/)?.[0];
+
+  if (aNum && bNum && aNum === bNum) {
+    const aStreet = aAddr.replace(/^\d+\s*/, '').split(' ').slice(0, 3).join(' ');
+    const bStreet = bAddr.replace(/^\d+\s*/, '').split(' ').slice(0, 3).join(' ');
+    
+    if (aStreet === bStreet) {
+      return true;
+    }
+  }
+
+  if (aAddr === bAddr) {
+    return true;
+  }
+
+  return false;
 }
-
 
 // ============= MAIN ENDPOINT =============
 export async function GET(request: Request) {
@@ -240,21 +269,23 @@ export async function GET(request: Request) {
     'Access-Control-Allow-Methods': 'GET, POST'
   };
 
-
-
-  
   const startTime = Date.now();
+  console.log('\n[DEBUG] ========== NEW SEARCH REQUEST ==========');
 
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');
     const lat = searchParams.get('lat');
     const lon = searchParams.get('lon');
+    const zip = searchParams.get('zip');
 
-    // Input validation
+    console.log(`[DEBUG] Search params: query="${query}", lat=${lat}, lon=${lon}, zip=${zip}`);
+
     if (!query || !lat || !lon || query.length < 2) {
+      console.log('[DEBUG] Invalid params, returning empty suggestions');
       return NextResponse.json({
         suggestions: [],
+        debug: { reason: 'Invalid parameters' },
         performance: { duration: Date.now() - startTime }
       }, { headers: corsHeaders });
     }
@@ -263,87 +294,131 @@ export async function GET(request: Request) {
     const latitude = parseFloat(lat);
     const longitude = parseFloat(lon);
 
-    // Check combined cache first for ultra-fast response
-    const fullCacheKey = generateCacheKey(sanitizedQuery, lat, lon);
-    const cachedResult = osmCache.get(fullCacheKey);
+    console.log(`[DEBUG] Sanitized query: "${sanitizedQuery}"`);
 
-    if (cachedResult) {
-      return NextResponse.json({
-        ...cachedResult,
-        cached: true,
-        performance: { duration: Date.now() - startTime }
-      }, { headers: corsHeaders });
-    }
+    // Skip cache for debugging
+    console.log('[DEBUG] Skipping cache for debugging purposes');
 
-    // Parallel fetch with individual timeouts
+    // Parallel fetch
     const [osmResult, airtableResult] = await Promise.allSettled([
-      // OSM search with timeout
+      // OSM search
       Promise.race([
         fetch(`${request.url.split('/api/')[0]}/api/pharmacy-search?q=${encodeURIComponent(sanitizedQuery)}&lat=${lat}&lon=${lon}`),
         new Promise<Response>((_, reject) =>
           setTimeout(() => reject(new Error('OSM timeout')), 3000)
         )
-      ]).then(res => res.json()).catch(() => ({ suggestions: [] })),
+      ]).then(res => res.json()).catch((err) => {
+        console.log('[DEBUG] OSM error:', err);
+        return { suggestions: [] };
+      }),
 
       // Airtable search
-      getAirtablePharmacies(latitude, longitude)
+      getAirtablePharmacies(latitude, longitude, zip || undefined)
     ]);
 
     // Process OSM results
     let suggestions: SearchSuggestion[] = [];
     if (osmResult.status === 'fulfilled' && osmResult.value.suggestions) {
-      suggestions = osmResult.value.suggestions
-        .filter((s: SearchSuggestion) => s.osm_id !== 'manual_entry')
-        .map((s: SearchSuggestion) => ({
-          ...s,
-          source: s.source || 'osm'
+      const osmSuggestions = osmResult.value.suggestions as OsmSuggestion[];
+      suggestions = osmSuggestions
+        .filter((s: OsmSuggestion) => {
+          const id = s.osm_id || '';
+          return id !== 'manual_entry';
+        })
+        .map((s: OsmSuggestion) => ({
+          name: s.name,
+          osm_id: s.osm_id || '',
+          full_address: s.full_address,
+          source: 'osm' as const,
+          distance: 0
         }));
+      console.log(`[DEBUG] OSM returned ${suggestions.length} results`);
+    } else {
+      console.log('[DEBUG] OSM failed or returned no results');
     }
 
     // Process Airtable results
     let airtableSuggestions: SearchSuggestion[] = [];
     if (airtableResult.status === 'fulfilled' && airtableResult.value) {
       const queryLower = sanitizedQuery.toLowerCase();
-      const queryTerms = queryLower.split(/\s+/).filter(t => t.length > 1);
-
+      console.log(`[DEBUG] Filtering ${airtableResult.value.length} Airtable pharmacies for query "${queryLower}"`);
+      
       airtableSuggestions = airtableResult.value
         .filter((pharmacy: AirtablePharmacy) => {
-          const searchText = `${pharmacy.name} ${pharmacy.street_address} ${pharmacy.city}`.toLowerCase();
-          return queryTerms.every(term => searchText.includes(term));
+          const nameLower = pharmacy.name.toLowerCase();
+          
+          // Debug each pharmacy
+          if (nameLower.includes('walgreens') || nameLower.includes('cvs')) {
+            console.log(`[DEBUG] Checking pharmacy: ${pharmacy.name} in ${pharmacy.zip_code}`);
+          }
+          
+          // Very broad matching for debugging
+          const matches = nameLower.includes(queryLower) || 
+                         queryLower.split(' ').some(term => nameLower.includes(term));
+          
+          if (matches) {
+            console.log(`[DEBUG] MATCH: ${pharmacy.name} (${pharmacy.zip_code})`);
+          }
+          
+          return matches;
         })
         .map((pharmacy: AirtablePharmacy) => ({
           name: pharmacy.name,
           osm_id: pharmacy.id,
           full_address: `${pharmacy.street_address}, ${pharmacy.city}, ${pharmacy.state} ${pharmacy.zip_code}`.replace(/^,\s*/, ''),
-          source: pharmacy.manual_entry ? 'manual' : 'reported',
-          phone_number: pharmacy.phone_number
+          source: (pharmacy.manual_entry && pharmacy.live_manual_entry ? 'manual' : 'reported'),
+          phone_number: pharmacy.phone_number,
+          distance: calculateDistance(latitude, longitude, pharmacy.latitude, pharmacy.longitude),
+          in_zip: zip ? pharmacy.zip_code === zip : false
         }));
+      
+      console.log(`[DEBUG] Airtable filtered to ${airtableSuggestions.length} results`);
+    } else {
+      console.log('[DEBUG] Airtable failed or returned no results');
     }
 
-    // Merge and deduplicate
+    // Merge results
     const mergedSuggestions: SearchSuggestion[] = [...suggestions];
+    console.log(`[DEBUG] Starting with ${mergedSuggestions.length} OSM results`);
 
+    let duplicatesFound = 0;
     airtableSuggestions.forEach(airtableItem => {
       if (!mergedSuggestions.some(existing => similarPharmacy(existing, airtableItem))) {
         mergedSuggestions.push(airtableItem);
+      } else {
+        duplicatesFound++;
       }
     });
+    console.log(`[DEBUG] Added ${airtableSuggestions.length - duplicatesFound} Airtable results (${duplicatesFound} duplicates skipped)`);
+    console.log(`[DEBUG] Total merged: ${mergedSuggestions.length} results`);
 
-    // Sort by relevance
+    // Sort
     const queryLower = sanitizedQuery.toLowerCase();
     mergedSuggestions.sort((a, b) => {
       const aExact = a.name.toLowerCase() === queryLower;
       const bExact = b.name.toLowerCase() === queryLower;
       if (aExact !== bExact) return aExact ? -1 : 1;
 
+      const aStarts = a.name.toLowerCase().startsWith(queryLower);
+      const bStarts = b.name.toLowerCase().startsWith(queryLower);
+      if (aStarts !== bStarts) return aStarts ? -1 : 1;
+
+      if (a.in_zip !== b.in_zip) return a.in_zip ? -1 : 1;
+
+      if (a.distance !== undefined && b.distance !== undefined) {
+        return a.distance - b.distance;
+      }
+
       const priority: Record<string, number> = {
-        'osm': 0, 'manual': 1, 'reported': 2
+        'osm': 0, 'reported': 1, 'manual': 2
       };
       return (priority[a.source || 'osm'] || 3) - (priority[b.source || 'osm'] || 3);
     });
 
-    // Take top results
-    const topResults = mergedSuggestions.slice(0, 1);
+    // CRITICAL: Take MAX_RESULTS, not 1!
+    console.log(`[DEBUG] Taking top ${MAX_RESULTS} results from ${mergedSuggestions.length} total`);
+    const topResults = mergedSuggestions.slice(0, MAX_RESULTS);
+    console.log(`[DEBUG] Final results count: ${topResults.length}`);
 
     // Add manual entry option
     topResults.push({
@@ -360,6 +435,12 @@ export async function GET(request: Request) {
         airtable: airtableSuggestions.length,
         total: topResults.length - 1
       },
+      debug: {
+        query: sanitizedQuery,
+        totalMerged: mergedSuggestions.length,
+        maxResults: MAX_RESULTS,
+        cacheStatus: 'disabled for debugging'
+      },
       cached: false,
       performance: {
         duration: Date.now() - startTime,
@@ -368,14 +449,14 @@ export async function GET(request: Request) {
       }
     };
 
-    // Cache the successful result
-    osmCache.set(fullCacheKey, result);
+    console.log(`[DEBUG] Returning ${result.suggestions.length} suggestions`);
+    console.log('[DEBUG] ========== END REQUEST ==========\n');
+    
     return NextResponse.json(result, { headers: corsHeaders });
 
   } catch (error) {
-    console.error('Hybrid search critical error:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('[DEBUG] Critical error:', error instanceof Error ? error.message : 'Unknown error');
 
-    // Emergency fallback
     return NextResponse.json({
       suggestions: [{
         name: '+ Add a pharmacy not listed',
@@ -384,14 +465,14 @@ export async function GET(request: Request) {
         source: 'action'
       }],
       error: 'Service temporarily unavailable',
+      debug: { error: error instanceof Error ? error.message : 'Unknown error' },
       performance: { duration: Date.now() - startTime }
     }, { headers: corsHeaders });
   }
 }
 
-// ============= HEALTH CHECK ENDPOINT =============
+// ============= HEALTH CHECK =============
 export async function POST(request: Request) {
-  // Simple health check for monitoring
   if (request.headers.get('x-health-check') === 'true') {
     const health = {
       status: 'healthy',
@@ -410,6 +491,5 @@ export async function POST(request: Request) {
     return NextResponse.json(health);
   }
 
-  // Return 404 for other POST requests
   return NextResponse.json({ error: 'Not found' }, { status: 404 });
 }
