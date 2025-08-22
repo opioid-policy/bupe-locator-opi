@@ -1,8 +1,17 @@
+// src/app/api/reports/route.ts
 import { NextResponse } from 'next/server';
 import { airtableAPI } from '@/lib/airtable-api';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { createHash } from 'crypto';
 
+// Constants for timeframes - only the ones we want to support
+const TIMEFRAMES = {
+  ALL: 'all',
+  PAST_MONTH: 'past-month'
+} as const;
+
+type Timeframe = typeof TIMEFRAMES[keyof typeof TIMEFRAMES];
 
 interface CleanReport {
   reportType: 'success' | 'denial';
@@ -17,53 +26,47 @@ interface CachedData {
   data: CleanReport[];
   lastUpdate: string;
   lastUpdateMonth: string;
-  timeframe: string;
+  timeframe: Timeframe;
 }
 
-// Cache file paths
-const getCacheFilePath = (timeframe: string) => {
-  return path.join('/tmp', `dashboard-cache-${timeframe}.json`);
-};
+// Cache directory configuration
+const CACHE_DIR = path.join(process.cwd(), '.cache', 'dashboard');
+const MAX_CACHE_FILES = 3;
 
-// Helper function to get current month key
+// Helper functions remain the same
+const getCacheFilePath = (timeframe: Timeframe) => path.join(CACHE_DIR, `dashboard-cache-${timeframe}.json`);
+
 function getCurrentMonthKey(): string {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 }
 
-// Helper function to get date ranges
 function getDateRanges() {
   const now = new Date();
-  
-  // Current month (for current month data)
-  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  
-  // Previous month (for "last month" data)
-  const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-  
+  const pastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const pastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
   return {
-    currentMonthStart: currentMonthStart.toISOString().split('T')[0],
-    previousMonthStart: previousMonthStart.toISOString().split('T')[0],
-    previousMonthEnd: previousMonthEnd.toISOString().split('T')[0]
+    pastMonthStart: pastMonthStart.toISOString().split('T')[0],
+    pastMonthEnd: pastMonthEnd.toISOString().split('T')[0]
   };
 }
 
-// Function to read cached data
-async function readCache(timeframe: string): Promise<CachedData | null> {
+// Cache functions remain the same
+async function readCache(timeframe: Timeframe): Promise<CachedData | null> {
   try {
+    await fs.mkdir(CACHE_DIR, { recursive: true });
     const cacheFile = getCacheFilePath(timeframe);
     const data = await fs.readFile(cacheFile, 'utf-8');
     return JSON.parse(data);
   } catch {
-    // Cache doesn't exist or is invalid
     return null;
   }
 }
 
-// Function to write cached data
-async function writeCache(timeframe: string, data: CleanReport[]): Promise<void> {
+async function writeCache(timeframe: Timeframe, data: CleanReport[]): Promise<void> {
   try {
+    await fs.mkdir(CACHE_DIR, { recursive: true });
     const cacheFile = getCacheFilePath(timeframe);
     const cacheData: CachedData = {
       data,
@@ -72,39 +75,45 @@ async function writeCache(timeframe: string, data: CleanReport[]): Promise<void>
       timeframe
     };
     await fs.writeFile(cacheFile, JSON.stringify(cacheData, null, 2));
+    await cleanupOldCacheFiles();
   } catch {
     console.error('Error writing cache - proceeding without cache');
   }
 }
 
-// Function to check if cache is valid for the current month
-function isCacheValid(cachedData: CachedData | null, timeframe: string): boolean {
-  if (!cachedData) return false;
-  
-  const currentMonth = getCurrentMonthKey();
-  
-  // For 'all' timeframe, refresh monthly
-  if (timeframe === 'all') {
-    return cachedData.lastUpdateMonth === currentMonth;
+async function cleanupOldCacheFiles() {
+  try {
+    const files = await fs.readdir(CACHE_DIR);
+    const cacheFiles = files.filter(f => f.startsWith('dashboard-cache-'));
+
+    if (cacheFiles.length > MAX_CACHE_FILES) {
+      const filesWithStats = await Promise.all(
+        cacheFiles.map(async (file) => {
+          const filePath = path.join(CACHE_DIR, file);
+          const stat = await fs.stat(filePath);
+          return { file, mtimeMs: stat.mtimeMs };
+        })
+      );
+
+      filesWithStats.sort((a, b) => b.mtimeMs - a.mtimeMs);
+
+      for (const { file } of filesWithStats.slice(MAX_CACHE_FILES)) {
+        await fs.unlink(path.join(CACHE_DIR, file));
+      }
+    }
+  } catch {
+    // Ignore cleanup errors
   }
-  
-  // For 'previous-month', only refresh when we move to a new month
-  // (previous month data becomes stable)
-  if (timeframe === 'previous-month') {
-    return cachedData.lastUpdateMonth === currentMonth;
-  }
-  
-  // For 'current-month', refresh monthly (since it's always changing)
-  if (timeframe === 'current-month') {
-    return cachedData.lastUpdateMonth === currentMonth;
-  }
-  
-  return false;
 }
 
-// Function to fetch fresh data from Airtable
-async function fetchFromAirtable(timeframe: string): Promise<CleanReport[]> {
-  // Validate environment variables
+function isCacheValid(cachedData: CachedData | null): boolean {
+  if (!cachedData) return false;
+  const currentMonth = getCurrentMonthKey();
+  return cachedData.lastUpdateMonth === currentMonth;
+}
+
+async function fetchFromAirtable(timeframe: Timeframe): Promise<CleanReport[]> {
+  // Use your actual environment variable names
   if (!process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN) {
     throw new Error('AIRTABLE_PERSONAL_ACCESS_TOKEN is not configured');
   }
@@ -112,76 +121,135 @@ async function fetchFromAirtable(timeframe: string): Promise<CleanReport[]> {
     throw new Error('NEXT_PUBLIC_AIRTABLE_BASE_ID is not configured');
   }
 
-  // Build filter formula based on timeframe
   let filterFormula = '';
-  const { currentMonthStart, previousMonthStart, previousMonthEnd } = getDateRanges();
-  
-  if (timeframe === 'current-month') {
-    // Data from start of current month to now
-    filterFormula = `IS_AFTER({submission_time}, "${currentMonthStart}")`;
-  } else if (timeframe === 'previous-month') {
-    // Data from previous month only (completed month)
-    filterFormula = `AND(IS_AFTER({submission_time}, "${previousMonthStart}"), IS_BEFORE({submission_time}, "${previousMonthEnd}"))`;
+  const { pastMonthStart, pastMonthEnd } = getDateRanges();
+
+  if (timeframe === TIMEFRAMES.PAST_MONTH) {
+    filterFormula = `AND(
+      IS_AFTER({submission_time}, "${pastMonthStart}"),
+      IS_BEFORE({submission_time}, "${pastMonthEnd}")
+    )`;
   }
-  // No filter for 'all' - returns all records
 
   console.log(`Fetching fresh data from Airtable for timeframe: ${timeframe}`);
 
-  // Fetch records from Airtable
-const records = await airtableAPI.select({
-  filterByFormula: filterFormula,
-  view: 'Grid view',
-});
+  let offset: string | undefined;
+  const allRecords: CleanReport[] = [];
+  let pageCount = 0;
+  const MAX_PAGES = 20;
 
-const allRecords: CleanReport[] = [];
-for (const record of records) {
-  const fields = record.fields;
-  
-  // Validate required fields
-  if (!fields.report_type || !fields.submission_time) {
-    console.warn('Skipping record with missing required fields:', record.id);
-    continue;
-  }
+  do {
+    pageCount++;
+    const records = await airtableAPI.select({
+      filterByFormula: filterFormula,
+      view: 'Grid view',
+      pageSize: 100,
+      ...(offset ? { offset } : {})
+    });
 
-  allRecords.push({
-    reportType: fields.report_type as 'success' | 'denial',
-    formulations: (fields.formulation as string[]) || [],
-    standardizedNotes: (fields.standardized_notes as string[]) || [],
-    zipCode: (fields.zip_code as string) || '',
-    state: (fields.state as string) || '',
-    submissionTime: fields.submission_time as string,
-  });
+    const airtableRecords = records as { offset?: string } & typeof records;
+
+    for (const record of records) {
+      const fields = record.fields;
+
+      if (!fields.report_type || !fields.submission_time) {
+        console.warn('Skipping record with missing required fields:', record.id);
+        continue;
+      }
+
+      allRecords.push({
+        reportType: fields.report_type as 'success' | 'denial',
+        formulations: Array.isArray(fields.formulation) ? fields.formulation : [],
+        standardizedNotes: Array.isArray(fields.standardized_notes) ? fields.standardized_notes : [],
+        zipCode: typeof fields.zip_code === 'string' ? fields.zip_code.substring(0, 3) + '..' : '',
+        state: typeof fields.state === 'string' ? fields.state : '',
+        submissionTime: typeof fields.submission_time === 'string' ? fields.submission_time : ''
+      });
+    }
+
+    offset = airtableRecords.offset;
+  } while (offset && pageCount < MAX_PAGES);
+
+  console.log(`Fetched ${allRecords.length} records for timeframe: ${timeframe}`);
+  return allRecords;
 }
 
-console.log(`Fetched ${allRecords.length} records for timeframe: ${timeframe}`);
-return allRecords;
+function generateETag(data: CleanReport[]): string {
+  const hash = createHash('sha256');
+  hash.update(JSON.stringify(data.length));
+  return hash.digest('base64');
 }
 
 export async function GET(request: Request) {
+  // Basic rate limiting
+  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+  const rateLimit = new Map<string, { count: number, lastRequest: number }>();
+
+  if (!rateLimit.has(ip)) {
+    rateLimit.set(ip, { count: 0, lastRequest: Date.now() });
+  }
+
+  const client = rateLimit.get(ip)!;
+  const timeSinceLast = Date.now() - client.lastRequest;
+
+  if (timeSinceLast < 1000) {
+    client.count++;
+    if (client.count > 10) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+  } else {
+    client.count = 1;
+    client.lastRequest = Date.now();
+  }
+
   const { searchParams } = new URL(request.url);
-  const timeframe = searchParams.get('timeframe') || 'all';
+  const timeframeParam = searchParams.get('timeframe') || TIMEFRAMES.ALL;
+
+  // Validate timeframe - only accept our defined values
+  if (!Object.values(TIMEFRAMES).includes(timeframeParam as Timeframe)) {
+    return NextResponse.json(
+      { error: `Invalid timeframe. Must be one of: ${Object.values(TIMEFRAMES).join(', ')}` },
+      { status: 400 }
+    );
+  }
+
+  const timeframe = timeframeParam as Timeframe;
 
   try {
-    // Try to read from cache first
     const cachedData = await readCache(timeframe);
-    
-    // Check if cache is valid for current month
-    if (isCacheValid(cachedData, timeframe)) {
+
+    if (isCacheValid(cachedData)) {
       console.log(`Serving cached data for timeframe: ${timeframe}`);
+      const etag = generateETag(cachedData!.data);
+      const ifNoneMatch = request.headers.get('if-none-match');
+
+      if (ifNoneMatch === etag) {
+        return new NextResponse(null, {
+          status: 304,
+          headers: {
+            'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
+            'ETag': etag
+          }
+        });
+      }
+
       return NextResponse.json({
         data: cachedData!.data,
         count: cachedData!.data.length,
         timeframe,
         generatedAt: cachedData!.lastUpdate,
         source: 'cache'
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
+          'ETag': etag
+        }
       });
     }
 
-    // Cache is invalid or doesn't exist, fetch fresh data
     const freshData = await fetchFromAirtable(timeframe);
-    
-    // Cache the fresh data
     await writeCache(timeframe, freshData);
+    const etag = generateETag(freshData);
 
     const response = NextResponse.json({
       data: freshData,
@@ -191,18 +259,18 @@ export async function GET(request: Request) {
       source: 'fresh'
     });
 
-    // Set cache headers for browser caching (1 day since we handle monthly refresh server-side)
     response.headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=3600');
+    response.headers.set('ETag', etag);
 
     return response;
 
   } catch (error) {
-    console.error('Error fetching reports:', error);
-    
-    // If we have cached data, serve it even if fresh fetch failed
+    console.error('Error fetching reports:', error instanceof Error ? error.message : 'Unknown error');
+
     const cachedData = await readCache(timeframe);
     if (cachedData) {
       console.log(`Serving stale cached data due to error for timeframe: ${timeframe}`);
+      const etag = generateETag(cachedData.data);
       return NextResponse.json({
         data: cachedData.data,
         count: cachedData.data.length,
@@ -210,14 +278,18 @@ export async function GET(request: Request) {
         generatedAt: cachedData.lastUpdate,
         source: 'stale-cache',
         warning: 'Using cached data due to fetch error'
+      }, {
+        headers: {
+          'Cache-Control': 'public, max-age=86400, stale-while-revalidate=3600',
+          'ETag': etag
+        }
       });
     }
-    
-    // Return error if no cache available
+
     if (error instanceof Error) {
       if (error.message.includes('AIRTABLE')) {
         return NextResponse.json(
-          { error: 'Airtable configuration error', details: error.message },
+          { error: 'Airtable configuration error' },
           { status: 500 }
         );
       }
@@ -228,7 +300,7 @@ export async function GET(request: Request) {
         );
       }
     }
-    
+
     return NextResponse.json(
       { error: 'Failed to fetch reports from Airtable' },
       { status: 500 }

@@ -91,7 +91,7 @@ export default function Dashboard() {
         // Fetch data for different time periods
         // "previous-month" in the API = the most recently completed month
         const [pastMonthRes, allTimeRes] = await Promise.all([
-          fetch('/api/reports?timeframe=previous-month').then(res => res.json()),
+          fetch('/api/reports?timeframe=past-month').then(res => res.json()),
           fetch('/api/reports').then(res => res.json())
         ]);
 
