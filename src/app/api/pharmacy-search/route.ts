@@ -46,7 +46,7 @@ const PHARMACY_KEYWORDS = new Set([
   'pharmacy', 'drug store', 'apothecary', 'chemist',
   'cvs', 'walgreens', 'rite aid', 'duane reade',
   'medicine shoppe', 'healthmart', 'genoa', 'capsule',
-  'walmart', 'target', 'kroger', 'safeway', 'albertsons',
+  'walmart', 'wal-mart', 'target', 'kroger', 'safeway', 'albertsons',
   'vons', 'pavilions', 'randalls', 'tom thumb', 'acme',
   'jewel-osco', 'shaw\'s', 'star market', 'meijer',
   'publix', 'wegmans', 'h-e-b', 'heb', 'hy-vee', 'giant',

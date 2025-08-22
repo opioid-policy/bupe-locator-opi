@@ -48,7 +48,8 @@ const formulationOptions = [
 ];
 
 const standardizedNoteOptions = [
-'Will order, but not in stock', 'Partial fill (did not fill the full prescription)', 
+'Will order, but not in stock', 'Partial fill (did not fill the full prescription)',
+ 'Permanently closed',
 'Best to call ahead', 'Only fills for existing patients', 
 'Only fills from prescribers "close-by"',
  'Requires specific diagnosis code', 'Long wait times',
