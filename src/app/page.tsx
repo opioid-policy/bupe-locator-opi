@@ -722,7 +722,8 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
                 <h3>🎉 Thank You! 🎉</h3>
                 <p>We know filling a bupe script isn&apos;t always easy. Your answers help others in your area find this lifesaving medication.</p>
                 <br />
-                <p><strong>The most helpful info is <em>new</em> info</strong>! So, the next time you try to fill a bupe script, tell us how it went. You can also help by sharing this website with friends who take bupe.</p>
+                <p><strong>The most helpful info is <em>new</em> info</strong>!</p> 
+                <p>So, the next time you try to fill a bupe script, tell us how it went. You can also help by sharing this website with friends who take bupe.</p>
                 <br/>
                 <p style={{marginTop: '1.5rem', fontStyle: 'italic', fontSize: '0.9rem'}}><Link href="/privacy" className={styles.styledLink}><strong>Remember to clear your browser history.</strong> Learn more in our privacy tips.🔒</Link></p>
                 <br/>
