@@ -101,6 +101,7 @@ export default function Home() {
   const turnstile = useTurnstile();
   const [isSearching, setIsSearching] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
+ 
 
   // Client-side rate limiting state
   const [lastRequestTime, setLastRequestTime] = useState(0);
@@ -691,6 +692,12 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
       <section className={styles.formSection}>
         {mode === 'find' && (
           <>
+           <div className={styles.manualEntry}>
+              <Link href="/" className={styles.backToZipLink}>
+                ← Back to ZIP
+              </Link>
+            </div>
+            <br />
             <div className={styles.findHeader}>
               <h2>Bupe-Friendly Pharmacies</h2>
               <button onClick={() => window.print()} className={styles.printButton}>Print List</button>

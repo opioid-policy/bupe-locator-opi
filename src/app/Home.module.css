@@ -182,9 +182,10 @@
 }
 
 .submitButton:hover {
-  background-color: var(--accent-blue);
-  color: var(--font-color-dark);
-  border-color: var(--accent-blue);
+  background-color: var(--font-color-dark);
+  border: 1.5px solid var(--accent-green);
+  color: var(--accent-cream);
+  transform: translateY(-1px);
 }
 
 .submitButton:disabled {
@@ -239,10 +240,10 @@
 }
 
 .choiceButton:hover {
-  background-color: var(--accent-blue);
-  color: var(--font-color-dark);
-  border-color: var(--accent-blue);
-  transform: translateY(-2px);
+  background-color: var(--font-color-dark);
+  border: 1.5px solid var(--accent-green);
+  color: var(--accent-cream);
+  transform: translateY(-1px);
 }
 
 /* --- Report Form & Success Screen Styles --- */
@@ -392,8 +393,10 @@
 }
 
 .directionsButton:hover {
-  background-color: var(--accent-blue);
-  color: var(--accent-navy);
+  background-color: var(--font-color-dark);
+  border: 1.5px solid var(--accent-green);
+  color: var(--accent-cream);
+  transform: translateY(-1px);
 }
 
 .printButton {
@@ -411,7 +414,10 @@
 }
 
 .printButton:hover {
-  background-color: var(--accent-blue);
+  background-color: var(--font-color-dark);
+  border: 1.5px solid var(--accent-green);
+  color: var(--accent-cream);
+  transform: translateY(-1px);
 }
 
 .printFooter {
@@ -447,7 +453,10 @@
 }
 
 .callButton:hover {
-  background-color: var(--accent-blue);
+  background-color: var(--font-color-dark);
+  border: 1.5px solid var(--accent-green);
+  color: var(--accent-cream);
+  transform: translateY(-1px);
 }
 
 .filterGroup {
@@ -854,7 +863,9 @@
 }
 
 .manualEntryButton:hover {
-  background-color: var(--accent-blue);
+  background-color: var(--font-color-dark);
+  border: 1.5px solid var(--accent-green);
+  color: var(--accent-cream);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -885,6 +896,28 @@
 .privacyButton:hover {
   background-color: var(--font-color-dark);
   border-color: var(--accent-orange);
+  color: var(--accent-cream);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.backToZipLink {
+  width: auto;
+  padding: 0.3rem 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--accent-green);
+  color: var(--font-color-dark);
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.backToZipLink:hover {
+  background-color: var(--font-color-dark);
+  border: 1.5px solid var(--accent-green);
   color: var(--accent-cream);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
