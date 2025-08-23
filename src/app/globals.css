@@ -8,7 +8,7 @@
   --font-color-light: #f2f1e8;
   --border-color: #00ff85;
   --accent-red: #f37970;
-  --accent-blue: #60efff;
+  --accent-blue: #04f5ff;
   --accent-mint: #98ff98;
   --accent-orange: #ff8500;
 }
@@ -39,4 +39,56 @@ h1, h2, h3, h4, h5, h6, button {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Remove default Leaflet cluster styles */
+.leaflet-markercluster-icon {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Base cluster styling */
+.pharmacy-cluster-icon {
+  background-color: var(--accent-blue);
+  border: 4px solid var(--accent-cream);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--font-color-dark);
+  font-weight: 800;
+  font-family: inherit;
+}
+
+/* Size variations based on cluster count */
+.pharmacy-cluster-icon.size-small {
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+}
+
+.pharmacy-cluster-icon.size-medium {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+}
+
+.pharmacy-cluster-icon.size-large {
+  width: 50px;
+  height: 50px;
+  font-size: 18px;
+}
+
+/* Hover and active states */
+.pharmacy-cluster-icon:hover {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+  transform: scale(1.25);
+  transition: all 0.2s ease;
+}
+
+.pharmacy-cluster-icon-active {
+  background-color: var(--accent-blue);
+  border-color: var(--accent-cream);
 }

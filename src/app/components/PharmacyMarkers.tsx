@@ -1,15 +1,17 @@
 // src/app/components/PharmacyMarkers.tsx
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import MarkerClusterGroup from 'react-leaflet-markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { AggregatedPharmacy } from "../page";
 import TrendIndicator from './TrendIndicator';
-
 
 function decodeHtmlEntities(text: string): string {
   const textarea = document.createElement('textarea');
   textarea.innerHTML = text;
   return textarea.value;
 }
+
 interface PharmacyMarkersProps {
   pharmacies: Record<string, AggregatedPharmacy>;
 }
@@ -36,8 +38,30 @@ const PharmacyMarkers: React.FC<PharmacyMarkersProps> = ({ pharmacies }) => {
     });
   };
 
+  // Custom cluster icon styling
+const createClusterCustomIcon = (cluster: L.MarkerCluster) => {
+  const count = cluster.getChildCount();
+  const size = count < 10 ? 'size-small' :
+              count < 100 ? 'size-medium' : 'size-large';
+
+  return L.divIcon({
+    html: `<div class="pharmacy-cluster-icon ${size}">${count}</div>`,
+    className: '',
+    iconSize: L.point(
+      count < 10 ? 30 : count < 100 ? 40 : 50,
+      count < 10 ? 30 : count < 100 ? 40 : 50
+    )
+  });
+};
+
   return (
-    <>
+    <MarkerClusterGroup
+      chunkedLoading
+      iconCreateFunction={createClusterCustomIcon}
+      spiderfyOnMaxZoom={false}
+      showCoverageOnHover={false}
+      zoomToBoundsOnClick={true}
+    >
       {Object.values(pharmacies).map((pharmacy) => (
         <Marker
           key={pharmacy.id}
@@ -47,7 +71,8 @@ const PharmacyMarkers: React.FC<PharmacyMarkersProps> = ({ pharmacies }) => {
           <Popup maxWidth={250}>
             <div style={{ padding: '5px' }}>
               <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>
-                {decodeHtmlEntities(pharmacy.name)}          <TrendIndicator trend={pharmacy.trend} />
+                {decodeHtmlEntities(pharmacy.name)}
+                <TrendIndicator trend={pharmacy.trend} />
               </h3>
               <p style={{ margin: '5px 0', fontSize: '14px' }}>
                 <strong>Status:</strong> {pharmacy.status === 'success' ? '✓ Available' : '✗ Denied/Issues'}
@@ -67,44 +92,43 @@ const PharmacyMarkers: React.FC<PharmacyMarkersProps> = ({ pharmacies }) => {
                       {pharmacy.phone_number}
                     </a>
                   </p>
-                    <button
-                      onClick={() => {
-                        // Get coordinates and address
-                        const lat = pharmacy.coords[0];
-                        const lon = pharmacy.coords[1];
-                        const address = encodeURIComponent(
-                          `${pharmacy.full_address || ''} ${pharmacy.city}, ${pharmacy.state} ${pharmacy.zip}`.trim()
+                  <button
+                    onClick={() => {
+                      // Get coordinates and address
+                      const lat = pharmacy.coords[0];
+                      const lon = pharmacy.coords[1];
+                      const address = encodeURIComponent(
+                        `${pharmacy.full_address || ''} ${pharmacy.city}, ${pharmacy.state} ${pharmacy.zip}`.trim()
+                      );
+
+                      // Check if mobile device
+                      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                      if (isMobile) {
+                        // On mobile, use generic geo: URI that opens default map app
+                        window.location.href = `geo:${lat},${lon}?q=${address}`;
+                      } else {
+                        // On desktop, open OpenStreetMap zoomed to location
+                        window.open(
+                          `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`,
+                          '_blank'
                         );
-                        
-                        // Check if mobile device
-                        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                        
-                        if (isMobile) {
-                          // On mobile, use generic geo: URI that opens default map app
-                          // This works with Apple Maps, Google Maps, or any default map app
-                          window.location.href = `geo:${lat},${lon}?q=${address}`;
-                        } else {
-                          // On desktop, open OpenStreetMap zoomed to location
-                          window.open(
-                            `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`,
-                            '_blank'
-                          );
-                        }
-                      }}
-                      style={{
-                        marginTop: '10px',
-                        padding: '5px 10px',
-                        backgroundColor: 'var(--accent-green)',
-                        color: 'var(--font-color-dark)',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        fontSize: '14px'
-                      }}
-                    >
-                      Get Directions
-                    </button>
+                      }
+                    }}
+                    style={{
+                      marginTop: '10px',
+                      padding: '5px 10px',
+                      backgroundColor: 'var(--accent-green)',
+                      color: 'var(--font-color-dark)',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: 'bold',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Get Directions
+                  </button>
                 </>
               )}
               {pharmacy.standardizedNotes && pharmacy.standardizedNotes.length > 0 && (
@@ -126,7 +150,7 @@ const PharmacyMarkers: React.FC<PharmacyMarkersProps> = ({ pharmacies }) => {
           </Popup>
         </Marker>
       ))}
-    </>
+    </MarkerClusterGroup>
   );
 };
 
