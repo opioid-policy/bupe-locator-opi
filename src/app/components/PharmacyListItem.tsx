@@ -1,14 +1,14 @@
-// In your PharmacyListItem.tsx file, update the interface declaration:
-
 "use client";
-import { useState, useEffect } from 'react';
-import styles from '../Home.module.css';
+import { useState, useEffect, useMemo } from 'react';
+import styles from '../Home.module.css'; // Using your existing Home.module.css
 import { AggregatedPharmacy } from '../page';
 import TrendIndicator from './TrendIndicator';
 import { getDirectionsUrl } from '../lib/directions';
+import ErrorBoundary from './ErrorBoundary';
+import MapLoading from './MapLoading';
 
 interface PharmacyListItemProps {
-  pharmacy: AggregatedPharmacy;  // This should use the AggregatedPharmacy type from page.tsx
+  pharmacy: AggregatedPharmacy;
 }
 
 function decodeHtmlEntities(text: string): string {
@@ -17,94 +17,217 @@ function decodeHtmlEntities(text: string): string {
   return textarea.value;
 }
 
-function formatDate(dateString: string) {
+function formatDate(dateString: string): string | null {
   if (!dateString) return null;
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  try {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  } catch {
+    return null;
+  }
 }
 
 export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
-  // Component continues as before...
   const [latitude, longitude] = pharmacy.coords || [0, 0];
-  const [directionsUrl, setDirectionsUrl] = useState<string>("");
-  const [mapUrl, setMapUrl] = useState<string>("");
+  const [isDirectionsLoading, setIsDirectionsLoading] = useState(false);
+  const [isCallLoading, setIsCallLoading] = useState(false);
+  const [showPrivacyWarning, setShowPrivacyWarning] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    if (latitude && longitude) {
-      setDirectionsUrl(getDirectionsUrl(latitude, longitude));
-      setMapUrl(`https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`);
+  // Check if user is on mobile
+useEffect(() => {
+  const checkIfMobile = () => {
+    if (typeof window !== 'undefined') {
+      // Use optional chaining and type assertions only where needed
+      const userAgent = navigator.userAgent ||
+                       (navigator as { vendor?: string }).vendor ||
+                       (window as { opera?: string }).opera;
+
+      const isMobileDevice = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+        userAgent?.toLowerCase() || ''
+      );
+      setIsMobile(isMobileDevice);
+    }
+  };
+
+  checkIfMobile();
+}, []);
+
+
+
+  const { directionsUrl, mapUrl } = useMemo(() => {
+    if (!latitude || !longitude) return { directionsUrl: "", mapUrl: "" };
+
+    try {
+      return {
+        directionsUrl: getDirectionsUrl(latitude, longitude),
+        mapUrl: `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`
+      };
+    } catch {
+      return { directionsUrl: "", mapUrl: "" };
     }
   }, [latitude, longitude]);
 
+  const formattedDate = useMemo(() =>
+    formatDate(pharmacy.lastUpdated),
+    [pharmacy.lastUpdated]
+  );
+
+  const handleCallClick = () => {
+    setIsCallLoading(true);
+    setTimeout(() => {
+      window.location.href = `tel:${pharmacy.phone_number.replace(/\D/g, '')}`;
+      setIsCallLoading(false);
+    }, 500);
+  };
+
+  const openDirections = () => {
+    setIsDirectionsLoading(true);
+    setTimeout(() => {
+      window.open(directionsUrl, '_blank', 'noopener,noreferrer');
+      setIsDirectionsLoading(false);
+    }, 500);
+  };
+
+  const handleDirectionsClick = () => {
+    if (isMobile) {
+      setShowPrivacyWarning(true);
+    } else {
+      openDirections();
+    }
+  };
+
   return (
-    <div className={styles.listItem}>
-      <div className={styles.listItemInfo}>
-        <strong>
-          {decodeHtmlEntities(pharmacy.name)}          <TrendIndicator trend={pharmacy.trend} />
-        </strong>
-
-        <a
-          href={mapUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.styledLink}
-        >
-          <small>{pharmacy.full_address}</small>
-        </a>
-
-        {pharmacy.phone_number && (
-          <div className={styles.phoneNumber}>
-            <small>Phone: {pharmacy.phone_number}</small>
+    <ErrorBoundary fallback={
+      <div className={styles.listItem} style={{ padding: '1rem', color: '#666' }}>
+        Error loading pharmacy information
+      </div>
+    }>
+      <div className={styles.listItem}>
+        <div className={styles.listItemInfo}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <strong>{decodeHtmlEntities(pharmacy.name)}</strong>
+            <TrendIndicator trend={pharmacy.trend} />
           </div>
-        )}
 
-        <div className={styles.reportSection}>
-          <br className={styles.reportBreak} />
-          <small>Success Reports: {pharmacy.successCount}</small>
-          <br />
-          <small>Denial Reports: {pharmacy.denialCount}</small>
+          {pharmacy.full_address && (
+            <div className={styles.addressContainer}>
+              <a
+                href={mapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.styledLink}
+                aria-label={`View ${pharmacy.name} on map (opens in new tab)`}
+              >
+                <small>{pharmacy.full_address} 🚌</small>
+              </a>
+            </div>
+          )}
+
+          {pharmacy.phone_number && (
+            <div className={styles.phoneNumber}>
+              <small>
+                Phone:{" "}
+                <a
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleCallClick();
+                  }}
+                  href={`tel:${pharmacy.phone_number.replace(/\D/g, '')}`}
+                  aria-label={`Call ${pharmacy.name}`}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {pharmacy.phone_number} 📞
+                </a>
+              </small>
+            </div>
+          )}
+
+          <div className={styles.reportSection}>
+            <small>Success Reports: {pharmacy.successCount}</small>
+            <br />
+            <small>Denial Reports: {pharmacy.denialCount}</small>
+          </div>
+
+          {pharmacy.lastUpdated && formattedDate && (
+            <small className={styles.lastUpdated}>
+              <br className={styles.reportBreak} />
+              Last Successful Report: {formattedDate}
+            </small>
+          )}
+
+          {pharmacy.standardizedNotes && pharmacy.standardizedNotes.length > 0 && (
+            <div className={styles.tagContainer}>
+              {pharmacy.standardizedNotes.map(note => (
+                <span key={note} className={styles.tag}>{note}</span>
+              ))}
+            </div>
+          )}
         </div>
 
-        {pharmacy.lastUpdated && (
-          <small className={styles.lastUpdated}>
-            <br className={styles.reportBreak} />
-            Last Successful Report: {formatDate(pharmacy.lastUpdated)}
-          </small>
-        )}
+        <div className={styles.listItemActions}>
+          {pharmacy.phone_number && (
+            <button
+              onClick={handleCallClick}
+              className={styles.callButton}
+              disabled={isCallLoading}
+              aria-label={`Call ${pharmacy.name}`}
+            >
+              {isCallLoading ? <MapLoading /> : 'Call Pharmacy 📞'}
+            </button>
+          )}
 
-        {pharmacy.standardizedNotes && pharmacy.standardizedNotes.length > 0 && (
-          <div className={styles.tagContainer}>
-            {pharmacy.standardizedNotes.map(note => (
-              <span key={note} className={styles.tag}>{note}</span>
-            ))}
-          </div>
-        )}
+          {latitude && longitude && directionsUrl && (
+            <>
+              <button
+                onClick={handleDirectionsClick}
+                className={styles.directionsButton}
+                disabled={isDirectionsLoading}
+                aria-label={`Get directions to ${pharmacy.name}`}
+              >
+                {isDirectionsLoading ? <MapLoading /> : 'Get Directions 🚌'}
+              </button>
+
+              {/* Privacy Warning Modal for Mobile */}
+              {showPrivacyWarning && (
+                <div className={styles.privacyWarningOverlay}>
+                  <div className={styles.privacyWarningContent}>
+                    <h3>Privacy Notice</h3>
+                    <p>
+                      This will open your device&apos;s map application. Please be aware that:
+                    </p>
+                    <ul>
+                      <li>Your map application may collect location data</li>
+                      <li>We don&apos;t track or store your location</li>
+                      <li>You can adjust location permissions on your phone settings</li>
+                    </ul>
+                    <div className={styles.privacyWarningButtons}>
+                      <button
+                        onClick={() => setShowPrivacyWarning(false)}
+                        className={styles.cancelButton}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowPrivacyWarning(false);
+                          openDirections();
+                        }}
+                        className={styles.continueButton}
+                      >
+                        Continue
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
-
-      <div className={styles.listItemActions}>
-        {pharmacy.phone_number && (
-          <a
-            href={`tel:${pharmacy.phone_number.replace(/\D/g, '')}`}
-            className={styles.callButton}
-          >
-            Call Pharmacy
-          </a>
-        )}
-
-        {latitude && longitude && (
-          <a
-            href={directionsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.directionsButton}
-          >
-            Get Directions
-          </a>
-        )}
-      </div>
-    </div>
+    </ErrorBoundary>
   );
 }

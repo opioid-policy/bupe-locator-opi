@@ -67,7 +67,7 @@ export default function PrivacyBanner() {
           ) : (
             <> Good job using privacy protections! Remember to clear your history when done. </>
           )}
-          <Link href="/privacy" className={styles.learnMore}> Learn more</Link>
+          <Link href="/privacy#protect-yourself" className={styles.learnMore}> Learn more</Link>
         </p>
         <button onClick={dismissBanner} className={styles.dismissButton} aria-label="Dismiss privacy banner">
           ✕

@@ -700,7 +700,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
             <br />
             <div className={styles.findHeader}>
               <h2>Bupe-Friendly Pharmacies</h2>
-              <button onClick={() => window.print()} className={styles.printButton}>Print List</button>
+              <button onClick={() => window.print()} className={styles.printButton}>Print List 🖨️ </button>
             </div>
             <div className={styles.trendLegend}>
               <p>Trending Recently:</p>
@@ -710,7 +710,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
             </div>
               <div className={styles.privacyGuidanceSection}>
                 <a 
-                  href="/privacy" 
+                  href="/privacy#protect-yourself" 
                   className={styles.privacyButton}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -753,7 +753,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
                 <p><strong>The most helpful info is <em>new</em> info</strong>!</p> 
                 <p>So, the next time you try to fill a bupe script, tell us how it went. You can also help by sharing this website with friends who take bupe.</p>
                 <br/>
-                <p style={{marginTop: '1.5rem', fontStyle: 'italic', fontSize: '0.9rem'}}><Link href="/privacy" className={styles.styledLink}><strong>Remember to clear your browser history.</strong> Learn more in our privacy tips.🔒</Link></p>
+                <p style={{marginTop: '1.5rem', fontStyle: 'italic', fontSize: '0.9rem'}}><Link href="/privacy#protect-yourself" className={styles.styledLink}><strong>Remember to clear your browser history.</strong> Learn more in our privacy tips.🔒</Link></p>
                 <br/>
                 <button
                   type="button"
