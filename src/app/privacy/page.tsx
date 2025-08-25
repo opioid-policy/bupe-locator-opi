@@ -10,11 +10,11 @@ export default function PrivacyPage() {
         <div className="toc" style={{ marginBottom: '2rem' }}>
           <h2>Table of Contents</h2>
           <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
-            <li style={{ marginBottom: '0.5rem' }}><Link href="#why-we-built">Why We Built This Tool</Link></li>
-            <li style={{ marginBottom: '0.5rem' }}><Link href="#what-we-collect">What We Collect (and What We Don&apos;t)</Link></li>
-            <li style={{ marginBottom: '0.5rem' }}><Link href="#how-technology-works">How the Technology Works</Link></li>
-            <li style={{ marginBottom: '0.5rem' }}><Link href="#protect-yourself">How to Protect Yourself</Link></li>
-            <li style={{ marginBottom: '0.5rem' }}><Link href="#bugs-questions">Bugs or Questions?</Link></li>
+            <li style={{ marginBottom: '0.5rem' }}><Link href="#why-we-built" className={styles.styledLink} >Why We Built This Tool</Link></li>
+            <li style={{ marginBottom: '0.5rem' }}><Link href="#what-we-collect" className={styles.styledLink} >What We Collect (and What We Don&apos;t)</Link></li>
+            <li style={{ marginBottom: '0.5rem' }}><Link href="#how-technology-works" className={styles.styledLink} >How the Technology Works</Link></li>
+            <li style={{ marginBottom: '0.5rem' }}><Link href="#protect-yourself" className={styles.styledLink} >How to Protect Yourself</Link></li>
+            <li style={{ marginBottom: '0.5rem' }}><Link href="#bugs-questions" className={styles.styledLink} >Bugs or Questions?</Link></li>
           </ul>
         </div>
 

@@ -44,15 +44,61 @@
   margin-bottom: 2rem;
 }
 
-.toc {
-  position: sticky;
-  top: 1rem;
-  background: white;
+.container {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Main content area */
+.mainContent {
+  margin-left: 0;
+  width: 100%;
+}
+
+.section {
+  scroll-margin-top: 100px; /* Account for fixed header and TOC */
+  padding-top: 1rem;
+  margin-bottom: 3rem;
+}
+
+/* Desktop TOC - fixed in left margin */
+.desktopToc {
+  display: none; /* Hidden by default */
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 250px;
+  height: 100vh;
+  padding: 20px;
+  background-color: white;
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  z-index: 10;
+}
+
+/* Mobile TOC - appears at top on mobile */
+.mobileToc {
+  display: block;
+  margin-bottom: 2rem;
   padding: 1rem;
+  background-color: #f8f9fa;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  z-index: 10;
-  margin-bottom: 2rem;
+}
+
+/* TOC content styling (shared between desktop and mobile) */
+.tocContent {
+  position: sticky;
+  top: 20px;
+}
+
+.tocTitle {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  color: var(--accent-blue);
 }
 
 .tocList {
@@ -62,13 +108,14 @@
 }
 
 .tocList li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .tocList li a {
   color: var(--accent-blue);
   text-decoration: none;
   transition: color 0.2s ease;
+  font-size: 0.9rem;
 }
 
 .tocList li a:hover {
@@ -76,17 +123,31 @@
   text-decoration: underline;
 }
 
-.sectionTitle {
-  margin-top: 2rem;
+/* Responsive styles */
+@media (min-width: 992px) {
+  .container {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 2rem;
+  }
+
+  .desktopToc {
+    display: block;
+  }
+
+  .mobileToc {
+    display: none;
+  }
+
+  .mainContent {
+    margin-left: 0;
+  }
 }
 
-.divider {
-  margin: 3rem 0;
-  border: none;
-  border-top: 1px solid var(--border-color);
-}
-
-.paragraph {
-  margin-bottom: 1rem;
-  line-height: 1.6;
+/* Page title styling */
+.pageTitle {
+  margin-top: 0;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  color: #333;
 }
