@@ -8,6 +8,9 @@ import PharmacyListItem from './components/PharmacyListItem';
 import TrendIndicator from './components/TrendIndicator';
 import confetti from "canvas-confetti";
 import ManualPharmacyEntry from './components/ManualPharmacyEntry';
+import ErrorBoundary from './components/ErrorBoundary';
+import { sanitize } from '@/utils/sanitize';
+
 
 const STATE_ABBR_TO_NAME: Record<string, string> = {
   'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
@@ -570,12 +573,14 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
   setSubmitStatus('idle');
   console.log('handleSubmit called'); // ADD THIS
   
+  const sanitizedNotes = sanitize(notes);
+
   const reportData = {
     pharmacy: selectedPharmacy,
     reportType,
     formulations,
     standardizedNotes,
-    notes,
+    notes: sanitizedNotes, // Use sanitized notes
     turnstileToken,
   };
   
@@ -643,6 +648,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 
   if (!locationCoords) {
     return (
+      <ErrorBoundary>
       <div className={styles.zipCodeContainer}>
         <form onSubmit={handleZipCodeSubmit}>
           <h2 >Enter Your ZIP Code</h2>
@@ -665,6 +671,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
           {locationError && <p className={styles.errorText}>{locationError}</p>}
         </form>
       </div>
+      </ErrorBoundary>
     );
   }
 
@@ -693,7 +700,22 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         {mode === 'find' && (
           <>
            <div className={styles.manualEntry}>
-              <Link href="/" className={styles.backToZipLink}>
+              <Link 
+              href="/" 
+              className={styles.backToZipLink}
+                  onClick={(e) => {
+                  e.preventDefault(); // Prevent default link behavior
+                  // Reset all relevant state
+                  setMode(null);
+                  setLocationCoords(null);
+                  setZipCode("");
+                  setSearchTerm("");
+                  setResults([]);
+                  setSelectedPharmacy(null);
+                  // If using router, you could also use:
+                  // router.push('/');
+                }}
+              >
                 ← Back to ZIP
               </Link>
             </div>

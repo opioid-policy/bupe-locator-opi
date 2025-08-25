@@ -557,21 +557,27 @@
 
 /* Update your print styles section to this: */
 @media print {
-  /* Hide non-printable elements */
+  /* Hide interactive elements BUT remove them from layout flow */
   .mapSection,
   .directionsButton,
   .printButton,
   .callButton,
   .filterGroup,
-  .findHeader,
   .trendLegend,
+  .backToZipLink,
   .privacyButton,
   .filterButton {
     display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* Style the printable content */
   .printableContent {
+    page-break-before: always; /* Force content to start on a new page */
+    margin-top: 0 !important;
+    padding-top: 0 !important;
     width: 100% !important;
     padding: 0 !important;
     background-color: white !important;
@@ -580,8 +586,8 @@
 
   .pharmacyList {
     background-color: transparent !important;
-    page-break-inside: auto;
-  }
+    page-break-inside: always !important; 
+    }
   
   .privacyGuidanceSection {
     display: none !important;
