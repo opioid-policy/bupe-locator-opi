@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import styles from '../Home.module.css';
 import { AggregatedPharmacy } from '../page';
 import TrendIndicator from './TrendIndicator';
-import { getDirectionsUrl } from '../lib/directions';
+// import { getDirectionsUrl } from '../lib/directions'; // <-- REMOVED this line
 import ErrorBoundary from './ErrorBoundary';
 import MapLoading from './MapLoading';
 
@@ -12,7 +12,6 @@ interface PharmacyListItemProps {
 }
 
 function decodeHtmlEntities(text: string): string {
-  // This function is safe to run on the client-side where 'document' is available.
   const textarea = document.createElement('textarea');
   textarea.innerHTML = text;
   return textarea.value;
@@ -39,18 +38,30 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Detect if the user is on a mobile device
-      const userAgent = navigator.userAgent || navigator.vendor || (window as Window & { opera?: string }).opera;    const isMobileDevice = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+    const userAgent = navigator.userAgent || navigator.vendor || (window as Window & { opera?: string }).opera;
+    const isMobileDevice = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
       userAgent?.toLowerCase() || ''
     );
     setIsMobile(isMobileDevice);
   }, []);
 
+  // --- UPDATED LOGIC ---
   // Memoized URL for native map applications (Mobile)
   const directionsUrl = useMemo(() => {
     if (!latitude || !longitude) return "";
-    return getDirectionsUrl(latitude, longitude);
+
+    // Differentiate between iOS and other platforms to generate the correct map link.
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as Window & { MSStream?: boolean }).MSStream;
+
+    if (isIOS) {
+      // Apple Maps URL scheme
+      return `https://maps.apple.com/?daddr=${latitude},${longitude}`;
+    } else {
+      // Google Maps URL scheme for Android and others
+      return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+    }
   }, [latitude, longitude]);
+
 
   // Memoized URL for OpenStreetMap (Desktop)
   const osmUrl = useMemo(() => {
@@ -71,16 +82,15 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
     }, 500);
   };
 
-  // --- REFACTORED LOGIC ---
-
   // Opens the native map app on mobile devices
   const openMobileMaps = () => {
     setIsDirectionsLoading(true);
     setShowPrivacyWarning(false);
     setTimeout(() => {
+      // This now uses the correctly generated native map URL
       window.location.href = directionsUrl;
       setIsDirectionsLoading(false);
-    }, 100); // Shorter delay for a snappier feel
+    }, 100);
   };
 
   // Opens OpenStreetMap in a new tab for desktop users
@@ -95,10 +105,8 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
   // Main handler for the "Get Directions" button
   const handleDirectionsClick = () => {
     if (isMobile) {
-      // On mobile, show the privacy warning first
       setShowPrivacyWarning(true);
     } else {
-      // On desktop, open OSM directly
       openDesktopMaps();
     }
   };
@@ -110,6 +118,7 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
       </div>
     }>
       <div className={styles.listItem}>
+        {/* ... rest of the JSX is unchanged ... */}
         <div className={styles.listItemInfo}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <strong>{decodeHtmlEntities(pharmacy.name)}</strong>
@@ -118,11 +127,13 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
           {pharmacy.full_address && (
             <div className={styles.addressContainer}>
               <a
-                href={isMobile ? directionsUrl : osmUrl}
-                target={isMobile ? "_self" : "_blank"}
+                // This link remains for accessibility but the button is the primary interaction
+                onClick={(e) => { e.preventDefault(); handleDirectionsClick(); }}
+                href={directionsUrl}
+                target="_self"
                 rel="noopener noreferrer"
                 className={styles.styledLink}
-                aria-label={`View ${pharmacy.name} on map (opens in ${isMobile ? 'map app' : 'new tab'})`}
+                aria-label={`View ${pharmacy.name} on map (opens in map app)`}
               >
                 <small>{pharmacy.full_address} 🚌</small>
               </a>
@@ -207,7 +218,7 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
                         Cancel
                       </button>
                       <button
-                        onClick={openMobileMaps} // Updated to call the correct function
+                        onClick={openMobileMaps}
                         className={styles.continueButton}
                       >
                         Continue
