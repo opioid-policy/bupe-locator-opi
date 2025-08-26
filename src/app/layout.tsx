@@ -47,7 +47,18 @@ export default function RootLayout({
             {children}
           </main>
           <footer className={styles.footer}>
-            <p>This is a crowd-source resource. This tool is not a guarantee of service.</p>
+            <p>This is a crowd-source resource.</p>
+            <p>This tool is not a guarantee of service.</p>
+             <p style={{marginTop: '0.5rem'}}>
+                <a 
+                  href="https://bupe.opioidpolicy.org" 
+                  className={styles.styledLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Home
+                </a>
+              </p>           
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/about" className={styles.styledLink}>
                 About This Project

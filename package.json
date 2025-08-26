@@ -1,6 +1,6 @@
 {
   "name": "bupe-finder",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "axios": "^1.11.0",
-    "can": "^3.3.1",
     "canvas-confetti": "^1.9.3",
     "dompurify": "^3.2.6",
     "dotenv": "^17.2.1",
@@ -37,6 +36,6 @@
     "eslint": "^9",
     "eslint-config-next": "15.4.5",
     "typescript": "^5",
-    "vercel": "^32.0.1"
+    "vercel": "^46.0.2"
   }
 }
