@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from 'react';
-import styles from '../Home.module.css'; // Using your existing Home.module.css
+import styles from '../Home.module.css';
 import { AggregatedPharmacy } from '../page';
 import TrendIndicator from './TrendIndicator';
 import { getDirectionsUrl } from '../lib/directions';
@@ -37,49 +37,30 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
   const [showPrivacyWarning, setShowPrivacyWarning] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Your existing mobile detection code stays the same
   useEffect(() => {
     const checkIfMobile = () => {
       if (typeof window !== 'undefined') {
         const userAgent = navigator.userAgent ||
                          (navigator as { vendor?: string }).vendor ||
                          (window as { opera?: string }).opera;
-
         const isMobileDevice = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
           userAgent?.toLowerCase() || ''
         );
         setIsMobile(isMobileDevice);
       }
     };
-
     checkIfMobile();
   }, []);
 
-  // Update the useMemo to be mobile-aware for both URLs
-  const { directionsUrl, mapUrl } = useMemo(() => {
-    if (!latitude || !longitude) return { directionsUrl: "", mapUrl: "" };
+  const osmUrl = useMemo(() => {
+    if (!latitude || !longitude) return "";
+    return `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`;
+  }, [latitude, longitude]);
 
-    try {
-      const mobileDirections = getDirectionsUrl(latitude, longitude);
-      
-      // On mobile, use directions URL for both map and directions
-      // This ensures the address link also opens in the mapping app
-      if (isMobile) {
-        return {
-          directionsUrl: mobileDirections,
-          mapUrl: mobileDirections  // Use directions URL for map link on mobile
-        };
-      } else {
-        // Desktop keeps separate URLs
-        return {
-          directionsUrl: mobileDirections,
-          mapUrl: `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`
-        };
-      }
-    } catch {
-      return { directionsUrl: "", mapUrl: "" };
-    }
-  }, [latitude, longitude, isMobile]); // Add isMobile as dependency
+  const directionsUrl = useMemo(() => {
+    if (!latitude || !longitude) return "";
+    return getDirectionsUrl(latitude, longitude);
+  }, [latitude, longitude]);
 
   const formattedDate = useMemo(() =>
     formatDate(pharmacy.lastUpdated),
@@ -97,15 +78,14 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
   const openDirections = () => {
     setIsDirectionsLoading(true);
     setTimeout(() => {
-      // On mobile, don't open in new tab - let the device handle it
       if (isMobile) {
-            window.location.href = directionsUrl;
-          } else {
-            window.open(directionsUrl, '_blank', 'noopener,noreferrer');
-          }
-          setIsDirectionsLoading(false);
-        }, 500);
-      };
+        window.location.href = directionsUrl;
+      } else {
+        window.open(osmUrl, '_blank', 'noopener,noreferrer');
+      }
+      setIsDirectionsLoading(false);
+    }, 500);
+  };
 
   const handleDirectionsClick = () => {
     if (isMobile) {
@@ -127,12 +107,11 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
             <strong>{decodeHtmlEntities(pharmacy.name)}</strong>
             <TrendIndicator trend={pharmacy.trend} />
           </div>
-
           {pharmacy.full_address && (
             <div className={styles.addressContainer}>
               <a
-                href={mapUrl}
-                target={isMobile ? "_self" : "_blank"}  // Changed: use _self on mobile
+                href={isMobile ? directionsUrl : osmUrl}
+                target={isMobile ? "_self" : "_blank"}
                 rel="noopener noreferrer"
                 className={styles.styledLink}
                 aria-label={`View ${pharmacy.name} on map (opens in ${isMobile ? 'map app' : 'new tab'})`}
@@ -141,7 +120,6 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
               </a>
             </div>
           )}
-
           {pharmacy.phone_number && (
             <div className={styles.phoneNumber}>
               <small>
@@ -160,20 +138,17 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
               </small>
             </div>
           )}
-
           <div className={styles.reportSection}>
             <small>Success Reports: {pharmacy.successCount}</small>
             <br />
             <small>Denial Reports: {pharmacy.denialCount}</small>
           </div>
-
           {pharmacy.lastUpdated && formattedDate && (
             <small className={styles.lastUpdated}>
               <br className={styles.reportBreak} />
               Last Successful Report: {formattedDate}
             </small>
           )}
-
           {pharmacy.standardizedNotes && pharmacy.standardizedNotes.length > 0 && (
             <div className={styles.tagContainer}>
               {pharmacy.standardizedNotes.map(note => (
@@ -182,7 +157,6 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
             </div>
           )}
         </div>
-
         <div className={styles.listItemActions}>
           {pharmacy.phone_number && (
             <button
@@ -194,7 +168,6 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
               {isCallLoading ? <MapLoading /> : 'Call Pharmacy 📞'}
             </button>
           )}
-
           {latitude && longitude && directionsUrl && (
             <>
               <button
@@ -206,7 +179,6 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
                 {isDirectionsLoading ? <MapLoading /> : 'Get Directions 🚌'}
               </button>
 
-              {/* Privacy Warning Modal for Mobile */}
               {showPrivacyWarning && (
                 <div className={styles.privacyWarningOverlay}>
                   <div className={styles.privacyWarningContent}>
@@ -217,7 +189,7 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
                     <ul>
                       <li>Your map application may collect and share your location data</li>
                       <li>We don&apos;t track or store your location</li>
-                      <li>Use privacy preserving mapping apps like Organic Maps</li>
+                      <li>Use privacy preserving map apps like Organic Maps</li>
                     </ul>
                     <div className={styles.privacyWarningButtons}>
                       <button
