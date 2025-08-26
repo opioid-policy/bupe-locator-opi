@@ -36,8 +36,8 @@ class AirtableAPI {
   private tableName: string;
 
   constructor(config?: AirtableConfig) {
-    const baseId = config?.baseId || process.env.NEXT_PUBLIC_AIRTABLE_BASE_ID;
-    this.tableName = config?.tableName || process.env.NEXT_PUBLIC_AIRTABLE_TABLE_NAME || 'Reports';
+    const baseId = config?.baseId || process.env.AIRTABLE_BASE_ID;
+    this.tableName = config?.tableName || process.env.AIRTABLE_TABLE_NAME || 'Reports';
     const apiKey = config?.apiKey || process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN;
 
     if (!baseId || !apiKey) {

@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // --- Config ---
-const AIRTABLE_API_URL = `https://api.airtable.com/v0/${process.env.NEXT_PUBLIC_AIRTABLE_BASE_ID}/${process.env.NEXT_PUBLIC_AIRTABLE_TABLE_NAME}`;
+const AIRTABLE_API_URL = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_NAME}`;
 const AIRTABLE_HEADERS = {
   'Authorization': `Bearer ${process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN}`,
   'Content-Type': 'application/json',
@@ -85,7 +85,14 @@ export async function POST(request: NextRequest) {
     }
 
     // --- Sanitize only the notes field ---
-    const sanitize = (input: string | undefined) => input ? input.replace(/[<>"']/g, '') : undefined;
+  const sanitize = (input: string | undefined) => {
+  if (!input) return undefined;
+  return input
+    .replace(/[<>\"'&]/g, '') // Remove HTML special chars
+    .replace(/javascript:/gi, '') // Remove javascript protocol
+    .substring(0, 500) // Limit length
+    .trim();
+};
 
     // --- Airtable Submission ---
     const airtableRecord = {
@@ -141,14 +148,15 @@ export async function POST(request: NextRequest) {
       headers: corsHeaders,
     });
 
-  } catch (error) {
-    return new NextResponse(JSON.stringify({
-      success: false,
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }), {
-      status: 500,
-      headers: corsHeaders,
-    });
-  }
+  } // Replace detailed error responses
+catch (error) {
+  console.error('Submit error:', error); // Log internally only
+  return new NextResponse(JSON.stringify({
+    success: false,
+    error: 'Internal server error' // Don't expose details
+  }), {
+    status: 500,
+    headers: corsHeaders,
+  });
+}
 }
