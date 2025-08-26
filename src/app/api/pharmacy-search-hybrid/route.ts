@@ -294,6 +294,14 @@ export async function GET(request: Request) {
     const latitude = parseFloat(lat);
     const longitude = parseFloat(lon);
 
+    if (isNaN(latitude) || isNaN(longitude) || 
+    Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+  return NextResponse.json({
+    suggestions: [],
+    debug: { reason: 'Invalid coordinates' }
+  }, { headers: corsHeaders });
+}
+
     console.log(`[DEBUG] Sanitized query: "${sanitizedQuery}"`);
 
     // Skip cache for debugging
