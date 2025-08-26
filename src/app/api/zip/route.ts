@@ -79,8 +79,13 @@ export async function GET(request: Request) {
       }
     });
 
-    if (!response.ok) {
-      console.error(`Nominatim API error: ${response.status} ${response.statusText}`);
+if (!response.ok) {
+      // Log details as a structured object for safe inspection
+      console.error("Nominatim API error", { 
+        status: response.status,
+        statusText: response.statusText 
+      });
+
       return NextResponse.json(
         { error: 'Failed to fetch location data' }, 
         { status: response.status }
