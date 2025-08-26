@@ -1,7 +1,7 @@
 # Security Policy
 
 ## Reporting Security Vulnerabilities
-Please email security issues to: code@opioidpolicy.org
+Please email security issues to: code[@]opioidpolicy[.org]
 
 Do NOT create public issues for security vulnerabilities. 
 
