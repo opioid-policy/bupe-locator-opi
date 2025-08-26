@@ -37,40 +37,51 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
   const [showPrivacyWarning, setShowPrivacyWarning] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Check if user is on mobile
-useEffect(() => {
-  const checkIfMobile = () => {
-    if (typeof window !== 'undefined') {
-      // Use optional chaining and type assertions only where needed
-      const userAgent = navigator.userAgent ||
-                       (navigator as { vendor?: string }).vendor ||
-                       (window as { opera?: string }).opera;
+  // Your existing mobile detection code stays the same
+  useEffect(() => {
+    const checkIfMobile = () => {
+      if (typeof window !== 'undefined') {
+        const userAgent = navigator.userAgent ||
+                         (navigator as { vendor?: string }).vendor ||
+                         (window as { opera?: string }).opera;
 
-      const isMobileDevice = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
-        userAgent?.toLowerCase() || ''
-      );
-      setIsMobile(isMobileDevice);
-    }
-  };
+        const isMobileDevice = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+          userAgent?.toLowerCase() || ''
+        );
+        setIsMobile(isMobileDevice);
+      }
+    };
 
-  checkIfMobile();
-}, []);
+    checkIfMobile();
+  }, []);
 
-
-
+  // Update the useMemo to be mobile-aware for both URLs
   const { directionsUrl, mapUrl } = useMemo(() => {
     if (!latitude || !longitude) return { directionsUrl: "", mapUrl: "" };
 
     try {
-      return {
-        directionsUrl: getDirectionsUrl(latitude, longitude),
-        mapUrl: `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`
-      };
+      const mobileDirections = getDirectionsUrl(latitude, longitude);
+      
+      // On mobile, use directions URL for both map and directions
+      // This ensures the address link also opens in the mapping app
+      if (isMobile) {
+        return {
+          directionsUrl: mobileDirections,
+          mapUrl: mobileDirections  // Use directions URL for map link on mobile
+        };
+      } else {
+        // Desktop keeps separate URLs
+        return {
+          directionsUrl: mobileDirections,
+          mapUrl: `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`
+        };
+      }
     } catch {
       return { directionsUrl: "", mapUrl: "" };
     }
-  }, [latitude, longitude]);
+  }, [latitude, longitude, isMobile]); // Add isMobile as dependency
 
+  // Keep all your other existing code exactly the same
   const formattedDate = useMemo(() =>
     formatDate(pharmacy.lastUpdated),
     [pharmacy.lastUpdated]
@@ -87,7 +98,12 @@ useEffect(() => {
   const openDirections = () => {
     setIsDirectionsLoading(true);
     setTimeout(() => {
-      window.open(directionsUrl, '_blank', 'noopener,noreferrer');
+      // On mobile, don't open in new tab - let the device handle it
+      if (isMobile) {
+        window.location.href = directionsUrl;
+      } else {
+        window.open(directionsUrl, '_blank', 'noopener,noreferrer');
+      }
       setIsDirectionsLoading(false);
     }, 500);
   };
@@ -200,9 +216,9 @@ useEffect(() => {
                       This will open your device&apos;s map application. Please be aware that:
                     </p>
                     <ul>
-                      <li>Your map application may collect location data</li>
+                      <li>Your map application may collect and share your location data</li>
                       <li>We don&apos;t track or store your location</li>
-                      <li>You can adjust location permissions on your phone settings</li>
+                      <li>Use privacy preserving mapping apps like Organic Maps</li>
                     </ul>
                     <div className={styles.privacyWarningButtons}>
                       <button

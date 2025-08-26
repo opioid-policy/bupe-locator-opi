@@ -982,18 +982,140 @@
 
 .cancelButton {
   padding: 0.5rem 1rem;
-  background-color: #f0f0f0;
-  border: 1px solid #ddd;
+  background-color: var(--accent-cream);
+  color: var(--font-color-dark);
+  border: none;
   border-radius: 4px;
   cursor: pointer;
 }
 
 .continueButton {
   padding: 0.5rem 1rem;
-  background-color: var(--accent-green);
-  color: white;
+  background-color: var(--accent-cream);
+  color: var(--font-color-dark);
   border: none;
   border-radius: 4px;
   cursor: pointer;
 }
 
+@media print {
+  /* Hide non-printable elements */
+  .mapSection,
+  .directionsButton,
+  .printButton,
+  .callButton,
+  .filterGroup,
+  .findHeader,
+  .trendLegend,
+  .filterButton,
+  .backToZipLink {
+    display: none !important;
+  }
+
+  /* Firefox-specific fix for blank first page */
+  @-moz-document url-prefix() {
+    .homeContainer {
+      display: block !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    .formSection {
+      display: block !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+  }
+
+  /* Reset page margins for all browsers */
+  @page {
+    margin: 0.5in;
+  }
+
+  /* Ensure content starts immediately */
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .homeContainer {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: auto !important;
+  }
+
+  .formSection {
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Style the printable content */
+  .printableContent {
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background-color: white !important;
+    color: #000 !important;
+    page-break-before: avoid !important;
+    position: static !important;
+    display: block !important;
+  }
+
+  .pharmacyList {
+    background-color: transparent !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    page-break-before: avoid !important;
+  }
+
+  /* Ensure first item doesn't break */
+  .listItem:first-child {
+    page-break-before: avoid !important;
+  }
+
+  .listItem {
+    background-color: transparent !important;
+    border: 1px solid #bbb !important;
+    page-break-inside: avoid !important;
+    color: #000 !important;
+    margin-bottom: 10px !important;
+    padding: 10px !important;
+  }
+
+  .printFooter {
+    display: block !important;
+    text-align: center;
+    margin-top: 2rem !important;
+    padding-top: 1rem !important;
+    border-top: 1px solid #ccc !important;
+    font-size: 0.9rem !important;
+    color: #000 !important;
+  }
+
+  /* Ensure all text is black */
+  .printableContent,
+  .printableContent * {
+    color: #000 !important;
+    background-color: transparent !important;
+  }
+
+  /* Limit the number of items printed */
+  .listItem:nth-child(n+13) {
+    display: none !important;
+  }
+}
+
+/* Hide trend legend on mobile */
+@media (max-width: 767px) {
+  .trendLegend {
+    display: none !important;
+  }
+}

@@ -111,31 +111,39 @@ export default function Home() {
   const REQUEST_DELAY_MS = 2000; // 2 seconds between requests
   
   // Scroll to top when component mounts (immediate)
+// Add this more comprehensive scroll effect that watches all relevant state changes
 useEffect(() => {
   // Don't scroll if there's a hash in the URL
   if (!window.location.hash) {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    const scrollToTop = () => {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0; // For Safari
+      document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+    };
+    
+    // Immediate scroll
+    scrollToTop();
+    
+    // Also scroll after a tiny delay to ensure DOM is updated
+    setTimeout(scrollToTop, 0);
+  }
+}, [mode, submitStatus, locationCoords]); // Add all states that change "pages"
+
+// Also add a specific one for after form submission success
+useEffect(() => {
+  if (submitStatus === 'success' && !window.location.hash) {
+    window.scrollTo(0, 0);
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
+    
+    // Force scroll after React renders
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    });
   }
-}, [mode]);
-
-  // --- Reset submit status on form open or change ---
-  useEffect(() => {
-    if (mode === 'report') {
-      setSubmitStatus('idle');
-    }
-  }, [mode]);
-
-  // Specific scroll effect for after successful submission
-  useEffect(() => {
-    if (submitStatus === 'success') {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    }
-  }, [submitStatus]);
+}, [submitStatus]);
 
 const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
   setSubmitStatus('idle');

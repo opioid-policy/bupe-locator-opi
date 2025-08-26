@@ -461,7 +461,7 @@ export default function ManualPharmacyEntry({
       </button>
 
       <div className={styles.privacyNote} style={{ marginTop: '1.5rem' }}>
-        <strong>Privacy Note:</strong> This pharmacy information and your report will be added 
+        <strong>Note:</strong> This pharmacy information and your report will be added 
         to our database to help others. Manual entries require approval before appearing in search results.
       </div>
     </div>
