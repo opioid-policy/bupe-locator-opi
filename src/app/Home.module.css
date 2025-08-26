@@ -570,11 +570,6 @@
     display: none !important;
   }
 
- body {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
   /* Style the printable content */
   .printableContent {
     width: 100% !important;
