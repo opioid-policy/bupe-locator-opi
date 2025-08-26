@@ -1,3 +1,11 @@
+# Opioid Policy Institute Bupe Locator 
+
+![Version](https://img.shields.io/badge/version-1.0.0-green)
+![Release](https://img.shields.io/badge/release-stable-brightgreen)
+
+[**Latest Stable Release: v1.0.0 🤘**](https://github.com/opioid-policy/bupe-locator-opi/releases/tag/v1.0.0)
+
+
 ## Technical Setup
 
 ### Prerequisites
