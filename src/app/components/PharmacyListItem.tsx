@@ -52,14 +52,14 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
     checkIfMobile();
   }, []);
 
-  const osmUrl = useMemo(() => {
-    if (!latitude || !longitude) return "";
-    return `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`;
-  }, [latitude, longitude]);
-
   const directionsUrl = useMemo(() => {
     if (!latitude || !longitude) return "";
     return getDirectionsUrl(latitude, longitude);
+  }, [latitude, longitude]);
+
+  const osmUrl = useMemo(() => {
+    if (!latitude || !longitude) return "";
+    return `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`;
   }, [latitude, longitude]);
 
   const formattedDate = useMemo(() =>
@@ -79,8 +79,10 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
     setIsDirectionsLoading(true);
     setTimeout(() => {
       if (isMobile) {
+        // For mobile, always use the native directions URL
         window.location.href = directionsUrl;
       } else {
+        // For desktop, use OSM in new tab
         window.open(osmUrl, '_blank', 'noopener,noreferrer');
       }
       setIsDirectionsLoading(false);
@@ -189,7 +191,7 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
                     <ul>
                       <li>Your map application may collect and share your location data</li>
                       <li>We don&apos;t track or store your location</li>
-                      <li>Use privacy preserving map apps like Organic Maps</li>
+                      <li>Use privacy preserving mapping apps like Organic Maps</li>
                     </ul>
                     <div className={styles.privacyWarningButtons}>
                       <button
@@ -201,6 +203,7 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
                       <button
                         onClick={() => {
                           setShowPrivacyWarning(false);
+                          // This will now properly use the native directions URL on mobile
                           openDirections();
                         }}
                         className={styles.continueButton}
