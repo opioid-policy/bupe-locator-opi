@@ -1030,16 +1030,6 @@
     }
   }
 
-  /* Reset page margins for all browsers */
-  @page {
-    margin: 0.5in;
-  }
-
-  /* Ensure content starts immediately */
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
 
   .homeContainer {
     display: block !important;
