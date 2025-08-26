@@ -23,7 +23,7 @@ This project is configured for Vercel deployment.
 
 
 
-## Why Do This
+## Why We Did This
 
 This project was built to help people find buprenorphine (bupe) in pharmacies. Bupe is used to treat opioid addiction. Many pharmacies do not stock it. This makes it hard to fill a prescription. Which makes treatment hard, and treatment is already harder than it should be. 
 
