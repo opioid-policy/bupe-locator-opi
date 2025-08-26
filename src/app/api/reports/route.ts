@@ -207,7 +207,10 @@ export async function GET(request: Request) {
   if (!Object.values(TIMEFRAMES).includes(timeframeParam as Timeframe)) {
     return NextResponse.json(
       { error: `Invalid timeframe. Must be one of: ${Object.values(TIMEFRAMES).join(', ')}` },
-      { status: 400 }
+      {    status: 400,
+    headers: {
+      'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': 'no-store, max-age=0',}}
     );
   }
 

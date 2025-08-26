@@ -9,10 +9,10 @@ const AIRTABLE_HEADERS = {
 };
 
 // --- CORS Middleware ---
-const allowedOrigins = [
-  /\.opioidpolicy\.org$/, // All subdomains of opioidpolicy.org
-  'http://localhost:3000', // Development
-];
+const allowedOrigins = process.env.NODE_ENV === 'development' 
+  ? [/\.opioidpolicy\.org$/, 'http://localhost:3000']
+  : [/\.opioidpolicy\.org$/];
+
 
 function getCorsHeaders(request: NextRequest): Record<string, string> {
   const origin = request.headers.get('origin');
@@ -48,9 +48,42 @@ export async function OPTIONS(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const corsHeaders = getCorsHeaders(request);
 
+  const contentLength = request.headers.get('content-length');
+  if (contentLength && parseInt(contentLength) > 10240) { // 10KB limit
+    return new NextResponse(JSON.stringify({
+      success: false,
+      error: 'Request too large'
+    }), {
+      status: 413,
+      headers: corsHeaders,
+    });
+  }
+
   try {
     const body = await request.json();
     const { turnstileToken, ...reportData } = body;
+
+    if (!reportData.pharmacy?.osm_id || !reportData.reportType) {
+  return new NextResponse(JSON.stringify({
+    success: false,
+    error: 'Missing required fields'
+  }), {
+    status: 400,
+    headers: corsHeaders,
+  });
+}
+
+// Validate report type
+if (!['success', 'denial'].includes(reportData.reportType)) {
+  return new NextResponse(JSON.stringify({
+    success: false,
+    error: 'Invalid report type'
+  }), {
+    status: 400,
+    headers: corsHeaders,
+  });
+}
+
 
     // --- Turnstile Verification ---
     if (!turnstileToken) {
