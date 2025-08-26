@@ -35,38 +35,38 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
   const [isDirectionsLoading, setIsDirectionsLoading] = useState(false);
   const [isCallLoading, setIsCallLoading] = useState(false);
   const [showPrivacyWarning, setShowPrivacyWarning] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const userAgent = navigator.userAgent || navigator.vendor || (window as Window & { opera?: string }).opera;
-    const isMobileDevice = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
-      userAgent?.toLowerCase() || ''
-    );
-    setIsMobile(isMobileDevice);
-  }, []);
+  const [isMobile] = useState(() => {
+  if (typeof window === 'undefined') return false;
+  const userAgent = navigator.userAgent || navigator.vendor || (window as Window & { opera?: string }).opera;
+  return /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+    userAgent?.toLowerCase() || ''
+  );
+});
 
   // --- UPDATED LOGIC ---
   // Memoized URL for native map applications (Mobile)
-  const directionsUrl = useMemo(() => {
-    if (!latitude || !longitude) return "";
+ const directionsUrl = useMemo(() => {
+  if (!latitude || !longitude) return "";
+  
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as Window & { MSStream?: boolean }).MSStream;
+  const name = pharmacy.name ? encodeURIComponent(pharmacy.name) : '';
 
-    // Differentiate between iOS and other platforms to generate the correct map link.
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as Window & { MSStream?: boolean }).MSStream;
-
-    if (isIOS) {
-      // Apple Maps URL scheme
-      return `https://maps.apple.com/?daddr=${latitude},${longitude}`;
-    } else {
-      // Google Maps URL scheme for Android and others
-      return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-    }
-  }, [latitude, longitude]);
+  if (isIOS) {
+    return `https://maps.apple.com/?daddr=${latitude},${longitude}&q=${name}`;
+  } else {
+    return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&travelmode=driving&dir_action=navigate`;
+  }
+}, [latitude, longitude, pharmacy.name]);
 
 
   // Memoized URL for OpenStreetMap (Desktop)
   const osmUrl = useMemo(() => {
     if (!latitude || !longitude) return "";
-    return `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`;
+    
+    // OpenStreetMap directions URL - user just needs to enter their starting point
+    // The route parameter format is: from_lat,from_lon;to_lat,to_lon
+    // We leave the "from" part empty so user can fill it in
+    return `https://www.openstreetmap.org/directions?engine=osrm_car&route=;${latitude},${longitude}#map=13/${latitude}/${longitude}`;
   }, [latitude, longitude]);
 
   const formattedDate = useMemo(() =>
@@ -83,14 +83,9 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
   };
 
   // Opens the native map app on mobile devices
-  const openMobileMaps = () => {
-    setIsDirectionsLoading(true);
-    setShowPrivacyWarning(false);
-    setTimeout(() => {
-      // This now uses the correctly generated native map URL
-      window.location.href = directionsUrl;
-      setIsDirectionsLoading(false);
-    }, 100);
+const openMobileMaps = () => {
+  setShowPrivacyWarning(false);
+  window.location.href = directionsUrl;
   };
 
   // Opens OpenStreetMap in a new tab for desktop users
@@ -126,17 +121,7 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
           </div>
           {pharmacy.full_address && (
             <div className={styles.addressContainer}>
-              <a
-                // This link remains for accessibility but the button is the primary interaction
-                onClick={(e) => { e.preventDefault(); handleDirectionsClick(); }}
-                href={directionsUrl}
-                target="_self"
-                rel="noopener noreferrer"
-                className={styles.styledLink}
-                aria-label={`View ${pharmacy.name} on map (opens in map app)`}
-              >
-                <small>{pharmacy.full_address} 🚌</small>
-              </a>
+            <small>{pharmacy.full_address} 🚌</small>
             </div>
           )}
           {pharmacy.phone_number && (
