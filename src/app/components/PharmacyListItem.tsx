@@ -81,7 +81,6 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
     }
   }, [latitude, longitude, isMobile]); // Add isMobile as dependency
 
-  // Keep all your other existing code exactly the same
   const formattedDate = useMemo(() =>
     formatDate(pharmacy.lastUpdated),
     [pharmacy.lastUpdated]
@@ -100,13 +99,13 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
     setTimeout(() => {
       // On mobile, don't open in new tab - let the device handle it
       if (isMobile) {
-        window.location.href = directionsUrl;
-      } else {
-        window.open(directionsUrl, '_blank', 'noopener,noreferrer');
-      }
-      setIsDirectionsLoading(false);
-    }, 500);
-  };
+            window.location.href = directionsUrl;
+          } else {
+            window.open(directionsUrl, '_blank', 'noopener,noreferrer');
+          }
+          setIsDirectionsLoading(false);
+        }, 500);
+      };
 
   const handleDirectionsClick = () => {
     if (isMobile) {
@@ -133,10 +132,10 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
             <div className={styles.addressContainer}>
               <a
                 href={mapUrl}
-                target="_blank"
+                target={isMobile ? "_self" : "_blank"}  // Changed: use _self on mobile
                 rel="noopener noreferrer"
                 className={styles.styledLink}
-                aria-label={`View ${pharmacy.name} on map (opens in new tab)`}
+                aria-label={`View ${pharmacy.name} on map (opens in ${isMobile ? 'map app' : 'new tab'})`}
               >
                 <small>{pharmacy.full_address} 🚌</small>
               </a>

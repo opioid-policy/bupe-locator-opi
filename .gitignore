@@ -43,3 +43,26 @@ next-env.d.ts
 .vercel
 
 /data/dashboard-cache.json
+
+# Local env files
+.env*.local
+!.env.example
+
+# Debug files  
+*.log
+
+# OS files
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Test data
+/test-data/
+/input.tsv
+/output.csv
+
+# Cache files
+/tmp/
+*.cache

@@ -1,3 +1,30 @@
+## Technical Setup
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Accounts: Airtable, Cloudflare Turnstile, Vercel, GitHub, Codeberg, Cloudflare DNS
+
+### Installation
+1. Clone the repository
+2. Copy `.env.example` to `.env.local`
+3. Fill in your API keys
+4. Run `npm install`
+5. Run `npm run dev` for development
+
+### Deployment
+This project is configured for Vercel deployment.
+
+### Security & Privacy
+- No user data is stored except what is submitted through the form
+- No cookies or tracking
+- IP addresses are not logged
+- All submissions are anonymous
+
+
+
+## Why Do This
+
 This project was built to help people find buprenorphine (bupe) in pharmacies. Bupe is used to treat opioid addiction. Many pharmacies do not stock it. This makes it hard to fill a prescription. Which makes treatment hard, and treatment is already harder than it should be. 
 
 This is bad. 
@@ -19,3 +46,4 @@ If we missed something, please let us know.
 We’ll keep trying to improve and respond to feedback.
 
 Check out our other stuff at https://opioidpolicy.org
+Consider donating at https://buy.stripe.com/cN2g1p3jIdrw1W0cMM 
