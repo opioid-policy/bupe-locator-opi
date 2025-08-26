@@ -1,0 +1,12 @@
+# .github/dependabot.yml
+
+version: 2
+updates:
+  # Enable version updates for pnpm
+  - package-ecosystem: "npm" # Use "npm" for pnpm, npm, and yarn
+    directory: "/"           # Location of your package.json
+    schedule:
+      interval: "weekly"     # How often to check for updates
+    commit-message:
+      prefix: "deps"         # Prefix for commit messages
+      include: "scope"

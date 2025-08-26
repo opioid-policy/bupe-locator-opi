@@ -2,8 +2,8 @@
 export function checkRequiredEnvVars() {
   const required = [
     'AIRTABLE_PERSONAL_ACCESS_TOKEN',
-    'NEXT_PUBLIC_AIRTABLE_BASE_ID',
-    'NEXT_PUBLIC_AIRTABLE_TABLE_NAME',
+    'AIRTABLE_BASE_ID',
+    'AIRTABLE_TABLE_NAME',
     'TURNSTILE_SECRET_KEY',
     'NEXT_PUBLIC_TURNSTILE_SITE_KEY',
   ];

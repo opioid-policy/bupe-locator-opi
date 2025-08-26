@@ -116,8 +116,8 @@ async function fetchFromAirtable(timeframe: Timeframe): Promise<CleanReport[]> {
   if (!process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN) {
     throw new Error('AIRTABLE_PERSONAL_ACCESS_TOKEN is not configured');
   }
-  if (!process.env.NEXT_PUBLIC_AIRTABLE_BASE_ID) {
-    throw new Error('NEXT_PUBLIC_AIRTABLE_BASE_ID is not configured');
+  if (!process.env.AIRTABLE_BASE_ID) {
+    throw new Error('AIRTABLE_BASE_ID is not configured');
   }
 
   let filterFormula = '';
