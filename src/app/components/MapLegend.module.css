@@ -36,3 +36,10 @@
 .red {
   background-color: var(--accent-red); /* UPDATED: Use your brand red */
 }
+
+/* Hide legend only on phones, not tablets */
+@media (max-width: 480px) {
+  .legend {
+    display: none;
+  }
+}
