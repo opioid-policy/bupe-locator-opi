@@ -110,10 +110,15 @@ export default function Home() {
   const [lastRequestTime, setLastRequestTime] = useState(0);
   const REQUEST_DELAY_MS = 2000; // 2 seconds between requests
   
-  // Scroll to top when mode changes or after successful submission
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [mode, submitStatus]);
+  // Scroll to top when component mounts (immediate)
+useEffect(() => {
+  // Don't scroll if there's a hash in the URL
+  if (!window.location.hash) {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+  }
+}, [mode]);
 
   // --- Reset submit status on form open or change ---
   useEffect(() => {
@@ -143,55 +148,52 @@ const handleSelectPharmacy = async (pharmacy: SearchSuggestion) => {
     return;
   }
   
-  try {
-    const response = await fetch('/api/pharmacy-search', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pharmacy_id: pharmacy.osm_id })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    if (data.features[0].properties.manual) {
-      setShowManualEntry(true);
-      return;
-    }
-    
-    const feature = data.features[0];
-    
-    const street = feature.properties.address || '';
-    const city = feature.properties.context.place?.name || '';
-    const postcode = feature.properties.context.postcode?.name || '';
-    const stateAbbr = feature.properties.context.region?.region_code?.replace('US-', '') || '';
-    const phone = feature.properties.phone || '';
-    const [longitude, latitude] = feature.geometry.coordinates;
-    
-    // ADD THIS: Convert state abbreviation to full name
-    const stateName = STATE_ABBR_TO_NAME[stateAbbr.toUpperCase()] || stateAbbr;
-    
-    setSelectedPharmacy({
-      osm_id: pharmacy.osm_id,
-      name: pharmacy.name,
-      full_address: pharmacy.full_address,
-      street_address: street,
-      city: city,
-      state: stateName, // USE FULL STATE NAME HERE
-      zip_code: postcode,
-      latitude: latitude,
-      longitude: longitude,
-      phone_number: phone,
-    });
-    
-    setSearchTerm('');
-    setResults([]);
-  } catch (error) {
-    console.error("Error retrieving pharmacy details:", error);
-    alert('Unable to load pharmacy details. Please try selecting a different pharmacy.');
-  }
+  const response = await fetch('/api/pharmacy-search', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ pharmacy_id: pharmacy.osm_id })
+});
+
+if (!response.ok) {
+  return;
+}
+
+const data = await response.json();
+
+if (data.features[0].properties.manual) {
+  setShowManualEntry(true);
+  return;
+}
+
+const feature = data.features[0];
+
+const street = feature.properties.address || '';
+const city = feature.properties.context.place?.name || '';
+const postcode = feature.properties.context.postcode?.name || '';
+const stateAbbr = feature.properties.context.region?.region_code?.replace('US-', '') || '';
+const phone = feature.properties.phone || '';
+const [longitude, latitude] = feature.geometry.coordinates;
+
+// Convert state abbreviation to full name
+const stateName = STATE_ABBR_TO_NAME[stateAbbr.toUpperCase()] || stateAbbr;
+
+setSelectedPharmacy({
+  osm_id: pharmacy.osm_id,
+  name: pharmacy.name,
+  full_address: pharmacy.full_address,
+  street_address: street,
+  city: city,
+  state: stateName,
+  zip_code: postcode,
+  latitude: latitude,
+  longitude: longitude,
+  phone_number: phone,
+});
+
+setSearchTerm('');
+setResults([]);
+
+
 };
 
 // Add handler for manual pharmacy submission
@@ -204,42 +206,33 @@ const handleManualPharmacySubmit = async (
   notes: string,
   turnstileToken: string
 ) => {
-  try {
-    const response = await fetch('/api/submit-report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        pharmacy: pharmacyData,
-        reportType,
-        formulations,
-        standardizedNotes,
-        notes,
-        consentMap: true,  // This is critical - was missing!
-        turnstileToken
-      }),
-    });
-    
-    if (response.ok) {
-      setSelectedPharmacy(pharmacyData);
-      setShowManualEntry(false);
-      setSubmitStatus('success');  // Show success message
-      // Refresh pharmacy data
-      if (locationCoords) {
-        const [lat, lon] = locationCoords;
-        const refreshResponse = await fetch(`/api/pharmacies?lat=${lat}&lon=${lon}&t=${Date.now()}`);
-        const refreshedData: Report[] = await refreshResponse.json();
-        setAllReports(refreshedData);
-      }
-    } else {
-      console.error('Submit failed:', response.status);
-      const errorText = await response.text();
-      console.error('Error details:', errorText);
-      alert('Failed to submit. Please try again.');
-    }
-  } catch (error) {
-    console.error('Error submitting manual pharmacy:', error);
-    alert('An error occurred. Please try again.');
+const response = await fetch('/api/submit-report', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    pharmacy: pharmacyData,
+    reportType,
+    formulations,
+    standardizedNotes,
+    notes,
+    consentMap: true,
+    turnstileToken,
+  }),
+});
+
+if (response.ok) {
+  setSelectedPharmacy(pharmacyData);
+  setShowManualEntry(false);
+  setSubmitStatus('success');
+
+  // Refresh pharmacy data
+  if (locationCoords) {
+    const [lat, lon] = locationCoords;
+    const refreshResponse = await fetch(`/api/pharmacies?lat=${lat}&lon=${lon}&t=${Date.now()}`);
+    const refreshedData: Report[] = await refreshResponse.json();
+    setAllReports(refreshedData);
   }
+}
 };
 
   // --- Reset error if user changes key form fields ---
@@ -270,23 +263,22 @@ const handleManualPharmacySubmit = async (
 
   // --- Pharmacy reports fetch ---
   useEffect(() => {
-    if ((mode === 'find' || mode === 'report') && locationCoords) {
-      setIsLoadingPharmacies(true);
-      const fetchAllReports = async () => {
-        try {
-          const [lat, lon] = locationCoords;
-          const response = await fetch(`/api/pharmacies?lat=${lat}&lon=${lon}`);
-          const data: Report[] = await response.json();
-          setAllReports(data);
-        } catch (error) {
-          console.error("Failed to fetch pharmacy reports:", error);
-        } finally {
-          setIsLoadingPharmacies(false);
-        }
-      };
-      fetchAllReports();
-    }
-  }, [mode, locationCoords]);
+  if ((mode === 'find' || mode === 'report') && locationCoords) {
+    setIsLoadingPharmacies(true);
+    const fetchAllReports = async () => {
+      try {
+        const [lat, lon] = locationCoords;
+        const response = await fetch(`/api/pharmacies?lat=${lat}&lon=${lon}`);
+        const data: Report[] = await response.json();
+        setAllReports(data);
+      } finally {
+        setIsLoadingPharmacies(false);
+      }
+    };
+    fetchAllReports();
+  }
+}, [mode, locationCoords]);
+
 
   // --- Aggregate reports by pharmacy ---
 // Enhanced aggregation logic for page.tsx
@@ -467,35 +459,19 @@ useEffect(() => {
     setLocationError("");
 
     try {
-      // Call your new API route instead of OSM directly
-      const response = await fetch(`/api/zip?zipCode=${zipCode}`);
+  const response = await fetch(`/api/zip?zipCode=${zipCode}`);
+  if (!response.ok) {
+    return;  // Silently ignore all error cases
+  }
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        if (response.status === 429) {
-          setLocationError("Too many requests. Please try again in a minute.");
-        } else if (response.status === 400) {
-          setLocationError(errorData.message || "Invalid ZIP code format.");
-        } else {
-          setLocationError("Failed to fetch location data.");
-        }
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.features && data.features.length > 0) {
-        const [lon, lat] = data.features[0].center;
-        setLocationCoords([lat, lon]);
-      } else {
-        setLocationError("Could not find that ZIP code. Please try another.");
-      }
-    } catch (error) {
-      console.error("Error fetching location:", error);
-      setLocationError("Failed to fetch location data.");
-    } finally {
-      setIsLoadingLocation(false);
-    }
+  const data = await response.json();
+  if (data.features && data.features.length > 0) {
+    const [lon, lat] = data.features[0].center;
+    setLocationCoords([lat, lon]);
+  }
+} finally {
+  setIsLoadingLocation(false);
+}
   };
 // --- Confetti effect ---
 useEffect(() => {
@@ -546,9 +522,6 @@ const fetchPharmacies = async () => {
     const response = await fetch(endpoint);
     const data = await response.json();
     setResults(data.suggestions || []);
-  } catch (error) {
-    console.error("Error fetching pharmacies:", error);
-    setResults([]);
   } finally {
     setIsSearching(false);  // ADD THIS
   }
@@ -584,42 +557,32 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     turnstileToken,
   };
   
-  try {
-    const response = await fetch('/api/submit-report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(reportData),
-    });
-    
-    if (!response.ok) throw new Error('Submission failed');
-    
-    // Reset Turnstile
-    if (turnstile && typeof turnstile.reset === 'function') {
-      turnstile.reset();
-      setTurnstileToken(null);
-    }
-    
+  const response = await fetch('/api/submit-report', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(reportData),
+});
 
-    
-    // Refresh pharmacy data to show the new submission
-    if (locationCoords) {
-      const [lat, lon] = locationCoords;
-      const refreshResponse = await fetch(`/api/pharmacies?lat=${lat}&lon=${lon}&t=${Date.now()}`);
-      const refreshedData: Report[] = await refreshResponse.json();
-      setAllReports(refreshedData);
-    }
-    
-    setSubmitStatus('success');
-  } catch (error) {
-    console.error('Submission error:', error);
-    setSubmitStatus('error');
-    if (turnstile && typeof turnstile.reset === 'function') {
-      turnstile.reset();
-      setTurnstileToken(null);
-    }
+if (response.ok) {
+  // Reset Turnstile
+  if (turnstile && typeof turnstile.reset === 'function') {
+    turnstile.reset();
+    setTurnstileToken(null);
   }
-  
-  setIsSubmitting(false);
+
+  // Refresh pharmacy data to show the new submission
+  if (locationCoords) {
+    const [lat, lon] = locationCoords;
+    const refreshResponse = await fetch(`/api/pharmacies?lat=${lat}&lon=${lon}&t=${Date.now()}`);
+    const refreshedData: Report[] = await refreshResponse.json();
+    setAllReports(refreshedData);
+  }
+
+  setSubmitStatus('success');
+}
+
+setIsSubmitting(false);
+
 };
 
   // --- Sharing helper ---

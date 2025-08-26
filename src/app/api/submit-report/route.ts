@@ -118,7 +118,6 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('Airtable error details:', errorData);
 
       // Return more detailed error information
       return new NextResponse(JSON.stringify({
@@ -143,7 +142,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Submission error:', error instanceof Error ? error.message : String(error));
     return new NextResponse(JSON.stringify({
       success: false,
         error: 'Internal server error',

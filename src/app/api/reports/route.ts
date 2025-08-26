@@ -77,7 +77,6 @@ async function writeCache(timeframe: Timeframe, data: CleanReport[]): Promise<vo
     await fs.writeFile(cacheFile, JSON.stringify(cacheData, null, 2));
     await cleanupOldCacheFiles();
   } catch {
-    console.error('Error writing cache - proceeding without cache');
   }
 }
 
@@ -131,7 +130,6 @@ async function fetchFromAirtable(timeframe: Timeframe): Promise<CleanReport[]> {
     )`;
   }
 
-  console.log(`Fetching fresh data from Airtable for timeframe: ${timeframe}`);
 
   let offset: string | undefined;
   const allRecords: CleanReport[] = [];
@@ -265,7 +263,6 @@ export async function GET(request: Request) {
     return response;
 
   } catch (error) {
-    console.error('Error fetching reports:', error instanceof Error ? error.message : 'Unknown error');
 
     const cachedData = await readCache(timeframe);
     if (cachedData) {

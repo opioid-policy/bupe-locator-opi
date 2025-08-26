@@ -150,9 +150,9 @@ const PharmacyMarkers: React.FC<PharmacyMarkersProps> = ({ pharmacies }) => {
                     style={{
                       marginTop: '10px',
                       padding: '5px 10px',
-                      backgroundColor: 'var(--accent-green)',
-                      color: 'var(--font-color-dark)',
-                      border: 'none',
+                      backgroundColor: 'var(--font-color-dark)',
+                      color: 'var(--accent-cream)',
+                      border: 'var(--accent-green) 2px solid',
                       borderRadius: '4px',
                       cursor: 'pointer',
                       fontWeight: 'bold',

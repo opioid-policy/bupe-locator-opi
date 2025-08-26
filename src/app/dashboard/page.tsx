@@ -100,11 +100,6 @@ export default function Dashboard() {
           throw new Error(pastMonthRes.error || allTimeRes.error);
         }
 
-        // Log cache status for debugging
-        console.log('Data sources:', {
-          pastMonth: pastMonthRes.source || 'unknown',
-          allTime: allTimeRes.source || 'unknown'
-        });
 
         // Process the data
         const processReports = (reports: AirtableReport[]) => {
@@ -228,10 +223,6 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  // Scroll to top when component mounts (immediate)
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
 
   // Scroll to top when data finishes loading
   useEffect(() => {

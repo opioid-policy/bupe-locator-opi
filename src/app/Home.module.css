@@ -565,29 +565,31 @@
   .filterGroup,
   .trendLegend,
   .backToZipLink,
-  .privacyButton,
-  .filterButton {
+  .filterButton
+  .backlink {
     display: none !important;
-    height: 0 !important;
+  }
+
+ body {
     margin: 0 !important;
     padding: 0 !important;
   }
 
   /* Style the printable content */
   .printableContent {
-    page-break-before: always; /* Force content to start on a new page */
-    margin-top: 0 !important;
-    padding-top: 0 !important;
     width: 100% !important;
     padding: 0 !important;
+    margin: 0 !important;
     background-color: white !important;
     color: #000 !important;
+    page-break-before: avoid !important; /* Prevent page break before content */
   }
 
   .pharmacyList {
     background-color: transparent !important;
-    page-break-inside: always !important; 
-    }
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
   
   .privacyGuidanceSection {
     display: none !important;
@@ -675,6 +677,11 @@
   .successMessage {
     min-height: calc(100vh - 3rem);
   }
+
+    .filterButton {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.75rem;
+    }
 }
 
 /* Desktop-specific adjustments for no-map view */
