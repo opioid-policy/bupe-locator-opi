@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import styles from '../Home.module.css';
 import { AggregatedPharmacy } from '../page';
 import TrendIndicator from './TrendIndicator';
