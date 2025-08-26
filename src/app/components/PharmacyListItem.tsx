@@ -12,6 +12,7 @@ interface PharmacyListItemProps {
 }
 
 function decodeHtmlEntities(text: string): string {
+  // This function is safe to run on the client-side where 'document' is available.
   const textarea = document.createElement('textarea');
   textarea.innerHTML = text;
   return textarea.value;
@@ -38,26 +39,20 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const checkIfMobile = () => {
-      if (typeof window !== 'undefined') {
-        const userAgent = navigator.userAgent ||
-                         (navigator as { vendor?: string }).vendor ||
-                         (window as { opera?: string }).opera;
-        const isMobileDevice = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
-          userAgent?.toLowerCase() || ''
-        );
-        setIsMobile(isMobileDevice);
-      }
-    };
-    checkIfMobile();
+    // Detect if the user is on a mobile device
+      const userAgent = navigator.userAgent || navigator.vendor || (window as Window & { opera?: string }).opera;    const isMobileDevice = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+      userAgent?.toLowerCase() || ''
+    );
+    setIsMobile(isMobileDevice);
   }, []);
 
-const directionsUrl = useMemo(() => {
-  if (!latitude || !longitude) return "";
-  return getDirectionsUrl(latitude, longitude);
-}, [latitude, longitude]);
+  // Memoized URL for native map applications (Mobile)
+  const directionsUrl = useMemo(() => {
+    if (!latitude || !longitude) return "";
+    return getDirectionsUrl(latitude, longitude);
+  }, [latitude, longitude]);
 
-
+  // Memoized URL for OpenStreetMap (Desktop)
   const osmUrl = useMemo(() => {
     if (!latitude || !longitude) return "";
     return `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=15/${latitude}/${longitude}`;
@@ -76,34 +71,36 @@ const directionsUrl = useMemo(() => {
     }, 500);
   };
 
-  const openDirections = () => {
+  // --- REFACTORED LOGIC ---
+
+  // Opens the native map app on mobile devices
+  const openMobileMaps = () => {
+    setIsDirectionsLoading(true);
+    setShowPrivacyWarning(false);
+    setTimeout(() => {
+      window.location.href = directionsUrl;
+      setIsDirectionsLoading(false);
+    }, 100); // Shorter delay for a snappier feel
+  };
+
+  // Opens OpenStreetMap in a new tab for desktop users
+  const openDesktopMaps = () => {
     setIsDirectionsLoading(true);
     setTimeout(() => {
-      if (isMobile) {
-        // For mobile, always use the native directions URL
-        window.location.href = directionsUrl;
-      } else {
-        // For desktop, use OSM in new tab
-        window.open(osmUrl, '_blank', 'noopener,noreferrer');
-      }
+      window.open(osmUrl, '_blank', 'noopener,noreferrer');
       setIsDirectionsLoading(false);
-    }, 500);
+    }, 100);
   };
 
+  // Main handler for the "Get Directions" button
   const handleDirectionsClick = () => {
     if (isMobile) {
+      // On mobile, show the privacy warning first
       setShowPrivacyWarning(true);
     } else {
-      openDirections();
+      // On desktop, open OSM directly
+      openDesktopMaps();
     }
-  };
-
-  const openNativeMaps = () => {
-  setIsDirectionsLoading(true);
-  setTimeout(() => {
-    window.location.href = directionsUrl;
-    setIsDirectionsLoading(false);
-  }, 500);
   };
 
   return (
@@ -203,23 +200,19 @@ const directionsUrl = useMemo(() => {
                       <li>Use privacy preserving mapping apps like Organic Maps</li>
                     </ul>
                     <div className={styles.privacyWarningButtons}>
-  <button
-    onClick={() => setShowPrivacyWarning(false)}
-    className={styles.cancelButton}
-  >
-    Cancel
-  </button>
-  <button
-    onClick={() => {
-      setShowPrivacyWarning(false);
-      // Ensure this calls our fixed function
-      openNativeMaps();
-    }}
-    className={styles.continueButton}
-  >
-    Continue
-  </button>
-</div>
+                      <button
+                        onClick={() => setShowPrivacyWarning(false)}
+                        className={styles.cancelButton}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={openMobileMaps} // Updated to call the correct function
+                        className={styles.continueButton}
+                      >
+                        Continue
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
