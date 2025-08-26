@@ -19,7 +19,7 @@ const raleway = Raleway({
 
 const merriweather = Merriweather({
   subsets: ['latin'],
-  weight: ['400', '700', '900'],
+  weight: ['400','500', '600', '700', '800', '900'],
   display: 'swap',
   variable: '--font-merriweather',
 });
