@@ -595,7 +595,7 @@ setIsSubmitting(false);
 
   // --- Sharing helper ---
   const handleShare = () => {
-    const shareText = `Need to find bupe? Know a pharmacies bupe availability? Help map access in our community: ${window.location.origin}`;
+    const shareText = `Need to find bupe? Know a pharmacies bupe availability? Help map access in our community: https://findbupe.org`;
     navigator.clipboard.writeText(shareText).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
