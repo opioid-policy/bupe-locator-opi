@@ -39,7 +39,7 @@ function debounce<F extends (...args: never[]) => void>(func: F, wait: number): 
 export default function Map({
   center,
   pharmacies,
-  zoom = 8,
+  zoom = 9,
   minZoom = 10,
   maxZoom = 19
 }: MapProps) {
