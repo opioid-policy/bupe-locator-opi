@@ -623,7 +623,7 @@ setIsSubmitting(false);
       <div className={styles.zipCodeContainer}>
         <form onSubmit={handleZipCodeSubmit}>
           <h2 >Enter Your ZIP Code</h2>
-          <p style={{ color: 'var(--font-color-dark)', fontStyle: 'italic' }}>Please enter a ZIP code to find pharmacies with bupe near you.</p>
+          <p style={{ color: 'var(--font-color-dark)', fontStyle: 'italic' }}>Please enter a ZIP code to find and report pharmacies with bupe near you.</p>
           <div className={styles.formGroup}>
             <label htmlFor="zip-code">ZIP Code</label>
             <input
