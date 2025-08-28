@@ -31,7 +31,7 @@ const nextConfig = {
               "worker-src 'self' blob:",
               "base-uri 'self'",
               "form-action 'self'",
-              "frame-ancestors 'none'",
+              "frame-ancestors 'self'",
               "upgrade-insecure-requests"
             ].join('; ')
           },
@@ -39,7 +39,7 @@ const nextConfig = {
           // Prevent clickjacking
           {
             key: 'X-Frame-Options',
-            value: 'DENY'
+            value: 'SAMEORIGIN'
           },
 
           // Prevent MIME type sniffing
