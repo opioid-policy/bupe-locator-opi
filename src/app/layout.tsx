@@ -49,7 +49,7 @@ export default function RootLayout({
           <footer className={styles.footer}>
             <p>This is a crowd-source resource.</p>
             <p>We only have data on bupe availability that has been reported to this database.</p>
-            <p>This tool is not a guarantee of service. This is not comprehensive.</p>
+            <p>This tool is not a guarantee of service. This data is not comprehensive.</p>
              <p style={{marginTop: '0.5rem'}}>
                 <a 
                   href="https://bupe.opioidpolicy.org" 
