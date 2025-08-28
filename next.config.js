@@ -31,15 +31,9 @@ const nextConfig = {
               "worker-src 'self' blob:",
               "base-uri 'self'",
               "form-action 'self'",
-              "frame-ancestors 'self'",
+              "frame-ancestors 'self' https://*.opioidpolicy.org https://opioidpolicy.org",
               "upgrade-insecure-requests"
             ].join('; ')
-          },
-
-          // Prevent clickjacking
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
           },
 
           // Prevent MIME type sniffing

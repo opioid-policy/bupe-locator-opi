@@ -55,7 +55,6 @@ export function middleware(request: NextRequest) {
   
   // 4. Add security headers to all API responses
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('X-RateLimit-Limit', '60');
   response.headers.set('X-RateLimit-Remaining', String(60 - clientLimit.count));
