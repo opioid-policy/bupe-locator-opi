@@ -1,7 +1,7 @@
 // src/app/components/NewsletterSignup.tsx
 "use client";
 
-import { useState, useEffect, useRef } from 'react'; // Add useRef
+import { useState, useEffect } from 'react'; // Add useRef
 import styles from './NewsletterSignup.module.css';
 
 // Add global Turnstile callback
@@ -11,8 +11,7 @@ declare global {
     turnstile?: {
       reset: (widgetId?: string) => void;
       execute: (widgetId?: string) => void; // Add this line
-      render: (container: string | HTMLElement, options: any) => string;
-    };
+      render: (container: string | HTMLElement, options: Record<string, unknown>) => string;     };
   }
 }
 
@@ -27,7 +26,6 @@ export default function NewsletterSignup({ className }: NewsletterSignupProps) {
   const [message, setMessage] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
-  const turnstileRef = useRef<string | null>(null);
 
 
   // Set up Turnstile callback
@@ -100,9 +98,10 @@ const handleSubmit = async (e: React.FormEvent) => {
         setStatus('error');
         setMessage(data.error || 'Something went wrong. Please try again.');
       }
-    } catch (error) {
-      setStatus('error');
-      setMessage('Network error. Please check your connection and try again.');
+  } catch (error) {
+  console.error('Newsletter submission error:', error); // Add this line
+  setStatus('error');
+  setMessage('Network error. Please check your connection and try again.');
     } finally {
       setIsSubmitting(false);
     }
