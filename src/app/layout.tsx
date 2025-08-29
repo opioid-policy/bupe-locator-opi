@@ -8,6 +8,8 @@ import PrivacyBanner from './components/PrivacyBanner'; // ADD THIS IMPORT
 import "./globals.css";
 import ScrollToTop from './components/ScrollToTop';
 import HashNavigator from './components/HashNavigator';
+import NewsletterSignup from './components/NewsletterSignup'; // Add this import
+
 
 
 // Initialize both fonts and assign them to CSS variables
@@ -24,7 +26,6 @@ const merriweather = Merriweather({
   variable: '--font-merriweather',
 });
 
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -35,7 +36,7 @@ export default function RootLayout({
     <body className={`${merriweather.variable} ${raleway.variable} ${styles.body}`}>
         <ScrollToTop />
         <HashNavigator />
-        <PrivacyBanner /> {/* ADD THIS LINE - Banner at top of page */}
+        <PrivacyBanner />
         <div className={styles.appContainer}>
           <header className={styles.header}>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
@@ -47,9 +48,14 @@ export default function RootLayout({
             {children}
           </main>
           <footer className={styles.footer}>
-            <p>This is a crowd-source resource.</p>
-            <p>We only have data on bupe availability that has been reported to this database.</p>
-            <p>This tool is not a guarantee of service. This data is not comprehensive.</p>
+            {/* Newsletter Section - Added at top of footer */}
+            <p style={{textAlign: 'center', fontStyle: 'italic'}}>This is a crowdsource resource.</p>
+            <p style={{textAlign: 'center', fontStyle: 'italic'}}>We only have data on bupe availability that has been reported to this database.</p>
+            <p style={{textAlign: 'center', fontStyle: 'italic'}}>This data is not comprehensive.</p>
+            <p style={{textAlign: 'center', fontStyle: 'italic'}}>This tool is not a guarantee of service.</p>
+            <div style={{ marginBottom: '0.5rem', width: '100%', maxWidth: '500px' }}>
+              <NewsletterSignup />
+            </div>
              <p style={{marginTop: '0.5rem'}}>
                 <a 
                   href="https://bupe.opioidpolicy.org" 
@@ -62,34 +68,24 @@ export default function RootLayout({
               </p>           
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/about" className={styles.styledLink}>
-                About This Project
+                About
               </Link>
             </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/dashboard" className={styles.styledLink}>
-                Check Out Our Dashboard
+                Dashboard
               </Link>
             </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/methadone-naltrexone" className={styles.styledLink}>
-                What About Other Treatments?
+                Other Treatments?
               </Link>
             </p>
              <p style={{marginTop: '0.5rem'}}>
               <Link href="/bulk-upload" className={styles.styledLink}>
-                Bulk Reporting Tool
+                Bulk Upload
               </Link>
             </p>
-              <p style={{marginTop: '0.5rem'}}>
-                <a 
-                  href="https://news.opioidpolicy.org/#/portal" 
-                  className={styles.styledLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Join Our Newsletter
-                </a>
-              </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/privacy" className={styles.styledLink}>
                  🔒 Privacy Info & Tips 🔒
