@@ -1,58 +1,134 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Store analytics in Airtable
-async function storeAnalytics(counts: Record<string, number>, stateCounts: Record<string, Record<string, number>>) {
-  const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+async function storeAnalytics(events: Array<{event: string, state?: string}>) {
+  const AIRTABLE_PERSONAL_ACCESS_TOKEN = process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN;
   const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
-  const ANALYTICS_TABLE_ID = process.env.AIRTABLE_ANALYTICS_TABLE_NAME; // Update with your actual table ID
+  const AIRTABLE_ANALYTICS_TABLE_NAME = process.env.AIRTABLE_ANALYTICS_TABLE_ID;
   
-const records = [];
-  const date = new Date().toISOString().split('T')[0];
+  // Get today's date for aggregation
+  const today = new Date().toISOString().split('T')[0];
   
-  // Global counts
-  for (const [eventType, count] of Object.entries(counts)) {
-    records.push({
-      fields: {
-        event_type: eventType,
-        count: count,
-        date: date,
-        aggregation_level: 'national'
+  // First, fetch existing records for today to update counts
+  try {
+    const filterFormula = `DATESTR({created_at}) = "${today}"`;
+    const fetchUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_ANALYTICS_TABLE_NAME}?filterByFormula=${encodeURIComponent(filterFormula)}`;
+    
+    const existingResponse = await fetch(fetchUrl, {
+      headers: {
+        'Authorization': `Bearer ${AIRTABLE_PERSONAL_ACCESS_TOKEN}`,
       }
     });
-  }
-  
-  // State-level counts
-  for (const [state, events] of Object.entries(stateCounts)) {
-    for (const [eventType, count] of Object.entries(events)) {
-      records.push({
-        fields: {
-          event_type: eventType,
-          count: count,
-          date: date,
-          state: state,
-          aggregation_level: 'state'
-        }
-      });
-    }
-  }
-  
-  // Batch create records in Airtable
-  try {
-    const response = await fetch(
-      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${ANALYTICS_TABLE_ID}`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${AIRTABLE_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ records })
-      }
-    );
     
-    if (!response.ok) {
-      console.error('Airtable error:', await response.text());
+    const existingData = await existingResponse.json();
+    const existingRecords = existingData.records || [];
+    
+    // Create aggregation maps
+    const nationalCounts: Record<string, number> = {};
+    const stateCounts: Record<string, Record<string, number>> = {};
+    
+    // Count new events
+    events.forEach(event => {
+      // National aggregation
+      nationalCounts[event.event] = (nationalCounts[event.event] || 0) + 1;
+      
+      // State aggregation
+      if (event.state) {
+        if (!stateCounts[event.state]) {
+          stateCounts[event.state] = {};
+        }
+        stateCounts[event.state][event.event] = 
+          (stateCounts[event.state][event.event] || 0) + 1;
+      }
+    });
+    
+    // Update existing records or create new ones
+    const updates: any[] = [];
+    const creates: any[] = [];
+    
+    // Process national counts
+    for (const [eventType, count] of Object.entries(nationalCounts)) {
+      const existing = existingRecords.find((r: any) => 
+        r.fields.event_type === eventType && 
+        r.fields.aggregation_level === 'national'
+      );
+      
+      if (existing) {
+        updates.push({
+          id: existing.id,
+          fields: {
+            count: (existing.fields.count || 0) + count
+          }
+        });
+      } else {
+        creates.push({
+          fields: {
+            event_type: eventType,
+            count: count,
+            aggregation_level: 'national'
+          }
+        });
+      }
     }
+    
+    // Process state counts
+    for (const [state, eventCounts] of Object.entries(stateCounts)) {
+      for (const [eventType, count] of Object.entries(eventCounts)) {
+        const existing = existingRecords.find((r: any) => 
+          r.fields.event_type === eventType && 
+          r.fields.state === state &&
+          r.fields.aggregation_level === 'state'
+        );
+        
+        if (existing) {
+          updates.push({
+            id: existing.id,
+            fields: {
+              count: (existing.fields.count || 0) + count
+            }
+          });
+        } else {
+          creates.push({
+            fields: {
+              event_type: eventType,
+              count: count,
+              state: state,
+              aggregation_level: 'state'
+            }
+          });
+        }
+      }
+    }
+    
+    // Execute updates
+    if (updates.length > 0) {
+      await fetch(
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_ANALYTICS_TABLE_NAME}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${AIRTABLE_PERSONAL_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ records: updates })
+        }
+      );
+    }
+    
+    // Execute creates
+    if (creates.length > 0) {
+      await fetch(
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_ANALYTICS_TABLE_NAME}`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${AIRTABLE_PERSONAL_ACCESS_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ records: creates })
+        }
+      );
+    }
+    
   } catch (error) {
     console.error('Failed to store analytics:', error);
   }
@@ -76,43 +152,45 @@ function isValidUSState(state: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
+    // No IP logging, no user agent, no fingerprinting
     const body = await request.json();
-    const { events = [] } = body;
+    const { events = [], timestamp } = body;
     
-    // Aggregate counts
-    const aggregatedCounts: Record<string, number> = {};
-    const stateCounts: Record<string, Record<string, number>> = {};
+    // Basic rate limiting: reject if too many events at once
+    if (events.length > 50) {
+      return NextResponse.json({ error: 'Too many events' }, { status: 429 });
+    }
     
-    events.forEach((event: {event: string, state?: string}) => {
-      // Validate allowed events
+    // Basic temporal validation (not for tracking, just anti-spam)
+    if (timestamp && Math.abs(Date.now() - timestamp) > 60000) {
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+    }
+    
+    // Filter and validate events
+    const validEvents = events.filter((event: any) => {
       const allowedEvents = [
         'find-pharmacy-click',
-        'report-pharmacy-click', 
+        'report-pharmacy-click',
         'report-submitted',
         'language-switched'
       ];
       
-      if (!allowedEvents.includes(event.event)) return;
+      if (!allowedEvents.includes(event.event)) return false;
+      if (event.state && !isValidUSState(event.state)) return false;
       
-      // Validate state if provided
-      if (event.state && !isValidUSState(event.state)) return;
-      
-      // Count by event type
-      aggregatedCounts[event.event] = (aggregatedCounts[event.event] || 0) + 1;
-      
-      // Count by state
-      if (event.state) {
-        if (!stateCounts[event.state]) stateCounts[event.state] = {};
-        stateCounts[event.state][event.event] = (stateCounts[event.state][event.event] || 0) + 1;
-      }
+      return true;
     });
     
-    // Store in Airtable
-    await storeAnalytics(aggregatedCounts, stateCounts);
+    if (validEvents.length > 0) {
+      await storeAnalytics(validEvents);
+    }
     
+    // Always return success (don't reveal validation details)
     return NextResponse.json({ success: true });
+    
   } catch (error) {
     console.error('Analytics error:', error);
+    // Generic error response (no details)
     return NextResponse.json({ error: 'Failed' }, { status: 500 });
   }
 }
