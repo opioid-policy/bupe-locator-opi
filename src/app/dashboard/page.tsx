@@ -21,6 +21,21 @@ interface StateStats {
   lastUpdated: string;
 }
 
+interface AnalyticsData {
+  byState: Record<string, {
+    'find-pharmacy-click': number;
+    'report-pharmacy-click': number;
+    'report-submitted': number;
+    'language-switched': number;
+  }>;
+  totals: {
+    'find-pharmacy-click': number;
+    'report-pharmacy-click': number;
+    'report-submitted': number;
+    'language-switched': number;
+  };
+}
+
 interface DashboardData {
   pastMonth: {
     total: number;
@@ -79,6 +94,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -218,6 +235,21 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const response = await fetch('/api/dashboard/analytics');
+        if (response.ok) {
+          const data = await response.json();
+          setAnalyticsData(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch analytics:', error);
+      }
+    };
+    
+    fetchAnalytics();
+  }, []);
 
   // Scroll to top when data finishes loading
   useEffect(() => {
@@ -313,7 +345,48 @@ export default function Dashboard() {
         <br/><em>Scroll left to right on mobile</em> ↔️
       </div>
 
-      {/* 3. Formulation Trends */}
+      {/* 3. Analytics Table */}
+
+      {analyticsData && (
+        <div className={styles.tableSection}>
+          <h2 className={styles.sectionTitle}>User Interactions (Privacy-Preserved)</h2>
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>State</th>
+                  <th>Find Pharmacy Clicks</th>
+                  <th>Report Clicks</th>
+                  <th>Reports Submitted</th>
+                  <th>Language Changes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(analyticsData.byState)
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .map(([state, metrics]) => (
+                    <tr key={state}>
+                      <td>{state}</td>
+                      <td>{metrics['find-pharmacy-click'] || 0}</td>
+                      <td>{metrics['report-pharmacy-click'] || 0}</td>
+                      <td>{metrics['report-submitted'] || 0}</td>
+                      <td>{metrics['language-switched'] || 0}</td>
+                    </tr>
+                  ))}
+                <tr className={styles.totalRow}>
+                  <td><strong>Total</strong></td>
+                  <td><strong>{analyticsData.totals['find-pharmacy-click'] || 0}</strong></td>
+                  <td><strong>{analyticsData.totals['report-pharmacy-click'] || 0}</strong></td>
+                  <td><strong>{analyticsData.totals['report-submitted'] || 0}</strong></td>
+                  <td><strong>{analyticsData.totals['language-switched'] || 0}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Formulation Trends */}
       <div className={styles.formulationSection}>
         <h2 className={styles.sectionTitle}>Formulation Availability (All Time)</h2>
         <div className={styles.formulationGrid}>
@@ -332,7 +405,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 4. Common Barriers */}
+      {/* 5. Common Barriers */}
       <div className={styles.barriersSection}>
         <h2 className={styles.sectionTitle}>Common Bupe Barriers (All Time)</h2>
         <div className={styles.barChart}>

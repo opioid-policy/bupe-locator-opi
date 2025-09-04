@@ -433,3 +433,9 @@
   color: var(--font-color-dark);
   font-style: italic;
 }
+
+.totalRow {
+  background-color: var(--accent-blue);
+  font-weight: bold;
+  border-top: 2px solid var(--font-color-dark);
+}

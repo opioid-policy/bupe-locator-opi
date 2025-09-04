@@ -236,6 +236,9 @@ if (response.ok) {
   setShowManualEntry(false);
   setSubmitStatus('success');
 
+ const stateName = getStateFromZipCode(zipCode);
+ analytics.trackEvent('report-submitted', stateName);
+
   // Refresh pharmacy data
   if (locationCoords) {
     const [lat, lon] = locationCoords;
@@ -654,8 +657,8 @@ setIsSubmitting(false);
       <div className={styles.choiceContainer}>
         <h2>What would you like to do today?</h2>
         <div className={styles.choiceButtons}>
-          <button className={styles.choiceButton} onClick={() => setMode('report')}>Update a Pharmacy&apos;s Bupe Status</button>
-          <button className={styles.choiceButton} onClick={() => setMode('find')}>Find a Bupe-Friendly Pharmacy</button>
+          <button className={styles.choiceButton} onClick={() => {setMode('report'); analytics.trackEvent('report-pharmacy-click');}}>Update a Pharmacy&apos;s Bupe Status</button>
+          <button className={styles.choiceButton} onClick={() => {setMode('find'); analytics.trackEvent('find-pharmacy-click');}}>Find a Bupe-Friendly Pharmacy</button>
         </div>
       </div>
     );

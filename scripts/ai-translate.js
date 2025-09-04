@@ -46,23 +46,32 @@ Provide ONLY the translation, no explanations or additional text:`;
 
 async function translateText(text, targetLang, nativeName) {
   try {
-    const prompt = createTranslationPrompt(text, targetLang, nativeName);
+    // More explicit prompt to get ONLY the translation
+    const prompt = `Translate the following English text to ${targetLang}. Output ONLY the translation without any explanation:
+
+"${text}"
+
+Translation:`;
     
     const response = await ollama.generate({
-      model: 'qwen3:8b',  // Updated to use your qwen3:8b model
+      model: 'qwen2.5:3b', // Try qwen2.5 if qwen3 gives reasoning
       prompt: prompt,
       stream: false,
       options: {
-        temperature: 0.3, // Lower temperature for consistent translations
+        temperature: 0.3,
         top_p: 0.9,
-        num_predict: 100
+        stop: ['\n\n', 'Explanation:', 'Note:', 'Reasoning:'], // Stop sequences
+        num_predict: 150
       }
     });
     
-    // Clean up the response
+    // Extract translation from response
     let translation = response.response.trim();
     
-    // Remove quotes if AI added them
+    // Remove "Translation:" prefix if present
+    translation = translation.replace(/^Translation:\s*/i, '');
+    
+    // Remove quotes
     if (translation.startsWith('"') && translation.endsWith('"')) {
       translation = translation.slice(1, -1);
     }
@@ -70,10 +79,15 @@ async function translateText(text, targetLang, nativeName) {
       translation = translation.slice(1, -1);
     }
     
+    // If response contains line breaks, take only first line
+    if (translation.includes('\n')) {
+      translation = translation.split('\n')[0].trim();
+    }
+    
     return translation;
   } catch (error) {
     console.error(`Translation error for ${targetLang}:`, error.message);
-    return text; // Fallback to original text
+    return text;
   }
 }
 
@@ -105,21 +119,20 @@ async function checkOllamaConnection() {
   try {
     const models = await ollama.list();
     const hasQwen = models.models.some(model => 
-      model.name.includes('qwen3:8b')
+      model.name.includes('qwen') // Check for any qwen model
     );
     
     if (!hasQwen) {
-      console.error('❌ Qwen3:8b model not found!');
-      console.log('💡 Please run: ollama pull qwen3:8b');
+      console.error('❌ Qwen model not found!');
+      console.log('💡 Try: ollama pull qwen2.5:3b');
       process.exit(1);
     }
     
-    console.log('✅ Ollama connected, Qwen3:8b model ready');
+    console.log('✅ Ollama connected, Qwen model ready');
     return true;
   } catch (error) {
     console.error('❌ Cannot connect to Ollama!');
     console.log('💡 Make sure Ollama is running: ollama serve');
-    console.log('💡 Or start Ollama Desktop app');
     process.exit(1);
   }
 }
