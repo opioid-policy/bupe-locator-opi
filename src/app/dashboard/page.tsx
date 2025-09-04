@@ -50,16 +50,11 @@ interface DashboardData {
 
 // Define these constants directly in the file
 const formulationOptions = [
-  'Suboxone Film', 'Suboxone Tablet', 'Zubsolv Tablet',
-  'Buprenorphine/Naloxone Film (generic)', 'Buprenorphine/Naloxone Tablet (generic)',
-  'Buprenorphine Tablet (generic)'
+'Suboxone (film)', 'Buprenorphine/Naloxone (film; generic)', 'Buprenorphine/Naloxone (tablet; generic)', 'Buprenorphine (tablet; mono product; generic)', 'Zubsolv (tablet)'
 ];
 
 const standardizedNoteOptions = [
-  'Will order, but not in stock', 'Best to call ahead',
-  'Only fills for existing patients', 'Only fills from prescribers "close-by"',
-  'Requires specific diagnosis code', 'Long wait times',
-  'Won\'t accept cash', 'Helpful staff', 'Unhelpful staff'
+'Will order, but not in stock', 'Partial fill (did not fill the full prescription)', 'Best to call ahead', 'Only fills for existing patients', 'Only fills from prescribers "close-by"', 'Only fill from certain prescribers', 'Only fills for patients "close-by"', 'Long wait times', 'Won\'t accept cash', 'Helpful staff', 'Unhelpful staff', 'Permanently closed'
 ];
 
 // Helper function to get month names

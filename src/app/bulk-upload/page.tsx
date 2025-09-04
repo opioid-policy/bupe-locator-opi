@@ -10,7 +10,7 @@ export default function BulkUploadPage() {
       <div className={styles.content}>
         <h2>Bulk Data Submission Instructions</h2>
         <p>
-          For researchers conducting secret shopper studies or organizations with multiple data points (pharmacy chains??? prescribers??? harm reduction orgs???), we offer a bulk submission option to help populate the map quickly.
+          For researchers conducting secret shopper studies or organizations with multiple data points (pharmacy chains??? peer recovery coaches??? prescribers??? harm reduction orgs???), we offer a bulk submission option to help populate the map quickly.
         </p>
 
         {/* This is now a proper list */}

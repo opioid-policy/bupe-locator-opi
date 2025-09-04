@@ -1,18 +1,18 @@
-// src/app/layout.tsx - COMPLETE FIXED FILE
+// src/app/layout.tsx - Updated with floating language selector
 "use client";
 
 import Link from 'next/link';
 import { Raleway, Merriweather } from 'next/font/google';
 import styles from "./Layout.module.css";
-import PrivacyBanner from './components/PrivacyBanner'; // ADD THIS IMPORT
+import PrivacyBanner from './components/PrivacyBanner';
+import LanguageSelector from './components/LanguageSelector';
 import "./globals.css";
 import ScrollToTop from './components/ScrollToTop';
 import HashNavigator from './components/HashNavigator';
-import NewsletterSignup from './components/NewsletterSignup'; // Add this import
+import { useTranslations, getTextDirection } from '@/lib/i18n';
+import { useEffect } from 'react';
 
-
-
-// Initialize both fonts and assign them to CSS variables
+// Initialize fonts
 const raleway = Raleway({
   subsets: ['latin'],
   display: 'swap',
@@ -31,31 +31,37 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { t, currentLang } = useTranslations();
+  
+  // Update document direction and lang for accessibility
+  useEffect(() => {
+    document.documentElement.lang = currentLang;
+    document.documentElement.dir = getTextDirection(currentLang);
+  }, [currentLang]);
+
   return (
-    <html lang="en" suppressHydrationWarning className={`${raleway.variable} ${merriweather.variable}`}>
+    <html lang={currentLang} dir={getTextDirection(currentLang)} suppressHydrationWarning className={`${raleway.variable} ${merriweather.variable}`}>
     <body className={`${merriweather.variable} ${raleway.variable} ${styles.body}`}>
         <ScrollToTop />
         <HashNavigator />
         <PrivacyBanner />
+        
+        {/* Floating Language Selector */}
+        <LanguageSelector />
+        
         <div className={styles.appContainer}>
           <header className={styles.header}>
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/" className={styles.styledLink}>
-              <h1>Bupe Access Tool</h1>
+              <h1>{t('site-title', 'Bupe Access Tool')}</h1>
             </a>
           </header>
           <main className={styles.main}>
             {children}
           </main>
           <footer className={styles.footer}>
-            {/* Newsletter Section - Added at top of footer */}
-            <p style={{textAlign: 'center', fontStyle: 'italic'}}>This is a crowdsource resource.</p>
-            <p style={{textAlign: 'center', fontStyle: 'italic'}}>We only have data on bupe availability that has been reported to this database.</p>
-            <p style={{textAlign: 'center', fontStyle: 'italic'}}>This data is not comprehensive.</p>
-            <p style={{textAlign: 'center', fontStyle: 'italic'}}>This tool is not a guarantee of service.</p>
-            <div style={{ marginBottom: '0.5rem', width: '100%', maxWidth: '500px' }}>
-              <NewsletterSignup />
-            </div>
+            <p>{t('crowdsource-note', 'This is a crowd-source resource.')}</p>
+            <p>{t('data-limitation-note', 'We only have data on bupe availability that has been reported to this database.')}</p>
+            <p>{t('not-guarantee-note', 'This tool is not a guarantee of service. This data is not comprehensive.')}</p>
              <p style={{marginTop: '0.5rem'}}>
                 <a 
                   href="https://bupe.opioidpolicy.org" 
@@ -63,32 +69,42 @@ export default function RootLayout({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Home
+                  {t('home', 'Home')}
                 </a>
               </p>           
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/about" className={styles.styledLink}>
-                About
+                {t('about-project', 'About This Project')}
               </Link>
             </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/dashboard" className={styles.styledLink}>
-                Dashboard
+                {t('dashboard', 'Check Out Our Dashboard')}
               </Link>
             </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/methadone-naltrexone" className={styles.styledLink}>
-                Other Treatments?
+                {t('other-treatments', 'What About Other Treatments?')}
               </Link>
             </p>
              <p style={{marginTop: '0.5rem'}}>
               <Link href="/bulk-upload" className={styles.styledLink}>
-                Bulk Upload
+                {t('bulk-reporting', 'Bulk Reporting Tool')}
               </Link>
             </p>
+              <p style={{marginTop: '0.5rem'}}>
+                <a 
+                  href="https://news.opioidpolicy.org/#/portal" 
+                  className={styles.styledLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t('newsletter', 'Join Our Newsletter')}
+                </a>
+              </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/privacy" className={styles.styledLink}>
-                 🔒 Privacy Info & Tips 🔒
+                 {t('privacy-info', '🔒 Privacy Info & Tips 🔒')}
               </Link>
             </p>
             <a 
@@ -97,7 +113,7 @@ export default function RootLayout({
               rel="noopener noreferrer"
               className={styles.donateButton}
             >
-              Support Us <span>❤️</span>
+              {t('support-us', 'Support Us')} <span>❤️</span>
             </a>
             <a href="https://opioidpolicy.org" target="_blank" rel="noopener noreferrer" className={styles.footerLogoLink}>
               <picture>

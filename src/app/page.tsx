@@ -10,6 +10,9 @@ import confetti from "canvas-confetti";
 import ManualPharmacyEntry from './components/ManualPharmacyEntry';
 import ErrorBoundary from './components/ErrorBoundary';
 import { sanitize } from '@/utils/sanitize';
+import { analytics } from '@/lib/privacy-analytics';
+import { getStateFromZipCode } from '@/utils/state-utils';
+
 
 
 const STATE_ABBR_TO_NAME: Record<string, string> = {
@@ -76,8 +79,8 @@ interface Report {
   phoneNumber: string;
   standardizedNotes: string[];
 }
-const formulationOptions = [ 'Suboxone Film', 'Suboxone Tablet', 'Zubsolv Tablet', 'Buprenorphine/Naloxone Film (generic)', 'Buprenorphine/Naloxone Tablet (generic)', 'Buprenorphine Tablet (generic)', ];
-const standardizedNoteOptions = [ 'Will order, but not in stock', 'Partial fill (did not fill the full prescription)', 'Permanently closed', 'Best to call ahead', 'Only fills for existing patients', 'Only fills from prescribers "close-by"', 'Requires specific diagnosis code', 'Long wait times', 'Won\'t accept cash', 'Helpful staff', 'Unhelpful staff' ];
+const formulationOptions = [ 'Suboxone (film)', 'Buprenorphine/Naloxone (film; generic)', 'Buprenorphine/Naloxone (tablet; generic)', 'Buprenorphine (tablet; mono product; generic)', 'Zubsolv (tablet)' ];
+const standardizedNoteOptions = [ 'Will order, but not in stock', 'Partial fill (did not fill the full prescription)', 'Best to call ahead', 'Only fills for existing patients', 'Only fills from prescribers "close-by"', 'Only fill from certain prescribers', 'Only fills for patients "close-by"', 'Long wait times', 'Won\'t accept cash', 'Helpful staff', 'Unhelpful staff', 'Permanently closed' ];
 export default function Home() {
   const [zipCode, setZipCode] = useState("");
   const [locationCoords, setLocationCoords] = useState<Coords | null>(null);

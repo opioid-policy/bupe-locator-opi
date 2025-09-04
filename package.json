@@ -7,9 +7,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
     "start": "node --trace-deprecation ./node_modules/next/dist/bin/next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "extract-text": "node scripts/extract-text.js",
+    "ai-translate": "node scripts/ai-translate.js", 
+    "translate": "npm run extract-text && npm run ai-translate",
+    "build": "npm run translate && next build",
+    "vercel-dev": "vercel dev",
+    "vercel-build": "vercel build"
+
   },
   "dependencies": {
     "axios": "^1.11.0",
@@ -38,13 +44,14 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.4.5",
+    "ollama": "^0.5.17",
     "typescript": "^5",
     "vercel": "^46.0.2"
   },
   "pnpm": {
-  "overrides": {
-    "undici": "5.29.0",
-    "esbuild": "0.25.0"
+    "overrides": {
+      "undici": "5.29.0",
+      "esbuild": "0.25.0"
+    }
   }
- }
 }

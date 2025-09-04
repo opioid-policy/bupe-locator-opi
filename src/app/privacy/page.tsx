@@ -174,7 +174,7 @@ export default function PrivacyPage() {
         {/* Bugs or Questions Section */}
         <section id="bugs-questions">
           <hr style={{ margin: '3rem 0', border: 'none', borderTop: '1px solid var(--border-color)' }} />
-          <h3 style={{ marginTop: '2rem' }}>Bugs or Questions?</h3>
+          <h3 style={{ marginTop: '2rem' }}>👾 Bugs or Questions?</h3>
           <p>
             If you find a problem with the site or have a question, we want to know. Please {' '}
             <Link href="https://opioidpolicy.fillout.com/contact-form" className={styles.styledLink} target="_blank" rel="noopener noreferrer">
