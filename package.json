@@ -12,9 +12,7 @@
     "extract-text": "node scripts/extract-text.js",
     "ai-translate": "node scripts/ai-translate.js", 
     "translate": "npm run extract-text && npm run ai-translate",
-    "build": "npm run translate && next build",
-    "vercel-dev": "vercel dev",
-    "vercel-build": "vercel build"
+    "build": "npm run translate && next build"
 
   },
   "dependencies": {
