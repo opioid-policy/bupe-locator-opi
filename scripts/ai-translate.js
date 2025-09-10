@@ -1,130 +1,331 @@
-// scripts/ai-translate.js - Qwen-powered translation generation
+// scripts/ai-translate.js - Fixed version with better error handling
 const fs = require('fs');
 const path = require('path');
 const { Ollama } = require('ollama');
 
 const ollama = new Ollama({ host: 'http://localhost:11434' });
 
-// Target languages (your 15 languages)
-const targetLanguages = [
-  { code: 'es', name: 'Spanish', nativeName: 'Español' },
-  { code: 'zh', name: 'Chinese (Mandarin)', nativeName: '中文' },
-  { code: 'tl', name: 'Tagalog', nativeName: 'Tagalog' },
-  { code: 'vi', name: 'Vietnamese', nativeName: 'Tiếng Việt' },
-  { code: 'ar', name: 'Arabic', nativeName: 'العربية' },
-  { code: 'fr', name: 'French', nativeName: 'Français' },
-  { code: 'ko', name: 'Korean', nativeName: '한국어' },
-  { code: 'pt', name: 'Portuguese', nativeName: 'Português' },
-  { code: 'ru', name: 'Russian', nativeName: 'Русский' },
-  { code: 'he', name: 'Hebrew', nativeName: 'עברית' },
-  { code: 'de', name: 'German', nativeName: 'Deutsch' },
-  { code: 'it', name: 'Italian', nativeName: 'Italiano' },
-  { code: 'pl', name: 'Polish', nativeName: 'Polski' },
-  { code: 'scn', name: 'Sicilian', nativeName: 'Sicilianu' }
+// For testing, only Spanish
+const TEST_MODE = false;
+const TEST_LANGUAGES = [
+  { code: 'es', name: 'Spanish', nativeName: 'Español' }
 ];
 
-// Healthcare-specific translation prompt
-function createTranslationPrompt(text, targetLang, nativeName) {
-  return `You are a professional medical translator. Translate this text for a healthcare website that helps people find pharmacies for addiction treatment medication (buprenorphine).
+const ALL_LANGUAGES = [
+  { code: 'es', name: 'Spanish', nativeName: 'Español' },
+  // ... rest of languages
+];
 
-CONTEXT: This is a community tool to help people access addiction treatment. Be respectful, clear, and medically appropriate.
+const targetLanguages = TEST_MODE ? TEST_LANGUAGES : ALL_LANGUAGES;
+const TRANSLATION_CAP = TEST_MODE ? 10 : null;
 
-RULES:
-1. Keep medical terms "bupe" and "buprenorphine" unchanged in all languages
-2. Use "medicine" instead of "prescription" for clarity
-3. Use respectful, non-stigmatizing language appropriate for healthcare
-4. Maintain the same tone (helpful, professional, compassionate)
-5. For technical terms like "ZIP Code," keep as-is or use local equivalent
-6. If translating "pharmacy," use the most common local term
-
-TARGET LANGUAGE: ${targetLang} (${nativeName})
-
-ENGLISH TEXT: "${text}"
-
-Provide ONLY the translation, no explanations or additional text:`;
-}
-
-async function translateText(text, targetLang, nativeName) {
+// IMPROVED Chat API approach
+async function translateTextWithChat(text, targetLang, nativeName) {
   try {
-    // More explicit prompt to get ONLY the translation
-    const prompt = `Translate the following English text to ${targetLang}. Output ONLY the translation without any explanation:
-
-"${text}"
-
-Translation:`;
+    console.log(`   [Chat API] Translating: "${text.substring(0, 50)}..."`);
     
-    const response = await ollama.generate({
-      model: 'qwen2.5:3b', // Try qwen2.5 if qwen3 gives reasoning
-      prompt: prompt,
+    const response = await ollama.chat({
+      model: 'gemma3:4b',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a translator. Translate to ${targetLang}. Output only the translation.`
+        },
+        {
+          role: 'user',
+          content: text
+        }
+      ],
       stream: false,
       options: {
         temperature: 0.3,
         top_p: 0.9,
-        stop: ['\n\n', 'Explanation:', 'Note:', 'Reasoning:'], // Stop sequences
-        num_predict: 150
+        num_predict: 2000,  // Allow longer responses since we'll extract from reasoning
       }
     });
     
-    // Extract translation from response
-    let translation = response.response.trim();
+    let translation = response.message.content.trim();
     
-    // Remove "Translation:" prefix if present
-    translation = translation.replace(/^Translation:\s*/i, '');
-    
-    // Remove quotes
-    if (translation.startsWith('"') && translation.endsWith('"')) {
-      translation = translation.slice(1, -1);
-    }
-    if (translation.startsWith("'") && translation.endsWith("'")) {
-      translation = translation.slice(1, -1);
+    // Debug: Show if we got reasoning
+    if (translation.length > 200) {
+      console.log(`   📊 Got long response (${translation.length} chars), likely reasoning`);
     }
     
-    // If response contains line breaks, take only first line
-    if (translation.includes('\n')) {
-      translation = translation.split('\n')[0].trim();
+    if (!translation || translation.length === 0) {
+      console.log(`   ⚠️  Chat API returned empty response`);
+      return null;
     }
     
+    // Clean and extract
+    translation = cleanTranslation(translation, targetLang, nativeName);
+    
+    if (!translation || translation.length < 1) {
+      console.log(`   ⚠️  Failed to extract translation from reasoning`);
+      return null;
+    }
+    
+    console.log(`   ✓ Extracted translation: "${translation.substring(0, 50)}..."`);
     return translation;
+    
   } catch (error) {
-    console.error(`Translation error for ${targetLang}:`, error.message);
-    return text;
+    console.error(`   ✗ Chat API error: ${error.message}`);
+    return null;
   }
 }
 
-async function translateToLanguage(englishTranslations, targetLang, nativeName) {
-  console.log(`🔄 Translating to ${targetLang} (${nativeName})...`);
+// IMPROVED Generate API with better prompts
+async function translateTextWithGenerate(text, targetLang, nativeName) {
+  console.log(`   [Generate API] Trying multiple prompts...`);
   
-  const translations = {};
-  const entries = Object.entries(englishTranslations);
+  const prompts = [
+    {
+      prompt: `Translate the following English text to ${targetLang}. English: ${text}\n${targetLang}:`,
+      name: 'Structured'
+    },
+    {
+      prompt: `English: ${text}\n${targetLang} translation:`,
+      name: 'Simple'
+    },
+    {
+      prompt: `${text}\n===\nThe above in ${targetLang}:`,
+      name: 'Separator'
+    },
+    {
+      prompt: text + `\n\nIn ${targetLang}, this means:`,
+      name: 'Natural'
+    }
+  ];
   
-  for (let i = 0; i < entries.length; i++) {
-    const [key, englishText] = entries[i];
-    
-    // Show progress
-    const progress = Math.round((i / entries.length) * 100);
-    process.stdout.write(`\r   Progress: ${progress}% (${i + 1}/${entries.length})`);
-    
-    const translatedText = await translateText(englishText, targetLang, nativeName);
-    translations[key] = translatedText;
-    
-    // Brief pause to prevent overwhelming the local model
-    await new Promise(resolve => setTimeout(resolve, 200));
+  for (const { prompt, name } of prompts) {
+    try {
+      console.log(`   Trying ${name} prompt...`);
+      
+      const response = await ollama.generate({
+        model: 'gemma3:4b',
+        prompt: prompt,
+        stream: false,
+        options: {
+          temperature: 0.3,
+          top_p: 0.9,
+          num_predict: 500,  // Increased
+          // Only stop on very clear markers
+          stop: ['English:', '\n\n\n', '===']
+        }
+      });
+      
+      // Debug: show raw response
+      console.log(`   Raw response: "${response.response.substring(0, 100)}..."`);
+      
+      let translation = response.response.trim();
+      
+      // If empty, try next
+      if (!translation) {
+        console.log(`   ✗ ${name} returned empty`);
+        continue;
+      }
+      
+      // Clean the response
+      translation = cleanTranslation(translation, targetLang, nativeName);
+      
+      // Check if valid
+      if (translation && translation !== text && translation.length > 0) {
+        console.log(`   ✓ ${name} worked: "${translation.substring(0, 50)}..."`);
+        return translation;
+      } else {
+        console.log(`   ✗ ${name} failed - Got: "${translation}"`);
+      }
+    } catch (error) {
+      console.error(`   ✗ ${name} error: ${error.message}`);
+    }
   }
   
-  process.stdout.write('\n');
-  return translations;
+  return null;
+}
+
+// Centralized cleaning function
+function cleanTranslation(translation, targetLang, nativeName) {
+  if (!translation) return '';
+  
+  // SPECIAL HANDLING FOR QWEN REASONING OUTPUT
+  // Qwen often outputs reasoning like "Let me translate... The translation would be: [actual translation]"
+  // We need to extract just the final translation
+  
+  // Common patterns where the actual translation appears
+  const extractionPatterns = [
+    // "The translation would be: [translation]"
+    /(?:translation would be|traducción sería|final translation is|la traducción es)[:\s]+(.+?)(?:\.|$)/i,
+    // "In Spanish: [translation]"
+    /(?:In Spanish|En español)[:\s]+(.+?)(?:\.|$)/i,
+    // "So the translation: [translation]"
+    /(?:So the translation|Entonces la traducción)[:\s]+(.+?)(?:\.|$)/i,
+    // Last sentence that doesn't contain "Let me", "I'll", "I need", etc.
+    /(?:^|\. )([^.]*?(?:es|son|está|están|soy|somos|tiene|tienen)[^.]*?)\.?$/i,
+  ];
+  
+  // Check if this looks like reasoning (contains phrases like "Let me", "I'll", "The user", etc.)
+  const reasoningIndicators = [
+    'let me', 'i\'ll', 'i need', 'the user', 'first', 'next', 'wait',
+    'okay', 'original', 'translation', 'should', 'would be', 'context',
+    'correct', 'better', 'alternatively', 'putting it together'
+  ];
+  
+  const lowerText = translation.toLowerCase();
+  const hasReasoning = reasoningIndicators.some(indicator => lowerText.includes(indicator));
+  
+  if (hasReasoning && translation.length > 200) {
+    console.log('   📝 Detected reasoning output, extracting translation...');
+    
+    // Try to extract the actual translation
+    for (const pattern of extractionPatterns) {
+      const match = translation.match(pattern);
+      if (match && match[1]) {
+        translation = match[1].trim();
+        console.log(`   ✂️ Extracted: "${translation.substring(0, 50)}..."`);
+        break;
+      }
+    }
+    
+    // If still too long, try splitting by sentences and taking the last Spanish-looking one
+    if (translation.length > 200) {
+      const sentences = translation.split(/[.!?]+/);
+      
+      // Find the last sentence that looks like Spanish (contains Spanish words)
+      const spanishIndicators = ['el', 'la', 'de', 'que', 'es', 'en', 'un', 'una', 'para', 'con', 'su', 'está'];
+      
+      for (let i = sentences.length - 1; i >= 0; i--) {
+        const sentence = sentences[i].trim();
+        const words = sentence.toLowerCase().split(/\s+/);
+        
+        // Check if this sentence contains Spanish words
+        if (spanishIndicators.some(indicator => words.includes(indicator))) {
+          // This might be the translation
+          if (!sentence.includes('translation') && !sentence.includes('user') && sentence.length > 2) {
+            translation = sentence;
+            console.log(`   ✂️ Found Spanish sentence: "${translation.substring(0, 50)}..."`);
+            break;
+          }
+        }
+      }
+    }
+    
+    // Last resort: if still contains obvious English reasoning, take everything after the last colon
+    if (translation.includes('translation') || translation.includes('user')) {
+      const parts = translation.split(':');
+      if (parts.length > 1) {
+        translation = parts[parts.length - 1].trim();
+        console.log(`   ✂️ Taking text after last colon: "${translation.substring(0, 50)}..."`);
+      }
+    }
+  }
+  
+  // Regular cleaning (for non-reasoning outputs)
+  translation = translation.replace(/<think>.*?<\/think>/gs, '');
+  translation = translation.replace(/<.*?>/g, '');
+  translation = translation.replace(/^["']|["']$/g, '');
+  translation = translation.replace(/\\"/g, '"');
+  translation = translation.replace(/\\'/g, "'");
+  translation = translation.replace(/^\n+|\n+$/g, '');
+  translation = translation.replace(/\n\n+/g, ' ');
+  translation = translation.replace(/\\n/g, ' ');
+  
+  // Remove common prefixes
+  const prefixPatterns = [
+    new RegExp(`^${targetLang}:\\s*`, 'i'),
+    new RegExp(`^${nativeName}:\\s*`, 'i'),
+    new RegExp(`^Spanish:\\s*`, 'i'),
+    new RegExp(`^Español:\\s*`, 'i'),
+    /^Translation:\s*/i,
+    /^Traducción:\s*/i,
+  ];
+  
+  for (const pattern of prefixPatterns) {
+    translation = translation.replace(pattern, '');
+  }
+  
+  // Final validation - if it still looks like reasoning, return empty
+  if (translation.toLowerCase().includes('let me') || 
+      translation.toLowerCase().includes('the user') ||
+      translation.length > 500) {
+    console.log('   ⚠️ Still contains reasoning after cleaning');
+    return '';
+  }
+  
+  return translation.trim();
+}
+
+// Test with raw Ollama to debug
+async function debugOllama() {
+  console.log('\n🔍 Debug: Testing raw Ollama response...');
+  
+  try {
+    // Test 1: Super simple
+    const test1 = await ollama.generate({
+      model: 'gemma3:4b',
+      prompt: 'Translate to Spanish: Hello',
+      stream: false,
+      options: { temperature: 0.5 }
+    });
+    console.log('Test 1 raw response:', test1.response);
+    
+    // Test 2: Chat format
+    const test2 = await ollama.chat({
+      model: 'gemma3:4b',
+      messages: [
+        { role: 'user', content: 'Say "hello" in Spanish' }
+      ],
+      stream: false,
+      options: { temperature: 0.5 }
+    });
+    console.log('Test 2 chat response:', test2.message.content);
+    
+  } catch (error) {
+    console.error('Debug error:', error);
+  }
+}
+
+// Main translation function
+async function translateText(text, targetLang, nativeName) {
+  // Try Chat API first
+  let translation = await translateTextWithChat(text, targetLang, nativeName);
+  
+  // If chat API fails, try Generate API
+  if (!translation) {
+    console.log('   Falling back to generate API...');
+    translation = await translateTextWithGenerate(text, targetLang, nativeName);
+  }
+  
+  // Final fallback
+  if (!translation) {
+    console.log(`   ✗ All methods failed, using original text`);
+    return text;
+  }
+  
+  return translation;
 }
 
 async function checkOllamaConnection() {
   try {
     const models = await ollama.list();
+    console.log('Available models:', models.models.map(m => m.name).join(', '));
+    
     const hasQwen = models.models.some(model => 
-      model.name.includes('qwen') // Check for any qwen model
+      model.name.includes('gemma')
     );
     
     if (!hasQwen) {
       console.error('❌ Qwen model not found!');
-      console.log('💡 Try: ollama pull qwen2.5:3b');
+      console.log('💡 Available models:', models.models.map(m => m.name));
+      
+      // Check for alternative models
+      const alternatives = ['llama3.2', 'gemma2', 'mistral', 'phi3'];
+      const available = alternatives.find(alt => 
+        models.models.some(m => m.name.includes(alt))
+      );
+      
+      if (available) {
+        console.log(`💡 Found alternative: ${available}. Update the script to use this model.`);
+      }
+      
       process.exit(1);
     }
     
@@ -137,29 +338,88 @@ async function checkOllamaConnection() {
   }
 }
 
-async function main() {
-  console.log('🤖 Starting AI translation with Qwen3:8b...');
+async function translateToLanguage(englishTranslations, targetLang, nativeName) {
+  console.log(`\n🔄 Translating to ${targetLang} (${nativeName})...`);
   
-  // Check Ollama connection
+  const translations = {};
+  const entries = Object.entries(englishTranslations);
+  
+  const entriesToTranslate = TRANSLATION_CAP 
+    ? entries.slice(0, TRANSLATION_CAP)
+    : entries;
+  
+  console.log(`📝 Will translate ${entriesToTranslate.length} of ${entries.length} strings\n`);
+  
+  let successCount = 0;
+  let failCount = 0;
+  
+  for (let i = 0; i < entriesToTranslate.length; i++) {
+    const [key, englishText] = entriesToTranslate[i];
+    
+    console.log(`\n[${i + 1}/${entriesToTranslate.length}] Processing: "${englishText.substring(0, 50)}..."`);
+    
+    try {
+      const translatedText = await translateText(englishText, targetLang, nativeName);
+      
+      if (translatedText && translatedText !== englishText) {
+        translations[key] = translatedText;
+        successCount++;
+        console.log(`✅ Success!`);
+      } else {
+        translations[key] = englishText;
+        failCount++;
+        console.log(`❌ Failed - using original`);
+      }
+    } catch (error) {
+      translations[key] = englishText;
+      failCount++;
+      console.log(`❌ Error: ${error.message}`);
+    }
+    
+    // Small delay
+    await new Promise(resolve => setTimeout(resolve, 200));
+  }
+  
+  // Fill remaining with English if capped
+  if (TRANSLATION_CAP && entries.length > TRANSLATION_CAP) {
+    console.log(`\n📋 Filling remaining ${entries.length - TRANSLATION_CAP} entries with English...`);
+    for (let i = TRANSLATION_CAP; i < entries.length; i++) {
+      const [key, englishText] = entries[i];
+      translations[key] = englishText;
+    }
+  }
+  
+  console.log(`\n📊 Results: ${successCount} successful, ${failCount} failed`);
+  return translations;
+}
+
+async function main() {
+  console.log('🤖 Starting AI translation test...');
+  console.log(`🧪 TEST MODE: ${TEST_MODE ? 'ON' : 'OFF'}`);
+  if (TEST_MODE) {
+    console.log(`📌 Testing with: Spanish only, first ${TRANSLATION_CAP} strings`);
+  }
+  
+  // Check connection
   await checkOllamaConnection();
+  
+  // Run debug tests first
+  await debugOllama();
   
   const translationsDir = path.join(process.cwd(), 'src', 'translations');
   const extractedFile = path.join(translationsDir, 'extracted.json');
   
   if (!fs.existsSync(extractedFile)) {
     console.error('❌ No extracted text found!');
-    console.log('💡 Please run: pnpm run extract-text first');
     process.exit(1);
   }
   
-  // Load extracted English text
   const extractedData = JSON.parse(fs.readFileSync(extractedFile, 'utf8'));
   const englishTranslations = extractedData.translations;
   
-  console.log(`📝 Translating ${Object.keys(englishTranslations).length} strings to ${targetLanguages.length} languages...`);
-  console.log('⏱️  Estimated time: ~2-3 minutes\n');
+  console.log(`\n📚 Loaded ${Object.keys(englishTranslations).length} strings`);
   
-  // Translate to each target language
+  // Translate
   for (const lang of targetLanguages) {
     try {
       const translations = await translateToLanguage(
@@ -168,48 +428,40 @@ async function main() {
         lang.nativeName
       );
       
-      // Save translation file
       const outputPath = path.join(translationsDir, `${lang.code}.json`);
       fs.writeFileSync(outputPath, JSON.stringify(translations, null, 2));
       
-      console.log(`✅ ${lang.nativeName} translations saved`);
-    } catch (error) {
-      console.error(`❌ Failed to translate to ${lang.name}:`, error.message);
-    }
-  }
-  
-  // Create public translations directory for dynamic loading
-  const publicTranslationsDir = path.join(process.cwd(), 'public', 'translations');
-  if (!fs.existsSync(publicTranslationsDir)) {
-    fs.mkdirSync(publicTranslationsDir, { recursive: true });
-  }
-  
-  // Copy non-core languages to public directory for dynamic loading
-  const coreLanguages = ['en', 'es', 'fr']; // These get bundled
-  
-  targetLanguages.forEach(lang => {
-    if (!coreLanguages.includes(lang.code)) {
-      const srcPath = path.join(translationsDir, `${lang.code}.json`);
-      const destPath = path.join(publicTranslationsDir, `${lang.code}.json`);
+      console.log(`\n💾 Saved to ${lang.code}.json`);
       
-      if (fs.existsSync(srcPath)) {
-        fs.copyFileSync(srcPath, destPath);
-        console.log(`📁 ${lang.code}.json copied to public directory`);
-      }
+    } catch (error) {
+      console.error(`\n❌ Failed:`, error.message);
     }
-  });
+  }
   
-  console.log('\n🎉 All translations complete!');
-  console.log('📋 Summary:');
-  console.log(`   • Generated ${targetLanguages.length} translation files`);
-  console.log(`   • Core languages (bundled): en, es, fr`);
-  console.log(`   • Dynamic languages: ${targetLanguages.filter(l => !coreLanguages.includes(l.code)).map(l => l.code).join(', ')}`);
-  console.log('\n✨ Ready to deploy! Your users can now access bupe information in 15 languages.');
-  console.log('🚀 Next: Run "pnpm run dev" to test the language selector');
+  console.log('\n✨ Complete!');
+}
+
+// Add to your translation output processing
+function encodeForJSX(text) {
+  // Only encode the essential ones that break JSX
+  return text
+    .replace(/'/g, "&apos;")  // or use \'
+    .replace(/"/g, "&quot;")  // or use \"
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+// Or, if you prefer, keep apostrophes as-is but escape for JSON:
+function escapeForJSON(text) {
+  return text
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t');
 }
 
 if (require.main === module) {
   main().catch(console.error);
 }
-
-module.exports = { translateText, checkOllamaConnection };

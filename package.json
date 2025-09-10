@@ -6,13 +6,14 @@
   "license": "GNU AGPLv3",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "start": "node --trace-deprecation ./node_modules/next/dist/bin/next start",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "lint": "next lint",
     "extract-text": "node scripts/extract-text.js",
-    "ai-translate": "node scripts/ai-translate.js", 
+    "ai-translate": "node scripts/ai-translate.js",
     "translate": "npm run extract-text && npm run ai-translate",
-    "build": "npm run translate && next build"
+    "translate-dev": "npm run translate && npm run dev"
 
   },
   "dependencies": {

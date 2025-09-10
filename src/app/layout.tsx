@@ -9,8 +9,11 @@ import LanguageSelector from './components/LanguageSelector';
 import "./globals.css";
 import ScrollToTop from './components/ScrollToTop';
 import HashNavigator from './components/HashNavigator';
-import { useTranslations, getTextDirection } from '@/lib/i18n';
+import { useTranslations } from '@/lib/i18n-client';
+import { getTextDirection } from '@/lib/i18n';
 import { useEffect } from 'react';
+import { T, NoTranslate } from '@/lib/i18n-markers';
+
 
 // Initialize fonts
 const raleway = Raleway({
@@ -31,9 +34,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { t, currentLang } = useTranslations();
+  const { currentLang } = useTranslations();
   
-  // Update document direction and lang for accessibility
   useEffect(() => {
     document.documentElement.lang = currentLang;
     document.documentElement.dir = getTextDirection(currentLang);
@@ -45,66 +47,64 @@ export default function RootLayout({
         <ScrollToTop />
         <HashNavigator />
         <PrivacyBanner />
-        
-        {/* Floating Language Selector */}
         <LanguageSelector />
         
         <div className={styles.appContainer}>
           <header className={styles.header}>
             <a href="/" className={styles.styledLink}>
-              <h1>{t('site-title', 'Bupe Access Tool')}</h1>
+              <h1><T>Bupe Access Tool</T></h1>
             </a>
           </header>
           <main className={styles.main}>
             {children}
           </main>
           <footer className={styles.footer}>
-            <p>{t('crowdsource-note', 'This is a crowd-source resource.')}</p>
-            <p>{t('data-limitation-note', 'We only have data on bupe availability that has been reported to this database.')}</p>
-            <p>{t('not-guarantee-note', 'This tool is not a guarantee of service. This data is not comprehensive.')}</p>
-             <p style={{marginTop: '0.5rem'}}>
-                <a 
-                  href="https://bupe.opioidpolicy.org" 
-                  className={styles.styledLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {t('home', 'Home')}
-                </a>
-              </p>           
+            <p><T>This is a crowd-source resource.</T></p>
+            <p><T>We only have data on bupe availability that has been reported to this database.</T></p>
+            <p><T>This tool is not a guarantee of service. This data is not comprehensive.</T></p>
+            <p style={{marginTop: '0.5rem'}}>
+              <a 
+                href="https://bupe.opioidpolicy.org" 
+                className={styles.styledLink}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <T>Home</T>
+              </a>
+            </p>           
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/about" className={styles.styledLink}>
-                {t('about-project', 'About This Project')}
+                <T>About This Project</T>
               </Link>
             </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/dashboard" className={styles.styledLink}>
-                {t('dashboard', 'Check Out Our Dashboard')}
+                <T>Check Out Our Dashboard</T>
               </Link>
             </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/methadone-naltrexone" className={styles.styledLink}>
-                {t('other-treatments', 'What About Other Treatments?')}
+                <T>What About Other Treatments?</T>
               </Link>
             </p>
-             <p style={{marginTop: '0.5rem'}}>
+            <p style={{marginTop: '0.5rem'}}>
               <Link href="/bulk-upload" className={styles.styledLink}>
-                {t('bulk-reporting', 'Bulk Reporting Tool')}
+                <T>Bulk Reporting Tool</T>
               </Link>
             </p>
-              <p style={{marginTop: '0.5rem'}}>
-                <a 
-                  href="https://news.opioidpolicy.org/#/portal" 
-                  className={styles.styledLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {t('newsletter', 'Join Our Newsletter')}
-                </a>
-              </p>
+            <p style={{marginTop: '0.5rem'}}>
+              <a 
+                href="https://news.opioidpolicy.org/#/portal" 
+                className={styles.styledLink}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <T>Join Our Newsletter</T>
+              </a>
+            </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/privacy" className={styles.styledLink}>
-                 {t('privacy-info', '🔒 Privacy Info & Tips 🔒')}
+                <T>🔒 Privacy Info & Tips 🔒</T>
               </Link>
             </p>
             <a 
@@ -113,7 +113,7 @@ export default function RootLayout({
               rel="noopener noreferrer"
               className={styles.donateButton}
             >
-              {t('support-us', 'Support Us')} <span>❤️</span>
+              <T>Support Us</T> <span>❤️</span>
             </a>
             <a href="https://opioidpolicy.org" target="_blank" rel="noopener noreferrer" className={styles.footerLogoLink}>
               <picture>

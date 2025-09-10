@@ -1,5 +1,5 @@
 // src/lib/i18n.ts - Complete translation system
-export type Language = 'en' | 'es' | 'zh' | 'tl' | 'vi' | 'ar' | 'fr' | 'ko' | 'pt' | 'ru' | 'he' | 'de' | 'it' | 'pl' | 'scn';
+export type Language = 'en' | 'es' | 'zh' | 'tl' | 'vi' | 'ar' | 'fr' | 'ko' | 'pt' | 'he' | 'de' | 'it' | 'pl' | 'scn';
 
 export interface LanguageConfig {
   code: Language;
@@ -11,20 +11,19 @@ export interface LanguageConfig {
 
 export const languages: LanguageConfig[] = [
   { code: 'en', name: 'English', nativeName: 'English' },
-  { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
-  { code: 'zh', name: 'Chinese', nativeName: '中文', flag: '🇨🇳' },
-  { code: 'tl', name: 'Tagalog', nativeName: 'Tagalog', flag: '🇵🇭' },
-  { code: 'vi', name: 'Vietnamese', nativeName: 'Tiếng Việt', flag: '🇻🇳' },
-  { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦', rtl: true },
-  { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
-  { code: 'ko', name: 'Korean', nativeName: '한국어', flag: '🇰🇷' },
-  { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: '🇵🇹' },
-  { code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺' },
-  { code: 'he', name: 'Hebrew', nativeName: 'עברית', flag: '🇮🇱', rtl: true },
-  { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
-  { code: 'it', name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹' },
-  { code: 'pl', name: 'Polish', nativeName: 'Polski', flag: '🇵🇱' },
-  { code: 'scn', name: 'Sicilian', nativeName: 'Sicilianu', flag: '🇮🇹' }
+  { code: 'es', name: 'Spanish', nativeName: 'Español' },
+  { code: 'zh', name: 'Chinese', nativeName: '中文' },
+  { code: 'tl', name: 'Tagalog', nativeName: 'Tagalog' },
+  { code: 'vi', name: 'Vietnamese', nativeName: 'Tiếng Việt' },
+  { code: 'ar', name: 'Arabic', nativeName: 'العربية', rtl: true },
+  { code: 'fr', name: 'French', nativeName: 'Français' },
+  { code: 'ko', name: 'Korean', nativeName: '한국어' },
+  { code: 'pt', name: 'Portuguese', nativeName: 'Português' },
+  { code: 'he', name: 'Hebrew', nativeName: 'עברית', rtl: true },
+  { code: 'de', name: 'German', nativeName: 'Deutsch' },
+  { code: 'it', name: 'Italian', nativeName: 'Italiano' },
+  { code: 'pl', name: 'Polish', nativeName: 'Polski' },
+  { code: 'scn', name: 'Sicilian', nativeName: 'Sicilianu' }
 ];
 
 // Translation loading system
@@ -82,7 +81,7 @@ export function detectUserLanguage(): Language {
   
   // 2. Check session storage
   try {
-    const stored = sessionStorage.getItem('preferred-language') as Language;
+    const stored = sessionStorage.getItem('selectedLanguage') as Language;
     if (stored && languages.find(l => l.code === stored)) {
       return stored;
     }
@@ -103,8 +102,7 @@ export function setUserLanguage(lang: Language): void {
   
   try {
     // Use sessionStorage (clears on browser close)
-    sessionStorage.setItem('preferred-language', lang);
-    
+    localStorage.setItem('selectedLanguage', lang);    
     // Update URL without page reload
     const url = new URL(window.location.href);
     url.searchParams.set('lang', lang);
@@ -118,52 +116,6 @@ export function setUserLanguage(lang: Language): void {
   }
 }
 
-// Translation hook
-import { useState, useEffect } from 'react';
-
-export function useTranslations() {
-  const [currentLang, setCurrentLang] = useState<Language>('en');
-  const [translations, setTranslations] = useState<any>({});
-  const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    const initializeTranslations = async () => {
-      const detectedLang = detectUserLanguage();
-      const translationData = await loadTranslations(detectedLang);
-      
-      setCurrentLang(detectedLang);
-      setTranslations(translationData);
-      setIsLoading(false);
-    };
-    
-    initializeTranslations();
-  }, []);
-  
-  const changeLang = async (newLang: Language) => {
-    const langConfig = languages.find(l => l.code === newLang);
-    if (!langConfig) return;
-    
-    setIsLoading(true);
-    
-    try {
-      const newTranslations = await loadTranslations(newLang);
-      setCurrentLang(newLang);
-      setTranslations(newTranslations);
-      setUserLanguage(newLang);
-    } catch (error) {
-      console.error('Failed to change language:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Translation function with fallback
-  const t = (key: string, fallback?: string): string => {
-    return translations[key] || fallback || key;
-  };
-  
-  return { t, currentLang, changeLang, isLoading, languages };
-}
 
 // Utility functions
 export function getTextDirection(lang: Language): 'ltr' | 'rtl' {
@@ -178,7 +130,7 @@ export function formatDateByLanguage(dateString: string, lang: Language): string
     const date = new Date(dateString);
     const localeMap: Record<Language, string> = {
       en: 'en-US', es: 'es-ES', zh: 'zh-CN', tl: 'tl-PH', vi: 'vi-VN',
-      ar: 'ar-SA', fr: 'fr-FR', ko: 'ko-KR', pt: 'pt-BR', ru: 'ru-RU',
+      ar: 'ar-SA', fr: 'fr-FR', ko: 'ko-KR', pt: 'pt-BR',
       he: 'he-IL', de: 'de-DE', it: 'it-IT', pl: 'pl-PL', scn: 'it-IT'
     };
     

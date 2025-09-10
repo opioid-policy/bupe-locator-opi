@@ -6,6 +6,8 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { AggregatedPharmacy } from "../page";
 import TrendIndicator from './TrendIndicator';
 import ErrorBoundary from './ErrorBoundary';
+import { T, NoTranslate } from '@/lib/i18n-markers';
+
 
 function decodeHtmlEntities(text: string): string {
   const textarea = document.createElement('textarea');

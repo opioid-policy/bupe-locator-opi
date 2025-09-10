@@ -1,7 +1,8 @@
 // src/components/LanguageSelector.tsx - Mobile-friendly floating selector
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { useTranslations, languages, Language } from '@/lib/i18n';
+import { useTranslations } from '@/lib/i18n-client';
+import { languages, Language } from '@/lib/i18n';
 import styles from './LanguageSelector.module.css';
 import { analytics } from '@/lib/privacy-analytics';
 
@@ -90,7 +91,7 @@ const handleLanguageChange = async (newLang: Language) => {
           <span className={styles.loading}>⟳</span>
         ) : (
           <>
-            <span className={styles.globe}>🌐</span>
+            <span className={styles.globe}>🌎</span>
             <span className={styles.currentLang}>{currentLanguage?.code.toUpperCase()}</span>
           </>
         )}
@@ -128,9 +129,6 @@ const handleLanguageChange = async (newLang: Language) => {
                     disabled={isLoading}
                     aria-label={`Switch to ${lang.name}`}
                   >
-                    <span className={styles.languageFlag}>
-                      {lang.flag || '🌍'}
-                    </span>
                     <span className={styles.languageName}>
                       {lang.nativeName}
                     </span>
@@ -153,9 +151,6 @@ const handleLanguageChange = async (newLang: Language) => {
                     disabled={isLoading}
                     aria-label={`Switch to ${lang.name}`}
                   >
-                    <span className={styles.languageFlag}>
-                      {lang.flag || '🌍'}
-                    </span>
                     <span className={styles.languageName}>
                       {lang.nativeName}
                     </span>

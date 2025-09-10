@@ -3,6 +3,8 @@
 
 import { useState, useEffect } from 'react'; // Add useRef
 import styles from './NewsletterSignup.module.css';
+import { T, NoTranslate } from '@/lib/i18n-markers';
+
 
 // Add global Turnstile callback
 declare global {
@@ -112,7 +114,7 @@ const canSubmit = email && consent && !isSubmitting;
   return (
     <div className={`${styles.newsletterContainer} ${className || ''}`}>
       <h3 className={styles.title}>
-        Subscribe to our newsletter for organizing and updates
+       <T>Subscribe to our newsletter for organizing and updates</T>
       </h3>
 
       <form onSubmit={handleSubmit} className={styles.form}>
@@ -153,7 +155,7 @@ const canSubmit = email && consent && !isSubmitting;
               className={styles.consentCheckbox}
             />
             <span className={styles.consentText}>
-              I consent to receive optional newsletter updates from the Opioid Policy Institute. 
+              <T>I consent to receive optional newsletter updates from the Opioid Policy Institute.</T>
             </span>
           </label>
         </div>

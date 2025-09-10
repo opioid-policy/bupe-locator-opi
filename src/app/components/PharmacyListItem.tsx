@@ -6,6 +6,9 @@ import TrendIndicator from './TrendIndicator';
 // import { getDirectionsUrl } from '../lib/directions'; // <-- REMOVED this line
 import ErrorBoundary from './ErrorBoundary';
 import MapLoading from './MapLoading';
+import { T, NoTranslate } from '@/lib/i18n-markers';
+import { getStandardizedNoteLabel } from '@/lib/form-options';
+
 
 interface PharmacyListItemProps {
   pharmacy: AggregatedPharmacy;
@@ -127,7 +130,7 @@ const openMobileMaps = () => {
           {pharmacy.phone_number && (
             <div className={styles.phoneNumber}>
               <small>
-                Phone:{" "}
+                <T>Phone:</T>{" "}
                 <a
                   onClick={(e) => {
                     e.preventDefault();
@@ -143,14 +146,14 @@ const openMobileMaps = () => {
             </div>
           )}
           <div className={styles.reportSection}>
-            <small>Success Reports: {pharmacy.successCount}</small>
+           <small><T>Success Reports:</T>{pharmacy.successCount}</small>
             <br />
-            <small>Denial Reports: {pharmacy.denialCount}</small>
+           <small><T>Denial Reports:</T>{pharmacy.denialCount}</small>
           </div>
           {pharmacy.lastUpdated && formattedDate && (
             <small className={styles.lastUpdated}>
               <br className={styles.reportBreak} />
-              Last Successful Report: {formattedDate}
+              <T>Last Successful Report:</T> {formattedDate}
             </small>
           )}
           {pharmacy.standardizedNotes && pharmacy.standardizedNotes.length > 0 && (
@@ -169,7 +172,7 @@ const openMobileMaps = () => {
               disabled={isCallLoading}
               aria-label={`Call ${pharmacy.name}`}
             >
-              {isCallLoading ? <MapLoading /> : 'Call Pharmacy 📞'}
+              {isCallLoading ? <MapLoading /> :<T>'Call Pharmacy 📞'</T>}
             </button>
           )}
           {latitude && longitude && directionsUrl && (
@@ -180,7 +183,7 @@ const openMobileMaps = () => {
                 disabled={isDirectionsLoading}
                 aria-label={`Get directions to ${pharmacy.name}`}
               >
-                {isDirectionsLoading ? <MapLoading /> : 'Get Directions 🚌'}
+                {isDirectionsLoading ? <MapLoading /> : <T>'Get Directions 🚌'</T>}
               </button>
 
               {showPrivacyWarning && (
@@ -188,25 +191,25 @@ const openMobileMaps = () => {
                   <div className={styles.privacyWarningContent}>
                     <h3>Privacy Notice</h3>
                     <p>
-                      This will open your device&apos;s map application. Please be aware that:
+                     <T>This will open your device&apos;s map application. Please be aware that:</T>
                     </p>
                     <ul>
-                      <li>Your map application may collect and share your location data</li>
-                      <li>We don&apos;t track or store your location</li>
-                      <li>Use privacy preserving mapping apps like Organic Maps</li>
+                     <li><T>Your map application may collect and share your location data</T></li>
+                     <li><T>We don&apos;t track or store your location</T></li>
+                     <li><T>Use privacy preserving mapping apps like Organic Maps</T></li>
                     </ul>
                     <div className={styles.privacyWarningButtons}>
                       <button
                         onClick={() => setShowPrivacyWarning(false)}
                         className={styles.cancelButton}
                       >
-                        Cancel
+                        <T>Cancel</T>
                       </button>
                       <button
                         onClick={openMobileMaps}
                         className={styles.continueButton}
                       >
-                        Continue
+                       <T>Continue</T>
                       </button>
                     </div>
                   </div>

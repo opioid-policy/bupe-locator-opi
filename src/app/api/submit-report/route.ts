@@ -1,5 +1,6 @@
 // src/app/api/submit-report/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { isDemoMode } from '@/lib/demo-data';
 
 // --- Config ---
 const AIRTABLE_API_URL = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_NAME}`;
@@ -47,9 +48,29 @@ export async function OPTIONS(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const corsHeaders = getCorsHeaders(request);
+    const reportData = await request.json();
+    if (reportData.pharmacy?.zip_code && isDemoMode(reportData.pharmacy.zip_code)) {
+      console.log('[DEBUG] Demo report submission detected - simulating success');
+      
+      // Simulate successful submission without hitting Airtable
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+      
+      return new NextResponse(JSON.stringify({
+        success: true,
+        recordId: `demo_record_${Date.now()}`,
+        message: 'Demo report submitted successfully'
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
 
+ 
   const contentLength = request.headers.get('content-length');
-  if (contentLength && parseInt(contentLength) > 10240) { // 10KB limit
+  if (contentLength && parseInt(contentLength) > 10240) {
     return new NextResponse(JSON.stringify({
       success: false,
       error: 'Request too large'
@@ -63,15 +84,32 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { turnstileToken, ...reportData } = body;
 
+    // Check if this is a demo submission
+    if (reportData.pharmacy?.zip_code && isDemoMode(reportData.pharmacy.zip_code)) {
+      console.log('[DEBUG] Demo report submission detected - simulating success');
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      return new NextResponse(JSON.stringify({
+        success: true,
+        recordId: `demo_record_${Date.now()}`,
+        message: 'Demo report submitted successfully'
+      }), {
+        status: 200,
+        headers: corsHeaders,
+      });
+    }
+
+    // Rest of your existing validation and processing...
     if (!reportData.pharmacy?.osm_id || !reportData.reportType) {
-  return new NextResponse(JSON.stringify({
-    success: false,
-    error: 'Missing required fields'
-  }), {
-    status: 400,
-    headers: corsHeaders,
-  });
-}
+      return new NextResponse(JSON.stringify({
+        success: false,
+        error: 'Missing required fields'
+      }), {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
 
 // Validate report type
 if (!['success', 'denial'].includes(reportData.reportType)) {
@@ -181,15 +219,14 @@ if (!['success', 'denial'].includes(reportData.reportType)) {
       headers: corsHeaders,
     });
 
-  } // Replace detailed error responses
-catch (error) {
-  console.error('Submit error:', error); // Log internally only
-  return new NextResponse(JSON.stringify({
-    success: false,
-    error: 'Internal server error' // Don't expose details
-  }), {
-    status: 500,
-    headers: corsHeaders,
-  });
-}
+  } catch (error) {
+    console.error('Submit error:', error);
+    return new NextResponse(JSON.stringify({
+      success: false,
+      error: 'Internal server error'
+    }), {
+      status: 500,
+      headers: corsHeaders,
+    });
+  }
 }

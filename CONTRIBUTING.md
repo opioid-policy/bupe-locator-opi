@@ -12,5 +12,5 @@ We welcome contributions that help improve access to buprenorphine treatment.
 ## Code of Conduct
 - Prioritize user privacy and security
 - Write accessible, mobile-friendly code
-- Comment complex logic
+- Please comment complex logic
 - Test! 

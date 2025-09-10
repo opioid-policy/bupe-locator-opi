@@ -12,7 +12,10 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { sanitize } from '@/utils/sanitize';
 import { analytics } from '@/lib/privacy-analytics';
 import { getStateFromZipCode } from '@/utils/state-utils';
-
+import { T, NoTranslate } from '@/lib/i18n-markers';
+import { standardizedNoteKeys, standardizedNoteLabels, getStandardizedNoteLabel} from '@/lib/form-options';
+import DemoModeIndicator from './components/DemoModeIndicator';
+import { isDemoMode, DEMO_COORDINATES } from '@/lib/demo-data';
 
 
 const STATE_ABBR_TO_NAME: Record<string, string> = {
@@ -80,7 +83,6 @@ interface Report {
   standardizedNotes: string[];
 }
 const formulationOptions = [ 'Suboxone (film)', 'Buprenorphine/Naloxone (film; generic)', 'Buprenorphine/Naloxone (tablet; generic)', 'Buprenorphine (tablet; mono product; generic)', 'Zubsolv (tablet)' ];
-const standardizedNoteOptions = [ 'Will order, but not in stock', 'Partial fill (did not fill the full prescription)', 'Best to call ahead', 'Only fills for existing patients', 'Only fills from prescribers "close-by"', 'Only fill from certain prescribers', 'Only fills for patients "close-by"', 'Long wait times', 'Won\'t accept cash', 'Helpful staff', 'Unhelpful staff', 'Permanently closed' ];
 export default function Home() {
   const [zipCode, setZipCode] = useState("");
   const [locationCoords, setLocationCoords] = useState<Coords | null>(null);
@@ -93,7 +95,7 @@ export default function Home() {
   const [selectedPharmacy, setSelectedPharmacy] = useState<SelectedPharmacy | null>(null);
   const [reportType, setReportType] = useState<'success' | 'denial' | ''>('');
   const [formulations, setFormulations] = useState<string[]>([]);
-  const [standardizedNotes, setStandardizedNotes] = useState<string[]>([]);
+  const [selectedStandardizedNotes, setSelectedStandardizedNotes] = useState<string[]>([]); 
   const [notes, setNotes] = useState('');
   const [consentMap, setConsentMap] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -255,7 +257,7 @@ if (response.ok) {
       setSubmitStatus('idle');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reportType, consentMap, standardizedNotes, formulations, notes, selectedPharmacy]);
+  }, [reportType, consentMap, selectedStandardizedNotes, formulations, notes, selectedPharmacy]);
 
   // --- Browser back button logic ---
   useEffect(() => {
@@ -452,8 +454,9 @@ useEffect(() => {
 }, [allReports, isLoadingPharmacies]);
 
   // --- OSM ZIP code submit with client-side rate limiting and server-side API ---
-  const handleZipCodeSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+const handleZipCodeSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setIsLoadingLocation(true);
     const now = Date.now();
 
     // Client-side rate limiting check
@@ -473,6 +476,12 @@ useEffect(() => {
     setLocationError("");
 
     try {
+          if (isDemoMode(zipCode)) {
+      console.log('[DEBUG] Demo mode activated');
+      setLocationCoords([DEMO_COORDINATES.latitude, DEMO_COORDINATES.longitude]);
+      setIsLoadingLocation(false);
+      return;
+    }
   const response = await fetch(`/api/zip?zipCode=${zipCode}`);
   if (!response.ok) {
     return;  // Silently ignore all error cases
@@ -549,9 +558,7 @@ const fetchPharmacies = async () => {
   const handleFormulationChange = (option: string) => {
     setFormulations(prev => prev.includes(option) ? prev.filter(item => item !== option) : [...prev, option]);
   };
-  const handleStandardizedNoteChange = (option: string) => {
-    setStandardizedNotes(prev => prev.includes(option) ? prev.filter(item => item !== option) : [...prev, option]);
-  };
+
 
   // --- Report submit ---
 const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -566,7 +573,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     pharmacy: selectedPharmacy,
     reportType,
     formulations,
-    standardizedNotes,
+    standardizedNotes: selectedStandardizedNotes,
     notes: sanitizedNotes, // Use sanitized notes
     turnstileToken,
   };
@@ -598,15 +605,16 @@ if (response.ok) {
 setIsSubmitting(false);
 
 };
-
+const SHARE_MESSAGE = "Need to find bupe? Know a pharmacies bupe availability? Help map access in our community:";
+const SHARE_URL = " https://findbupe.org"
   // --- Sharing helper ---
-  const handleShare = () => {
-    const shareText = `Need to find bupe? Know a pharmacies bupe availability? Help map access in our community: https://findbupe.org`;
-    navigator.clipboard.writeText(shareText).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
+const handleShare = () => {
+  const shareText = SHARE_MESSAGE + SHARE_URL;
+  navigator.clipboard.writeText(shareText).then(() => {
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  });
+};
 
   // --- Form validation for submit button ---
   const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting && selectedPharmacy);
@@ -628,10 +636,12 @@ setIsSubmitting(false);
       <ErrorBoundary>
       <div className={styles.zipCodeContainer}>
         <form onSubmit={handleZipCodeSubmit}>
-          <h2 >Enter Your ZIP Code</h2>
-          <p style={{ color: 'var(--font-color-dark)', fontStyle: 'italic' }}>Please enter a ZIP code to find and report pharmacies with bupe near you.</p>
+          <h2><T>Enter Your ZIP Code</T></h2>
+          <p style={{ color: 'var(--font-color-dark)', fontStyle: 'italic' }}>
+          <T>Please enter a ZIP code to find and report pharmacies with bupe near you.</T> 
+          </p>
           <div className={styles.formGroup}>
-            <label htmlFor="zip-code">ZIP Code</label>
+            <label htmlFor="zip-code"><T>ZIP Code</T></label>
             <input
               id="zip-code"
               type="text"
@@ -644,7 +654,7 @@ setIsSubmitting(false);
               required
             />
           </div>
-          <button type="submit" className={styles.choiceButton} disabled={isLoadingLocation}>{isLoadingLocation ? 'Loading...' : 'Set Location'}</button>
+          <button type="submit" className={styles.choiceButton} disabled={isLoadingLocation}>{isLoadingLocation ? <T>Loading...</T> : <T>Set Location</T>}</button>
           {locationError && <p className={styles.errorText}>{locationError}</p>}
         </form>
       </div>
@@ -655,10 +665,14 @@ setIsSubmitting(false);
   if (!mode) {
     return (
       <div className={styles.choiceContainer}>
-        <h2>What would you like to do today?</h2>
+        <h2><T>What would you like to do today?</T></h2>
         <div className={styles.choiceButtons}>
-          <button className={styles.choiceButton} onClick={() => {setMode('report'); analytics.trackEvent('report-pharmacy-click');}}>Update a Pharmacy&apos;s Bupe Status</button>
-          <button className={styles.choiceButton} onClick={() => {setMode('find'); analytics.trackEvent('find-pharmacy-click');}}>Find a Bupe-Friendly Pharmacy</button>
+          <button className={styles.choiceButton} onClick={() => {setMode('report'); analytics.trackEvent('report-pharmacy-click');}}>
+            <T>Update a Pharmacy&apos;s Bupe Status</T>
+            </button>
+          <button className={styles.choiceButton} onClick={() => {setMode('find'); analytics.trackEvent('find-pharmacy-click');}}>
+            <T>Find a Bupe-Friendly Pharmacy</T>
+            </button>
         </div>
       </div>
     );
@@ -693,19 +707,21 @@ setIsSubmitting(false);
                   // router.push('/');
                 }}
               >
-                ← Back to ZIP
+                <T> ← Back to ZIP </T>
               </Link>
             </div>
             <br />
             <div className={styles.findHeader}>
-              <h2>Bupe-Friendly Pharmacies</h2>
-              <button onClick={() => window.print()} className={styles.printButton}>Print List 🖨️ </button>
+              <h2><T>Bupe-Friendly Pharmacies</T></h2>
+              <button onClick={() => window.print()} className={styles.printButton}>
+                 <T>Print List 🖨️</T>
+                  </button>
             </div>
             <div className={styles.trendLegend}>
-              <p>Trending Recently:</p>
-              <div><TrendIndicator trend="up" /> <span>More Successes</span></div>
-              <div><TrendIndicator trend="neutral" /> <span>Neutral</span></div>
-              <div><TrendIndicator trend="down" /> <span>More Denials</span></div>
+              <p><T>Trending Recently:</T></p>
+              <div><TrendIndicator trend="up" /> <span><T>More Successes</T></span></div>
+              <div><TrendIndicator trend="neutral" /> <span><T>Neutral</T></span></div>
+              <div><TrendIndicator trend="down" /> <span><T>More Denials</T></span></div>
             </div>
               <div className={styles.privacyGuidanceSection}>
                 <a 
@@ -714,30 +730,30 @@ setIsSubmitting(false);
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  🔒 Privacy & Safety Tips 🔒
+                  <T>🔒 Privacy & Safety Tips 🔒</T>
                 </a>
               </div>
             <div className={styles.filterGroup}>
-              <button onClick={() => handleFilterClick(7)} className={`${styles.filterButton} ${dateFilter === 7 ? styles.active : ''}`}>Last 7 Days</button>
-              <button onClick={() => handleFilterClick(15)} className={`${styles.filterButton} ${dateFilter === 15 ? styles.active : ''}`}>Last 15 Days</button>
-              <button onClick={() => handleFilterClick(30)} className={`${styles.filterButton} ${dateFilter === 30 ? styles.active : ''}`}>Last 30 Days</button>
-              <button onClick={() => handleFilterClick(null)} className={`${styles.filterButton} ${styles.allTimeButton} ${dateFilter === null ? styles.active : ''}`}>All Time</button>
+              <button onClick={() => handleFilterClick(7)} className={`${styles.filterButton} ${dateFilter === 7 ? styles.active : ''}`}><T>Last 7 Days</T></button>
+              <button onClick={() => handleFilterClick(15)} className={`${styles.filterButton} ${dateFilter === 15 ? styles.active : ''}`}><T>Last 15 Days</T></button>
+              <button onClick={() => handleFilterClick(30)} className={`${styles.filterButton} ${dateFilter === 30 ? styles.active : ''}`}><T>Last 30 Days</T></button>
+              <button onClick={() => handleFilterClick(null)} className={`${styles.filterButton} ${styles.allTimeButton} ${dateFilter === null ? styles.active : ''}`}><T>All Time</T></button>
             </div>
             {/* This is the printable content container */}
             <div className={styles.printableContent}>
               <div className={styles.pharmacyList}>
                 {isLoadingPharmacies ? (
-                  <p>Loading pharmacies...</p>
+                  <p><T>Loading pharmacies...</T></p>
                 ) : successfulPharmacies.length > 0 ? (
                 successfulPharmacies.map(pharmacy => (
                   <PharmacyListItem key={pharmacy.id} pharmacy={pharmacy} />
                   ))
                 ) : (
-                  <p>No successful reports found for the selected time period. Try a wider date range or select &quot;All Time&quot;.</p>
+                  <p><T>No successful reports found for the selected time period. Be the first to report! Or, try a wider date range or select &quot;All Time&quot;.</T></p>
                 )}
               </div>
               <div className={styles.printFooter}>
-                <p>For the latest updates, visit bupe.opioidpolicy.org</p>
+                <p><T>For the latest updates, visit findbupe.org</T></p>
               </div>
             </div>
           </>
@@ -746,13 +762,20 @@ setIsSubmitting(false);
           <>
             {submitStatus === 'success' ? (
               <div className={styles.successMessage}>
-                <h3>🎉 Thank You! 🎉</h3>
-                <p>We know filling a bupe script isn&apos;t always easy. Your answers help others in your area find this lifesaving medication.</p>
-                <br />
-                <p><strong>The most helpful info is <em>new</em> info</strong>!</p> 
-                <p>So, the next time you try to fill a bupe script, tell us how it went. You can also help by sharing this website with friends who take bupe.</p>
+                <h3><T>🎉 Thank You! 🎉</T></h3>
+                <p>
+                <T>We know filling a bupe script isn&apos;t always easy. Your answers help others in your area find this lifesaving medication.</T></p>
                 <br/>
-                <p style={{marginTop: '1.5rem', fontStyle: 'italic', fontSize: '0.9rem'}}><Link href="/privacy#protect-yourself" className={styles.styledLink}><strong>Remember to clear your browser history.</strong> Learn more in our privacy tips.🔒</Link></p>
+                <p>
+                <T>The most helpful info is NEW info!</T>
+                </p> 
+                <p>
+                <T>So, the next time you try to fill a bupe script, tell us how it went. You can also help by sharing this website with friends who take bupe.</T>
+                </p>
+                <br/>
+                <p style={{marginTop: '1.5rem', fontStyle: 'italic', fontSize: '0.9rem'}}><Link href="/privacy#protect-yourself" className={styles.styledLink}>
+                <T>Remember to clear your browser history. Learn more in our privacy tips.🔒</T>
+                </Link></p>
                 <br/>
                 <button
                   type="button"
@@ -762,14 +785,16 @@ setIsSubmitting(false);
                     setSubmitStatus('idle');
                   }}
                 >
-                  Find Bupe-Friendly Pharmacies Near You
+                 <T> Find Bupe-Friendly Pharmacies Near You</T>
                 </button>
-                <button type="button" className={styles.submitButton} onClick={handleShare}>{copied ? 'Copied to Clipboard!' : 'Share with a Friend 🚀'}</button>
-                <p style={{marginTop: '1.5rem', fontStyle: 'italic', fontSize: '0.9rem'}}><Link href="/bulk-upload" className={styles.styledLink}>If you&apos;re interested in submitting multiple reports, check out our bulk reporting tool.</Link></p>
+                <button type="button" className={styles.submitButton} onClick={handleShare}>{copied ? <T>Copied to Clipboard!</T> : <T>Share with a Friend 🚀</T>}</button>
+                <p style={{marginTop: '1.5rem', fontStyle: 'italic', fontSize: '0.9rem'}}><Link href="/bulk-upload" className={styles.styledLink}>
+               <T>If you&apos;re interested in submitting multiple reports, check out our bulk reporting tool.</T>
+                </Link></p>
               </div>
 ) : (
               <form onSubmit={handleSubmit}>
-                <h2>Update Pharmacy&apos;s Bupe Status</h2>
+                <h2><T>Update Pharmacy&apos;s Bupe Status</T></h2>
                 {showManualEntry ? (
                   <ManualPharmacyEntry
                     onBack={() => setShowManualEntry(false)}
@@ -780,7 +805,7 @@ setIsSubmitting(false);
                     {!selectedPharmacy ? (
                       <>
                         <div className={styles.formGroup}>
-                          <label htmlFor="pharmacy-search">Search for a Pharmacy</label>
+                          <label htmlFor="pharmacy-search"><T>Search for a Pharmacy</T></label>
                           <input
                             type="text"
                             id="pharmacy-search"
@@ -815,7 +840,7 @@ setIsSubmitting(false);
                               className={styles.manualEntryButton}
                               onClick={() => setShowManualEntry(true)}
                             >
-                              + Can&apos;t find your pharmacy? Add it manually
+                             <T> ➕ Can&apos;t find your pharmacy? Add it manually</T>
                             </button>
                           )}
                       </>
@@ -823,10 +848,12 @@ setIsSubmitting(false);
                       <>
                         <div className={styles.selectedPharmacy}>
                           <p><strong>{selectedPharmacy.name}</strong><br />{selectedPharmacy.full_address}</p>
-                          <button type="button" onClick={() => setSelectedPharmacy(null)}>Change pharmacy</button>
+                          <button type="button" onClick={() => setSelectedPharmacy(null)}>
+                            <T>Change pharmacy</T>
+                            </button>
                         </div>
                         <div className={styles.formGroup}>
-                          <label>What was the outcome?</label>
+                          <label><T>What was the outcome? (Required)</T></label>
                           <hr className={styles.formDivider} />
                           <div className={styles.radioGroup}>
                             <label>
@@ -837,7 +864,7 @@ setIsSubmitting(false);
                                 checked={reportType === 'success'}
                                 onChange={(e) => setReportType(e.target.value as 'success' | 'denial')}
                               />
-                            ✅ I was able to fill my prescription
+                            <T>✅ I was able to fill my prescription</T>
                             </label>
                             <label>
                               <input
@@ -847,12 +874,12 @@ setIsSubmitting(false);
                                 checked={reportType === 'denial'}
                                 onChange={(e) => setReportType(e.target.value as 'success' | 'denial')}
                               /> 
-                             ❌ I was not able to fill my prescription
+                            <T>❌ I was not able to fill my prescription</T>
                             </label>
                           </div>
                         </div>
                         <div className={styles.formGroup}>
-                          <label>Formulation (optional, check all that apply)</label>
+                          <label><T>Formulation (optional, check all that apply)</T></label>
                           <hr className={styles.formDivider} />
                           <div className={styles.checkboxGroup}>
                             {formulationOptions.map(option => (
@@ -868,25 +895,32 @@ setIsSubmitting(false);
                             ))}
                           </div>
                         </div>
-                        <div className={styles.formGroup}>
-                          <label>Common Observations (optional)</label>
-                          <hr className={styles.formDivider} />
-                          <div className={styles.checkboxGroup}>
-                            {standardizedNoteOptions.map(option => (
-                              <label key={option} className={styles.checkboxLabel}>
-                                <input
-                                  type="checkbox"
-                                  value={option}
-                                  checked={standardizedNotes.includes(option)}
-                                  onChange={() => handleStandardizedNoteChange(option)}
-                                />
-                                {option}
-                              </label>
-                            ))}
+                          <div className={styles.formGroup}>
+                            <label><T>Common Observations (optional)</T></label>
+                            <div className={styles.checkboxGroup}>
+                              {standardizedNoteKeys.map(key => (
+                                <label key={key} className={styles.checkboxLabel}>
+                                  <input
+                                    type="checkbox"
+                                    value={key}
+                                    checked={selectedStandardizedNotes.includes(key)}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setSelectedStandardizedNotes([...selectedStandardizedNotes, key]);
+                                      } else {
+                                        setSelectedStandardizedNotes(
+                                          selectedStandardizedNotes.filter(k => k !== key)
+                                        );
+                                      }
+                                    }}
+                                  />
+                                  {getStandardizedNoteLabel(key)}
+                                </label>
+                              ))}
+                            </div>
                           </div>
-                        </div>
                         <div className={styles.formGroup}>
-                          <label htmlFor="notes">Other Notes (optional)</label>
+                          <label htmlFor="notes"><T>Other Notes (optional)</T></label>
                           <hr className={styles.formDivider} />
                           <textarea
                             id="notes"
@@ -904,7 +938,7 @@ setIsSubmitting(false);
                               onChange={(e) => setConsentMap(e.target.checked)}
                               required
                             />
-                            I understand my anonymous report will be used to update the public map (REQUIRED).
+                           <T> I understand my anonymous report will be used to update the public map (REQUIRED).</T>
                           </label>
                         </div>
                         <Turnstile
@@ -917,10 +951,10 @@ setIsSubmitting(false);
                           style={{ marginTop: '1rem' }}
                           disabled={!canSubmit}
                         >
-                          {isSubmitting ? 'Submitting...' : 'Submit Report'}
+                          {isSubmitting ? <T>Submitting...</T> : <T>Submit Report</T>}
                         </button>
                         {submitStatus === 'error' && (
-                          <p className={styles.errorText}>Submission failed. Please try again.</p>
+                          <p className={styles.errorText}><T>Submission failed. Please try again.</T></p>
                         )}
                       </>
                     )}

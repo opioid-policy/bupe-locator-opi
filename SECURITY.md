@@ -10,3 +10,4 @@ Admittedly, we're not pros. We're trying to create a tool to help people in need
 ## Our Commitment
 - User privacy is paramount. Addiction is a protected health condition. Privacy is a human right. We tried to design this tool in a way that preserves those principles. 
 - No tracking or data collection aside from what is voluntarily submitted to our tracking tool.
+- We try to guide the end-users how to reduce their privacy risks. 

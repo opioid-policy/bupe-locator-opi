@@ -1,5 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { T, NoTranslate } from '@/lib/i18n-markers';
+
 
 // Create a separate component for the content that might use dynamic features
 function NotFoundContent() {
@@ -12,9 +14,9 @@ function NotFoundContent() {
       flexDirection: 'column', 
       justifyContent: 'center' 
     }}>
-      <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Page Not Found</h1>
+      <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}><T>Page Not Found</T></h1>
       <p style={{ marginBottom: '2rem', color: '#666' }}>
-        Sorry, the page you&apos;re looking for doesn&apos;t exist.
+       <T>Sorry, the page you&apos;re looking for doesn&apos;t exist.</T>
       </p>
       <Link 
         href="/" 
@@ -28,7 +30,7 @@ function NotFoundContent() {
           fontSize: '1rem'
         }}
       >
-        Return Home
+        <T>Return Home</T>
       </Link>
     </div>
   );
@@ -45,9 +47,9 @@ function LoadingFallback() {
       flexDirection: 'column', 
       justifyContent: 'center' 
     }}>
-      <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Page Not Found</h1>
+      <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}><T>Page Not Found</T></h1>
       <p style={{ marginBottom: '2rem', color: '#666' }}>
-        Sorry, the page you&apos;re looking for doesn&apos;t exist.
+       <T>Sorry, the page you&apos;re looking for doesn&apos;t exist.</T>
       </p>
       <Link 
         href="/" 
@@ -61,7 +63,7 @@ function LoadingFallback() {
           fontSize: '1rem'
         }}
       >
-        Return Home
+       <T>Return Home</T>
       </Link>
     </div>
   );

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import styles from './PrivacyBanner.module.css';
+import { T, NoTranslate } from '@/lib/i18n-markers';
+
 
 declare global {
   interface Window {
@@ -61,13 +63,13 @@ export default function PrivacyBanner() {
         <p>
           🕵️ <strong>Privacy Tip:</strong>
           {dntEnabled ? (
-            <> Do Not Track detected - we respect your privacy preference. </>
+            <><T> Do Not Track detected - we respect your privacy preference.</T> </>
           ) : hasTrackers ? (
-            <> For maximum privacy, consider clearing your browser history and switching to incognito/private browsing mode or a privacy-focused browser like Brave or Tor. </>
+           <><T> For maximum privacy, consider clearing your browser history and switching to incognito/private browsing mode or a privacy-focused browser like Brave or Tor.</T> </>
           ) : (
-            <> Good job using privacy protections! Remember to clear your history when done. </>
+            <><T> Nice privacy protections! Remember to clear your history when done.</T> </>
           )}
-          <Link href="/privacy#protect-yourself" className={styles.learnMore}> Learn more</Link>
+          <Link href="/privacy#protect-yourself" className={styles.learnMore}> <T>Learn more</T></Link>
         </p>
         <button onClick={dismissBanner} className={styles.dismissButton} aria-label="Dismiss privacy banner">
           ✕
