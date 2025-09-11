@@ -155,9 +155,15 @@ function extractTComponents(filePath) {
     }
     
     if (!shouldSkip && text.length > 1) {
-        const fileName = path.basename(filePath, '.tsx').replace(/[^a-z0-9]/gi, '');
-        const key = id || `${fileName}_${count}`;
-        extracted[key] = text;
+const relativePath = path.relative(process.cwd(), filePath);
+const fileKey = relativePath
+  .replace(/\\/g, '/')  // Windows path fix
+  .replace('src/app/', '')
+  .replace('.tsx', '')
+  .replace(/[^a-z0-9\/]/gi, '_')
+  .replace(/\//g, '_');
+    const key = id || `${fileKey}_${count}`;
+    extracted[key] = text;  // ADD THIS LINE
     }
   }
   
@@ -331,7 +337,7 @@ if (termsToPreserve.length > 0) {
         messages: [
           {
             role: 'system',
-            content: `You are a translator. Translate to ${targetLang}. Output only the translation.`
+            content: instruction
           },
           {
             role: 'user',

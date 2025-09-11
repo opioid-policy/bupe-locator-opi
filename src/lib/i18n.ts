@@ -35,12 +35,18 @@ export async function loadTranslations(lang: Language): Promise<any> {
   }
 
   try {
-    // For bundled languages (en, es, fr) - instant load
-    if (['en', 'es', 'fr'].includes(lang)) {
-      const translations = await import(`../translations/${lang}.json`);
-      translationsCache[lang] = translations.default;
-      return translations.default;
-    }
+// For bundled languages - static imports
+if (lang === 'en') {
+  const translations = await import('../translations/en.json');
+  translationsCache[lang] = translations.default || translations;
+  return translations.default || translations;
+}
+if (lang === 'es') {
+  const translations = await import('../translations/es.json');
+  translationsCache[lang] = translations.default || translations;
+  return translations.default || translations;
+}
+
 
     // For extended languages - dynamic load with caching
     const response = await fetch(`/translations/${lang}.json`);
@@ -81,7 +87,7 @@ export function detectUserLanguage(): Language {
   
   // 2. Check session storage
   try {
-    const stored = sessionStorage.getItem('selectedLanguage') as Language;
+    const stored = localStorage.getItem('selectedLanguage') as Language;
     if (stored && languages.find(l => l.code === stored)) {
       return stored;
     }
