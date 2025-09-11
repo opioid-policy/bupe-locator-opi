@@ -157,11 +157,12 @@ function extractTComponents(filePath) {
     if (!shouldSkip && text.length > 1) {
 const relativePath = path.relative(process.cwd(), filePath);
 const fileKey = relativePath
-  .replace(/\\/g, '/')  // Windows path fix
+  .replace(/\\/g, '/')
   .replace('src/app/', '')
+  .replace('src/components/', '')  // Handle components too
   .replace('.tsx', '')
-  .replace(/[^a-z0-9\/]/gi, '_')
-  .replace(/\//g, '_');
+  .replace(/\//g, '_')  // Convert slashes to underscores
+  .toLowerCase();
     const key = id || `${fileKey}_${count}`;
     extracted[key] = text;  // ADD THIS LINE
     }
@@ -315,13 +316,13 @@ function cleanTranslation(translation, targetLang) {
 
 async function translateText(text, targetLang, nativeName) {
   // Skip if text contains never-translate terms
-let instruction = `Translate to ${targetLang}. Output only the translation.`;
+let instruction = `You are a translator. Translate the following English text to ${targetLang}. Output ONLY the direct translation, not an explanation or answer. Keep the same meaning as the original.`;
 const termsToPreserve = [];
 
 for (const term of CONFIG.NEVER_TRANSLATE) {
-  if (text.includes(term)) {
-    termsToPreserve.push(term);
-  }
+if (termsToPreserve.length > 0) {
+  instruction += ` Keep these terms exactly as they are: ${termsToPreserve.join(', ')}.`;
+}
 }
 
 if (termsToPreserve.length > 0) {
@@ -341,7 +342,7 @@ if (termsToPreserve.length > 0) {
           },
           {
             role: 'user',
-            content: text
+            content: `Translate this text to ${targetLang}: "${text}"` 
           }
         ],
         stream: false,
