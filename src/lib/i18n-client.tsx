@@ -1,3 +1,4 @@
+// src/lib/i18n-client.tsx
 "use client";
 import { useState, useEffect } from 'react';
 import { loadTranslations, detectUserLanguage, setUserLanguage, languages, type Language } from './i18n';
@@ -5,10 +6,15 @@ import { loadTranslations, detectUserLanguage, setUserLanguage, languages, type 
 export function useTranslations() {
   const [currentLang, setCurrentLang] = useState<Language>('en');
   const [translations, setTranslations] = useState<any>({});
+  const [englishTranslations, setEnglishTranslations] = useState<any>({});
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     const initializeTranslations = async () => {
+      // Always load English as the source
+      const englishData = await loadTranslations('en');
+      setEnglishTranslations(englishData);
+      
       const detectedLang = detectUserLanguage();
       const translationData = await loadTranslations(detectedLang);
       
@@ -42,5 +48,5 @@ export function useTranslations() {
     return translations[key] || fallback || key;
   };
   
-  return { t, currentLang, changeLang, isLoading, languages };
+  return { t, currentLang, changeLang, isLoading, languages, translations, englishTranslations };
 }

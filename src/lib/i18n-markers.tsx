@@ -4,41 +4,27 @@ import React from 'react';
 import { useTranslations } from '@/lib/i18n-client';
 
 export function T({ children, id }: { children: React.ReactNode; id?: string }) {
-  const { t } = useTranslations();
+  const { t, translations, englishTranslations, currentLang } = useTranslations();
   
   if (!children) return null;
   
   const text = children.toString();
   
-    if (typeof window !== 'undefined' && window.location.search.includes('debug')) {
-    console.log('Looking for translation:', { id, text: text.substring(0, 30) });
-  }
-
-  // Generate key - must match extraction logic
+  // If explicit id provided, use it
   if (id) {
     return <>{t(id, text)}</>;
   }
   
-  // Auto-generate key from text (must match extraction pattern)
-  const autoKey = text.toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .substring(0, 50);
-  
-  // Try various key patterns that might have been generated
-  const possibleKeys = [
-    autoKey,
-    `auto_${autoKey}`,
-    // Add component-specific keys if needed
-  ];
-  
-  for (const key of possibleKeys) {
-    const translated = t(key, '');
-    if (translated && translated !== key) {
+  // Find the key by matching against ENGLISH text
+  for (const [key, englishValue] of Object.entries(englishTranslations || {})) {
+    if (englishValue === text) {
+      // Found the key, now get the translation for current language
+      const translated = translations[key] || text;
       return <>{translated}</>;
     }
   }
   
-  // Fallback to original text
+  // Fallback
   return <>{text}</>;
 }
 

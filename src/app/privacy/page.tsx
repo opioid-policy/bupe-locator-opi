@@ -48,9 +48,9 @@ export default function PrivacyPage() {
           </p>
           <h4 style={{ marginTop: '2rem' }}><T>There are two main ways we collect information about you with this site:</T></h4>
           <ol>
-           <li><strong><T>REPORTING PHARMACY BUPE AVAILABILITY:</T></strong>
+           <li><strong><T>REPORTING PHARMACY BUPE AVAILABILITY: </T></strong>
             <T>What you report is not tied to you and completely voluntary. You do not have to file reports to find bupe. On the reporting pharmacies bupe access form We intentionally do not collect any information like your name, contact information, or sneaky stuff like an IP address that identifies your device and could identify you. This means we do not know who you are, and we do not want to know. We only want to help people find bupe.</T></li>
-           <li><strong><T>FINDING BUPE:</T></strong> 
+           <li><strong><T>FINDING BUPE: </T></strong> 
            <T>We use what the ZIP code you enter to help you find pharmacies near you. We do not store your ZIP code or any other information that could identify you when you search for a pharmacy.</T></li>
           </ol>
           <br/>
@@ -87,11 +87,11 @@ export default function PrivacyPage() {
           </p>
           <ul>
            <li>
-            <strong><T>Spam Protection:</T></strong> 
+            <strong><T>Spam Protection: </T></strong> 
            <T>We use a tool called Cloudflare Turnstile to check if a submission is from a real person, not a robot. It does this without the annoying puzzles and without building an advertising profile about the websites you visit or what you enter into a form. We use this to protect the form from fake entries.</T></li>
             <br/>
            <li>
-            <strong><T>Maps:</T></strong> 
+            <strong><T>Maps: </T></strong> 
            <T>To protect your privacy the &quot;Get Directions&quot; links and other maping uses OpenStreetMap, a non-profit mapping service that has strong privacy practices. Your searches are not linked to a personal account used to build an advertising profile, unlike with Google Maps. Open Street Maps prioritizes privacy, especially compared to Google Maps.</T></li>
             <br/>
            <br/>
@@ -108,27 +108,27 @@ export default function PrivacyPage() {
             <T> on your phone to reduce these issues. You can also use Google Maps in &quot;Incognito Mode&quot; but other Google &quot;Incognito Mode&quot; products were found to not actually protect your privacy, so it is best to avoid products from companies like Google, Meta/Facebook/Instagram, Amazon, Apple, Microsoft, etc to avoid them getting your information to use for advertising.</T>
             <br/>
             <li>
-            <strong><T>Database:</T></strong>
+            <strong><T>Database: </T></strong>
             <T>Your anonymous reports are stored in a secure database called Airtable. We are the only ones with access to this data and it only includes information you submitted on the pharmacy updating tool + automatically adding time of submission (to help represent the freshness of the data).</T></li>
              <br/>
             <li>
-             <strong><T>Hosting:</T></strong>
+             <strong><T>Hosting: </T></strong>
              <T>The website is hosted on Vercel, and we have configured it not to store logs of visitor IP addresses (so that your device is not identified).</T></li>
             <br/>
            <li>
-            <strong><T>Code:</T></strong> 
+            <strong><T>Code: </T></strong> 
            <T>The website code (not the form data) is hosted on </T> {' '}
             <Link href="https://codeberg.org/opioidpolicy/bupe-locator-opi" className={styles.styledLink} target="_blank" rel="noopener noreferrer">
             Codeberg</Link>
-            <T>and </T> {' '}
+            <T> and </T> {' '}
             <Link href="https://github.com/opioid-policy/bupe-locator-opi" className={styles.styledLink} target="_blank" rel="noopener noreferrer">
             GitHub</Link> 
-            <T>so that people can audit this website and suggest fixes to our privacy and security practices or new features. We are committed to transparency and open source software</T>
+            <T> so that people can audit this website and suggest fixes to our privacy and security practices or new features. We are committed to transparency and open source software.</T>
             {' '}
             <Link href="https://opioidpolicy.fillout.com/contact-form" className={styles.styledLink} target="_blank" rel="noopener noreferrer">
             <T>Please reach out using our secure form if you have questions or suggestions.</T>
             </Link> 
-            <T>This is a community-oriented project and we appreciate the help.</T>
+            <T> This is a community-oriented project and we appreciate the help.</T>
             </li>
           </ul>
         </section>

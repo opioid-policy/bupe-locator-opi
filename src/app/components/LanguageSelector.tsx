@@ -65,8 +65,9 @@ const handleLanguageChange = async (newLang: Language) => {
   setIsOpen(false);
   if (newLang !== currentLang) {
     await changeLang(newLang);
-    // ADD THIS LINE:
     analytics.trackEvent('language-switched');
+    // Add this line to force reload:
+    window.location.reload();
   }
 };
 
