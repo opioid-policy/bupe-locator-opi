@@ -10,49 +10,60 @@ export function T({ children, id }: { children: React.ReactNode; id?: string }) 
   
   const text = children.toString();
   
-  // Add key prop to force re-render when language changes
-  const key = `${currentLang}-${id || text.substring(0, 20)}`;
+  // Comprehensive debug mode
+  const debugMode = typeof window !== 'undefined' && 
+    (window.location.search.includes('debug') || localStorage.getItem('debugTranslations') === 'true');
   
-  // If explicit id provided, use it
+  // Add key prop to force re-render
+  const reactKey = `${currentLang}-${id || text.substring(0, 20)}`;
+  
+  // Try to find the translation
+  let translationKey = null;
+  let translated = text;
+  
+  // Method 1: Use explicit ID
   if (id) {
-    const translated = translations[id] || text;
-    return <React.Fragment key={key}>{translated}</React.Fragment>;
-  }
-  
-  // Special handling for form option labels
-  const formOptionKeys = [
-    'will-order-not-in-stock',
-    'partial-fill',
-    'call-ahead',
-    'existing-patients-only',
-    'prescribers-close-by',
-    'certain-prescribers',
-    'patients-close-by',
-    'long-wait-times',
-    'no-cash',
-    'helpful-staff',
-    'unhelpful-staff',
-    'permanently-closed'
-  ];
-  
-  for (const optionKey of formOptionKeys) {
-    const formKey = `form.note.${optionKey}`;
-    if (englishTranslations[formKey] === text) {
-      const translated = translations[formKey] || text;
-      return <React.Fragment key={key}>{translated}</React.Fragment>;
+    translationKey = id;
+    translated = translations[id] || text;
+  } else {
+    // Method 2: Find by exact text match
+    for (const [key, englishValue] of Object.entries(englishTranslations || {})) {
+      if (englishValue === text) {
+        translationKey = key;
+        translated = translations[key] || text;
+        break;
+      }
+    }
+    
+    // Method 3: Try normalized text match (handle special characters)
+    if (translationKey === null) {
+      const normalizedText = text.replace(/['']/g, "'").replace(/[""]/g, '"').trim();
+      for (const [key, englishValue] of Object.entries(englishTranslations || {})) {
+const normalizedEnglish = typeof englishValue === 'string' 
+  ? englishValue.replace(/['']/g, "'").replace(/[""]/g, '"').trim()
+  : '';       
+   if (normalizedEnglish === normalizedText) {
+          translationKey = key;
+          translated = translations[key] || text;
+          break;
+        }
+      }
     }
   }
   
-  // Find the key by matching against ENGLISH text
-  for (const [translationKey, englishValue] of Object.entries(englishTranslations || {})) {
-    if (englishValue === text) {
-      const translated = translations[translationKey] || text;
-      return <React.Fragment key={key}>{translated}</React.Fragment>;
+  if (debugMode) {
+    // Log untranslated text
+    if (translated === text && currentLang !== 'en') {
+      console.warn('Untranslated:', {
+        text: text.substring(0, 50),
+        searchedFor: text,
+        foundKey: translationKey,
+        translated: translated !== text
+      });
     }
   }
   
-  // Fallback
-  return <React.Fragment key={key}>{text}</React.Fragment>;
+  return <React.Fragment key={reactKey}>{translated}</React.Fragment>;
 }
 
 export function NoTranslate({ children }: { children: React.ReactNode }) {

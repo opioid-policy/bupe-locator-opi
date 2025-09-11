@@ -132,18 +132,30 @@ function extractTComponents(filePath) {
   });
   
   // Extract T components
-  const tPattern = /<T(?:\s+id="([^"]+)")?\s*>([\s\S]*?)<\/T>/g;
-  let match;
-  let count = 0;
+// Extract T components
+const tPattern = /<T(?:\s+id="([^"]+)")?\s*>([\s\S]*?)<\/T>/g;
+let match;
+let count = 0;
+
+while ((match = tPattern.exec(content)) !== null) {
+  count++;
+  const id = match[1];
+  let text = match[2];
   
-  while ((match = tPattern.exec(content)) !== null) {
-    count++;
-    const id = match[1];
-    let text = match[2].trim();
-    
-    // Clean and decode
-    text = text.replace(/\s+/g, ' ').trim();
-    text = decodeHTMLEntities(text);
+  // Better text cleaning
+  text = text
+    .replace(/\s+/g, ' ')  // Normalize whitespace
+    .replace(/\n/g, ' ')   // Remove newlines
+    .trim();
+  
+  text = decodeHTMLEntities(text);
+  
+  // Normalize quotes and apostrophes
+  text = text
+    .replace(/['']/g, "'")
+    .replace(/[""]/g, '"')
+    .replace(/\s+/g, ' ')  // Normalize whitespace again after decoding
+    .trim();
     
     // Skip if it matches forbidden patterns
     let shouldSkip = false;
@@ -338,11 +350,11 @@ if (termsToPreserve.length > 0) {
         messages: [
           {
             role: 'system',
-            content: instruction
+            content: `You are a literal translator. Translate exactly what is written from English to ${targetLang}. Do not explain, expand, or answer questions. If the text says "More about X", translate it as "Más sobre X" or whatever language is being translated, not an explanation about X. Keep all proper nouns unchanged: ${termsToPreserve.join(', ')}.`
           },
           {
             role: 'user',
-            content: `Translate this text to ${targetLang}: "${text}"` 
+            content: `Translate this text to ${targetLang}: "Translate exactly: "${text}""`
           }
         ],
         stream: false,
