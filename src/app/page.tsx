@@ -14,8 +14,6 @@ import { analytics } from '@/lib/privacy-analytics';
 import { getStateFromZipCode } from '@/utils/state-utils';
 import { T, NoTranslate } from '@/lib/i18n-markers';
 import { standardizedNoteKeys, standardizedNoteLabels, getStandardizedNoteLabel} from '@/lib/form-options';
-import DemoModeIndicator from './components/DemoModeIndicator';
-import { isDemoMode, DEMO_COORDINATES } from '@/lib/demo-data';
 
 
 const STATE_ABBR_TO_NAME: Record<string, string> = {
@@ -476,16 +474,10 @@ const handleZipCodeSubmit = async (e: FormEvent<HTMLFormElement>) => {
     setLocationError("");
 
     try {
-          if (isDemoMode(zipCode)) {
-      console.log('[DEBUG] Demo mode activated');
-      setLocationCoords([DEMO_COORDINATES.latitude, DEMO_COORDINATES.longitude]);
-      setIsLoadingLocation(false);
-      return;
-    }
-  const response = await fetch(`/api/zip?zipCode=${zipCode}`);
-  if (!response.ok) {
-    return;  // Silently ignore all error cases
-  }
+      const response = await fetch(`/api/zip?zipCode=${zipCode}`);
+      if (!response.ok) {
+        return;  // Silently ignore all error cases
+      }
 
   const data = await response.json();
   if (data.features && data.features.length > 0) {
@@ -617,8 +609,7 @@ const handleShare = () => {
 };
 
   // --- Form validation for submit button ---
-  const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting && selectedPharmacy);
-  const successfulPharmacies = useMemo(() => {
+const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting && selectedPharmacy);  const successfulPharmacies = useMemo(() => {
     return Object.values(aggregatedPharmacies)
       .filter(p => p.status === 'success')
       .sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());

@@ -5,8 +5,8 @@ import { loadTranslations, detectUserLanguage, setUserLanguage, languages, type 
 
 export function useTranslations() {
   const [currentLang, setCurrentLang] = useState<Language>('en');
-  const [translations, setTranslations] = useState<any>({});
-  const [englishTranslations, setEnglishTranslations] = useState<any>({});
+  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [englishTranslations, setEnglishTranslations] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {

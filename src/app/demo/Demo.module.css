@@ -1,0 +1,31 @@
+.demoContainer {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.demoSection {
+  margin: 3rem 0;
+}
+
+.screenshot {
+  margin: 1rem 0;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.screenshot img {
+  width: 100%;
+  height: auto;
+}
+
+.backButton {
+  display: inline-block;
+  padding: 1rem 2rem;
+  background: var(--primary-color);
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  margin-top: 2rem;
+}

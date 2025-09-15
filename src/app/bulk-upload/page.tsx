@@ -2,7 +2,7 @@
 
 import styles from '../about/About.module.css'; // UPDATED: Use the 'About' page's styles
 import Link from 'next/link';
-import { T, NoTranslate } from '@/lib/i18n-markers';
+import { T } from '@/lib/i18n-markers';
 
 
 export default function BulkUploadPage() {

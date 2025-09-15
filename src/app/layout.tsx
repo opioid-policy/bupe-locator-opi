@@ -51,9 +51,9 @@ export default function RootLayout({
         
         <div className={styles.appContainer}>
           <header className={styles.header}>
-            <a href="/" className={styles.styledLink}>
+            <Link href="/" className={styles.styledLink}>
               <h1><T>Bupe Access Tool</T></h1>
-            </a>
+            </Link>
           </header>
           <main className={styles.main}>
             {children}
@@ -72,7 +72,12 @@ export default function RootLayout({
               >
                 <T>Home</T>
               </a>
-            </p>           
+            </p>
+            <p style={{marginTop: '0.5rem'}}>
+              <Link href="/demo" className={styles.styledLink}>
+                <T>Demo Mode</T>
+              </Link>
+            </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/about" className={styles.styledLink}>
                 <T>About This Project</T>

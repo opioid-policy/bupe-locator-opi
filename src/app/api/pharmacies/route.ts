@@ -2,7 +2,6 @@
 import { airtableAPI } from '@/lib/airtable-api';
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
-import { isDemoMode, getDemoReports, DEMO_COORDINATES } from '@/lib/demo-data';
 
 // Constants
 const MAX_DISTANCE_MILES = 30;
@@ -54,48 +53,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const lat = parseFloat(searchParams.get('lat')!);
   const lon = parseFloat(searchParams.get('lon')!);
-  const zip = searchParams.get('zip');
-
-  // Check if we're in demo mode
-  const isDemo = (zip && isDemoMode(zip)) || 
-                 (Math.abs(lat - DEMO_COORDINATES.latitude) < 0.01 && 
-                  Math.abs(lon - DEMO_COORDINATES.longitude) < 0.01);
-
-  if (isDemo) {
-    console.log('[DEBUG] Demo mode detected - returning demo reports');
-    
-    const demoReports = getDemoReports();
-    
-    // Format demo reports to match your Report interface
-    const formattedReports = demoReports.map(report => ({
-      pharmacy: {
-        osm_id: report.pharmacy_id,
-        name: report.pharmacy_id.includes('cvs') ? 'CVS Pharmacy #1234 (DEMO)' :
-              report.pharmacy_id.includes('walgreens') ? 'Walgreens #5678 (DEMO)' :
-              'Community Pharmacy (DEMO)',
-        street_address: report.pharmacy_id.includes('cvs') ? '123 Main Street' :
-                       report.pharmacy_id.includes('walgreens') ? '456 Oak Avenue' :
-                       '789 Elm Street',
-        city: 'Demo City',
-        state: 'Demo',
-        zip_code: '00000',
-        latitude: DEMO_COORDINATES.latitude + (Math.random() - 0.5) * 0.01,
-        longitude: DEMO_COORDINATES.longitude + (Math.random() - 0.5) * 0.01,
-        full_address: `${report.pharmacy_id.includes('cvs') ? '123 Main Street' :
-                      report.pharmacy_id.includes('walgreens') ? '456 Oak Avenue' :
-                      '789 Elm Street'}, Demo City, Demo ${report.zip_code}`,
-        phone_number: report.pharmacy_id.includes('cvs') ? '5555551234' :
-                     report.pharmacy_id.includes('walgreens') ? '5555555678' :
-                     '5555559012'
-      },
-      reportType: report.report_type as 'success' | 'denial',
-      formulations: report.formulation,
-      standardizedNotes: report.standardized_notes,
-      submissionTime: report.submission_time
-    }));
-
-    return NextResponse.json(formattedReports);
-  }
+  const zip = searchParams.get('zip');   
 
   const cacheKey = generateCacheKey(lat, lon);
   const headers = {

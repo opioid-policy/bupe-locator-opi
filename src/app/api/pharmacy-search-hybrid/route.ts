@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 import { airtableAPI } from '@/lib/airtable-api';
 import NodeCache from 'node-cache';
 import { createHash } from 'crypto';
-import {  isDemoMode, formatDemoPharmaciesForAPI, DEMO_COORDINATES } from '@/lib/demo-data';
 
 // ============= TYPES =============
 interface AirtablePharmacy {
@@ -279,36 +278,7 @@ export async function GET(request: Request) {
     const zip = searchParams.get('zip');
     const lat = parseFloat(searchParams.get('lat') || '0');
     const lon = parseFloat(searchParams.get('lon') || '0');
-
-    if (zip && isDemoMode(zip)) {
-      console.log('[DEBUG] Demo mode detected - returning demo data');
-      
-      const demoPharmacies = formatDemoPharmaciesForAPI();
-
-          let filteredPharmacies = demoPharmacies;
-      if (query && query.trim()) {
-        const queryLower = query.toLowerCase().trim();
-        filteredPharmacies = demoPharmacies.filter(pharmacy => 
-          pharmacy.name.toLowerCase().includes(queryLower) ||
-          pharmacy.street_address.toLowerCase().includes(queryLower)
-        );
-      }
-
-      // Format for SearchSuggestion interface
-      const suggestions = filteredPharmacies.map(pharmacy => ({
-        name: pharmacy.name,
-        osm_id: pharmacy.id,
-        full_address: `${pharmacy.street_address}, ${pharmacy.city}, ${pharmacy.state} ${pharmacy.zip_code}`,
-        source: pharmacy.manual_entry && pharmacy.live_manual_entry ? 'manual' : 'reported',
-        phone_number: pharmacy.phone_number,
-        distance: 0, // Demo pharmacies are all "nearby"
-        in_zip: true
-      }));
-
-      return NextResponse.json(suggestions);
-    }
-    
-
+  
     console.log(`[DEBUG] Search params: query="${query}", lat=${lat}, lon=${lon}, zip=${zip}`);
 
     if (!query || !lat || !lon || query.length < 2) {

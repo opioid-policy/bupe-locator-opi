@@ -27,7 +27,7 @@ export const languages: LanguageConfig[] = [
 ];
 
 // Translation loading system
-let translationsCache: Record<string, any> = {};
+const translationsCache: Record<string, Record<string, string>> = {};
 
 export async function loadTranslations(lang: Language): Promise<any> {
   if (translationsCache[lang]) {
