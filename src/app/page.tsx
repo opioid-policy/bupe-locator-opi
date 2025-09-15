@@ -914,7 +914,7 @@ const handleShare = () => {
                                       }
                                     }}
                                   />
-                                  {getStandardizedNoteLabel(key)}
+                                  <T id={`form.note.${key}`}>{getStandardizedNoteLabel(key)}</T>
                                 </label>
                               ))}
                             </div>

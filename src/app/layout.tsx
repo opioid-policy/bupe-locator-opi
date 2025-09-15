@@ -13,7 +13,7 @@ import { useTranslations } from '@/lib/i18n-client';
 import { getTextDirection } from '@/lib/i18n';
 import { useEffect } from 'react';
 import { T, NoTranslate } from '@/lib/i18n-markers';
-
+import TranslationNotice from './components/TranslationNotice';
 
 // Initialize fonts
 const raleway = Raleway({
@@ -62,6 +62,7 @@ export default function RootLayout({
             <p><T>This is a crowd-source resource.</T></p>
             <p><T>We only have data on bupe availability that has been reported to this database.</T></p>
             <p><T>This tool is not a guarantee of service. This data is not comprehensive.</T></p>
+            <TranslationNotice />
             <p style={{marginTop: '0.5rem'}}>
               <a 
                 href="https://bupe.opioidpolicy.org" 
