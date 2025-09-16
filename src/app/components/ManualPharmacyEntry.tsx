@@ -3,8 +3,7 @@ import { useState } from 'react';
 import styles from '../Home.module.css';
 import Turnstile from 'react-turnstile';
 import { T } from '@/lib/i18n-markers';
-import { standardizedNoteKeys, getStandardizedNoteLabel} from '@/lib/form-options';
-
+import { standardizedNoteKeys, getStandardizedNoteLabel } from '@/lib/form-options';
 
 interface PharmacyData {
   osm_id: string;
@@ -379,30 +378,29 @@ export default function ManualPharmacyEntry({
         </div>
       </div>
 
-      <div className={styles.formGroup}>
-        <label><T>Common Observations (optional)</T></label>
-        <div className={styles.checkboxGroup}>
-          {standardizedNoteKeys.map(key => (
-            <label key={key} className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                value={key}
-                checked={selectedStandardizedNotes.includes(key)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedStandardizedNotes([...selectedStandardizedNotes, key]);
-                  } else {
-                    setSelectedStandardizedNotes(
-                      selectedStandardizedNotes.filter(k => k !== key)
-                    );
-                  }
-                }}
-              />
-              {getStandardizedNoteLabel(key)}
-            </label>
-          ))}
-        </div>
+     <div className={styles.formGroup}>
+      <label><T>Common Observations (optional)</T></label>
+      <div className={styles.checkboxGroup}>
+        {standardizedNoteKeys.map(key => (
+          <label key={key} className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              value={key}
+              checked={selectedStandardizedNotes.includes(key)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedStandardizedNotes([...selectedStandardizedNotes, key]);
+                } else {
+                  setSelectedStandardizedNotes(selectedStandardizedNotes.filter(k => k !== key));
+                }
+              }}
+            />
+            <T id={`form.note.${key}`}>{getStandardizedNoteLabel(key)}</T>
+          </label>
+        ))
+        }
       </div>
+    </div>
 
       <div className={styles.formGroup}>
         <label htmlFor="notes">

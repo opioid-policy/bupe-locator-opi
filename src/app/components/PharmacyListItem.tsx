@@ -6,6 +6,7 @@ import TrendIndicator from './TrendIndicator';
 import ErrorBoundary from './ErrorBoundary';
 import MapLoading from './MapLoading';
 import { T } from '@/lib/i18n-markers';
+import { getStandardizedNoteLabel } from '@/lib/form-options';
 
 
 interface PharmacyListItemProps {
@@ -154,13 +155,18 @@ const openMobileMaps = () => {
               <T>Last Successful Report:</T> {formattedDate}
             </small>
           )}
-          {pharmacy.standardizedNotes && pharmacy.standardizedNotes.length > 0 && (
-            <div className={styles.tagContainer}>
-              {pharmacy.standardizedNotes.map(note => (
-                <span key={note} className={styles.tag}>{note}</span>
-              ))}
-            </div>
-          )}
+            {pharmacy.standardizedNotes && pharmacy.standardizedNotes.length > 0 && (
+              <div className={styles.tagContainer}>
+                {pharmacy.standardizedNotes.map(note => {
+                  const label = getStandardizedNoteLabel(note);
+                  return (
+                    <span key={note} className={styles.tag}>
+                      <T id={`form.note.${note}`}>{label}</T>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
         </div>
         <div className={styles.listItemActions}>
           {pharmacy.phone_number && (
