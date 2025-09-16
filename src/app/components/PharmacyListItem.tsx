@@ -3,11 +3,9 @@ import { useState, useMemo } from 'react';
 import styles from '../Home.module.css';
 import { AggregatedPharmacy } from '../page';
 import TrendIndicator from './TrendIndicator';
-// import { getDirectionsUrl } from '../lib/directions'; // <-- REMOVED this line
 import ErrorBoundary from './ErrorBoundary';
 import MapLoading from './MapLoading';
 import { T } from '@/lib/i18n-markers';
-import { getStandardizedNoteLabel } from '@/lib/form-options';
 
 
 interface PharmacyListItemProps {

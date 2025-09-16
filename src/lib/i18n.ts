@@ -29,8 +29,8 @@ export const languages: LanguageConfig[] = [
 // Translation loading system
 const translationsCache: Record<string, Record<string, string>> = {};
 
-export async function loadTranslations(lang: Language): Promise<any> {
-  if (translationsCache[lang]) {
+export async function loadTranslations(lang: Language): Promise<Record<string, string>> {
+    if (translationsCache[lang]) {
     return translationsCache[lang];
   }
 

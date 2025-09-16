@@ -592,6 +592,14 @@ if (response.ok) {
   }
 
   setSubmitStatus('success');
+} else {
+  // ADD THIS ELSE BLOCK
+  // Reset Turnstile on failure to get a fresh token
+  if (turnstile && typeof turnstile.reset === 'function') {
+    turnstile.reset();
+    setTurnstileToken(null);
+  }
+  setSubmitStatus('error');
 }
 
 setIsSubmitting(false);

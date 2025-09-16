@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(_request: Request) {
+export async function GET() {
   try {
     // Use your env variable names
     const AIRTABLE_PERSONAL_ACCESS_TOKEN = process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN;
@@ -46,7 +46,6 @@ export async function GET(_request: Request) {
       const eventType = record.fields.event_type;
       const count = record.fields.count || 0;
       const state = record.fields.state;
-      const createdAt = new Date(record.createdTime);
       
       if (state) {
         if (!byState[state]) {

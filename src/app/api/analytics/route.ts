@@ -47,9 +47,9 @@ async function storeAnalytics(events: Array<{event: string, state?: string}>) {
     
     // Process national counts
     for (const [eventType, count] of Object.entries(nationalCounts)) {
-      const existing = existingRecords.find((r: any) => 
-        r.fields.event_type === eventType && 
-        r.fields.aggregation_level === 'national'
+    const existing = existingRecords.find((r: { fields: { event_type: string; aggregation_level: string } }) =>        
+      r.fields.event_type === eventType && 
+      r.fields.aggregation_level === 'national'
       );
       
       if (existing) {
@@ -167,8 +167,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Filter and validate events
-    const validEvents = events.filter((event: any) => {
-      const allowedEvents = [
+const validEvents = events.filter((event: { event: string; state?: string }) => {
+        const allowedEvents = [
         'find-pharmacy-click',
         'report-pharmacy-click',
         'report-submitted',

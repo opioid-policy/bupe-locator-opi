@@ -192,14 +192,6 @@ export default function ManualPharmacyEntry({
     );
   };
 
-const handleStandardizedNoteChange = (option: string) => {
-  setSelectedStandardizedNotes((prev: string[]) => 
-    prev.includes(option) 
-      ? prev.filter((item: string) => item !== option) 
-      : [...prev, option]
-  );
-};
-
   const canSubmit = 
     pharmacyName && 
     streetAddress && 
