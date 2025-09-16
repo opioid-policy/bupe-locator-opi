@@ -37,6 +37,7 @@ export default function PharmacyListItem({ pharmacy }: PharmacyListItemProps) {
   const [isDirectionsLoading, setIsDirectionsLoading] = useState(false);
   const [isCallLoading, setIsCallLoading] = useState(false);
   const [showPrivacyWarning, setShowPrivacyWarning] = useState(false);
+  
   const [isMobile] = useState(() => {
   if (typeof window === 'undefined') return false;
   const userAgent = navigator.userAgent || navigator.vendor || (window as Window & { opera?: string }).opera;

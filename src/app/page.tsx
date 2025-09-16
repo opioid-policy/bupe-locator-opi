@@ -107,7 +107,18 @@ export default function Home() {
   const turnstile = useTurnstile();
   const [isSearching, setIsSearching] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
- 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const successfulPharmacies = useMemo(() =>
+  Object.values(aggregatedPharmacies)
+    .filter(p => p.status === 'success')
+    .sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()),
+    [aggregatedPharmacies]);
+  // Calculate current items
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = successfulPharmacies.slice(indexOfFirstItem, indexOfLastItem);
 
   // Client-side rate limiting state
   const [lastRequestTime, setLastRequestTime] = useState(0);
@@ -625,11 +636,7 @@ const handleShare = () => {
 };
 
   // --- Form validation for submit button ---
-const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting && selectedPharmacy);  const successfulPharmacies = useMemo(() => {
-    return Object.values(aggregatedPharmacies)
-      .filter(p => p.status === 'success')
-      .sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
-  }, [aggregatedPharmacies]);
+const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting && selectedPharmacy);  
   const handleFilterClick = (days: number | null) => {
     if (dateFilter === days) {
       setDateFilter(null);
@@ -752,11 +759,28 @@ const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting
                 {isLoadingPharmacies ? (
                   <p><T>Loading pharmacies...</T></p>
                 ) : successfulPharmacies.length > 0 ? (
-                successfulPharmacies.map(pharmacy => (
-                  <PharmacyListItem key={pharmacy.id} pharmacy={pharmacy} />
-                  ))
+                  <>
+                    <div className={styles.pharmacyList}>
+                      {currentItems.map(pharmacy => (
+                        <PharmacyListItem key={pharmacy.id} pharmacy={pharmacy} />
+                      ))}
+                    </div>
+                    <div className={styles.pagination}>
+                      {/* Pagination controls */}
+                    </div>
+                  </>
                 ) : (
-                  <p><T>No successful reports found for the selected time period. Be the first to report! Or, try a wider date range or select &quot;All Time&quot;.</T></p>
+                  <div className={styles.noReports}>
+                    <p><T>No reports in your area. Be the first!</T></p>
+                    <button
+                      onClick={() => {
+                        setMode('report');
+                      }}
+                      className={styles.submitButton}
+                    >
+                      <T>Report a Pharmacy</T>
+                    </button>
+                  </div>
                 )}
               </div>
               <div className={styles.printFooter}>

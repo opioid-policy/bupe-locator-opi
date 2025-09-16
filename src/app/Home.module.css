@@ -246,6 +246,28 @@
   transform: translateY(-1px);
 }
 
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.noReports {
+  text-align: center;
+  padding: 2rem;
+}
+
+.noReports p {
+  margin-bottom: 1rem;
+}
+
 /* --- Report Form & Success Screen Styles --- */
 .selectedPharmacy {
   padding: 1rem;
