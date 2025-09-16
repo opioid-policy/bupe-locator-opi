@@ -1,6 +1,5 @@
 // src/app/api/submit-report/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { mapLabelsToKeys } from '@/lib/form-options';
 
 // --- Config ---
 const AIRTABLE_API_URL = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_NAME}`;
@@ -58,7 +57,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.clone().json();
-    const { turnstileToken, ...reportData } = body;
+    const { turnstileToken, standardizedNotes, ...reportData } = body;
 
     if (!reportData.pharmacy?.osm_id || !reportData.reportType) {
       return new NextResponse(JSON.stringify({
@@ -118,10 +117,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Map translated standardized notes back to their original keys
-    const standardizedNotes = reportData.standardizedNotes ?
-      mapLabelsToKeys(reportData.standardizedNotes) :
-      [];
+    // No mapping needed since we are sending labels directly from page.tsx
+    const notes = standardizedNotes || [];
 
     // --- Sanitize only the notes field ---
     const sanitize = (input: string | undefined) => {
@@ -148,7 +145,7 @@ export async function POST(request: NextRequest) {
           phone_number: reportData.pharmacy.phone_number,
           report_type: reportData.reportType,
           formulation: reportData.formulations,
-          standardized_notes: standardizedNotes, // Use mapped keys
+          standardized_notes: notes, // Use notes directly
           notes: sanitize(reportData.notes), // Only sanitize the free-text notes
         },
       }],

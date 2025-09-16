@@ -22,7 +22,7 @@ export const standardizedNoteLabels: Record<string, string> = {
   'partial-fill': 'Partial fill (did not fill the full prescription)',
   'call-ahead': 'Best to call ahead',
   'existing-patients-only': 'Only fills for existing patients',
-  'prescribers-close-by': 'Only fills from prescribers "close-by"',
+  'prescribers-close-by': 'Only fills for patients "close-by"',
   'certain-prescribers': 'Only fill from certain prescribers',
   'patients-close-by': 'Only fills for patients "close-by"',
   'long-wait-times': 'Long wait times',

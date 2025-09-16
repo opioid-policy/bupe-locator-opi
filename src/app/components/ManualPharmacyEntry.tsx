@@ -141,38 +141,41 @@ export default function ManualPharmacyEntry({
 
   // Handle form submission
   const handleSubmit = () => {
-    if (!turnstileToken) {
-      setValidationError('Please complete the security check.');
-      return;
-    }
-    
-    setIsValidating(true);
-    setValidationError('');
-    
-    const validationMessage = validateFields();
-    if (validationMessage) {
-      setValidationError(validationMessage);
-      setIsValidating(false);
-      return;
-    };
-    
-    // Prepare pharmacy data
-    const fullAddress = `${streetAddress}, ${city}, ${state} ${pharmacyZip}`;
-    const pharmacyData: PharmacyData = {
-  osm_id: `manual_${Date.now()}`,
-  name: pharmacyName.trim(),
-  full_address: fullAddress,
-  street_address: streetAddress.trim(),
-  city: city.trim(),
-  state: state,
-  zip_code: pharmacyZip,
-  latitude: 0,
-  longitude: 0,
-  phone_number: phoneNumber.replace(/\D/g, ''),
-  manual_entry: true,
-  live_manual_entry: false  // ADD THIS - requires approval before going live
-};
-    
+  if (!turnstileToken) {
+    setValidationError('Please complete the security check.');
+    return;
+  }
+
+  setIsValidating(true);
+  setValidationError('');
+
+  // Log the Turnstile token for debugging
+  console.log('Turnstile token:', turnstileToken);
+
+  const validationMessage = validateFields();
+  if (validationMessage) {
+    setValidationError(validationMessage);
+    setIsValidating(false);
+    return;
+  }
+
+  // Prepare pharmacy data
+  const fullAddress = `${streetAddress}, ${city}, ${state} ${pharmacyZip}`;
+  const pharmacyData: PharmacyData = {
+    osm_id: `manual_${Date.now()}`,
+    name: pharmacyName.trim(),
+    full_address: fullAddress,
+    street_address: streetAddress.trim(),
+    city: city.trim(),
+    state: state,
+    zip_code: pharmacyZip,
+    latitude: 0,
+    longitude: 0,
+    phone_number: phoneNumber.replace(/\D/g, ''),
+    manual_entry: true,
+    live_manual_entry: false
+  };
+
   onSubmit(
     pharmacyData,
     reportType as 'success' | 'denial',
@@ -183,6 +186,7 @@ export default function ManualPharmacyEntry({
   );
   setIsValidating(false);
 };
+
 
   const handleFormulationChange = (option: string) => {
     setFormulations(prev => 

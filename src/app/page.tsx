@@ -210,43 +210,45 @@ setResults([]);
 // Add handler for manual pharmacy submission
 // Update handler for manual pharmacy submission
 const handleManualPharmacySubmit = async (
-  pharmacyData: SelectedPharmacy, 
+  pharmacyData: SelectedPharmacy,
   reportType: 'success' | 'denial',
   formulations: string[],
   standardizedNotes: string[],
   notes: string,
   turnstileToken: string
 ) => {
-const response = await fetch('/api/submit-report', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    pharmacy: pharmacyData,
-    reportType,
-    formulations,
-    standardizedNotes,
-    notes,
-    consentMap: true,
-    turnstileToken,
-  }),
-});
+  const response = await fetch('/api/submit-report', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      pharmacy: pharmacyData,
+      reportType,
+      formulations,
+      standardizedNotes: standardizedNotes.map(key => getStandardizedNoteLabel(key)),
+      notes,
+      turnstileToken, // Ensure Turnstile token is included
+    }),
+  });
 
-if (response.ok) {
-  setSelectedPharmacy(pharmacyData);
-  setShowManualEntry(false);
-  setSubmitStatus('success');
+  if (response.ok) {
+    setSelectedPharmacy(pharmacyData);
+    setShowManualEntry(false);
+    setSubmitStatus('success');
 
- const stateName = getStateFromZipCode(zipCode);
- analytics.trackEvent('report-submitted', stateName);
+    const stateName = getStateFromZipCode(zipCode);
+    analytics.trackEvent('report-submitted', stateName);
 
-  // Refresh pharmacy data
-  if (locationCoords) {
-    const [lat, lon] = locationCoords;
-    const refreshResponse = await fetch(`/api/pharmacies?lat=${lat}&lon=${lon}&t=${Date.now()}`);
-    const refreshedData: Report[] = await refreshResponse.json();
-    setAllReports(refreshedData);
+    // Refresh pharmacy data
+    if (locationCoords) {
+      const [lat, lon] = locationCoords;
+      const refreshResponse = await fetch(`/api/pharmacies?lat=${lat}&lon=${lon}&t=${Date.now()}`);
+      const refreshedData: Report[] = await refreshResponse.json();
+      setAllReports(refreshedData);
+    }
+  } else {
+    const errorData = await response.json();
+    console.error('Manual Pharmacy Submission Error:', errorData);
   }
-}
 };
 
   // --- Reset error if user changes key form fields ---
