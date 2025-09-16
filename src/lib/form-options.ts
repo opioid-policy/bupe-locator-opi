@@ -36,3 +36,14 @@ export const standardizedNoteLabels: Record<string, string> = {
 export function getStandardizedNoteLabel(key: string): string {
   return standardizedNoteLabels[key] || key;
 }
+
+// Function to map labels back to keys
+export function mapLabelsToKeys(labels: string[]): string[] {
+  const labelToKeyMap: Record<string, string> = {};
+  (standardizedNoteKeys as readonly string[]).forEach(key => {
+    const label = getStandardizedNoteLabel(key);
+    labelToKeyMap[label] = key;
+  });
+
+  return labels.map(label => labelToKeyMap[label] || label);
+}

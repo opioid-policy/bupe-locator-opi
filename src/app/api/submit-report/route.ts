@@ -1,5 +1,6 @@
 // src/app/api/submit-report/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { mapLabelsToKeys } from '@/lib/form-options';
 
 // --- Config ---
 const AIRTABLE_API_URL = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_NAME}`;
@@ -12,24 +13,24 @@ const AIRTABLE_HEADERS = {
 // Simplified CORS that actually works
 function getCorsHeaders(request: NextRequest): Record<string, string> {
   const origin = request.headers.get('origin') || '';
-  
+
   // Always return these headers
   const headers: Record<string, string> = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
-  
+
   // In development, allow localhost
   if (process.env.NODE_ENV === 'development' && origin.includes('localhost')) {
     headers['Access-Control-Allow-Origin'] = origin;
     return headers;
   }
-  
+
   // In production, allow your domains
   if (origin.includes('opioidpolicy.org') || origin.includes('findbupe.org')) {
     headers['Access-Control-Allow-Origin'] = origin;
   }
-  
+
   return headers;
 }
 
@@ -43,7 +44,7 @@ export async function OPTIONS(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const corsHeaders = getCorsHeaders(request);
- 
+
   const contentLength = request.headers.get('content-length');
   if (contentLength && parseInt(contentLength) > 10240) {
     return new NextResponse(JSON.stringify({
@@ -56,8 +57,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-      const body = await request.clone().json();
-      const { turnstileToken, ...reportData } = body;
+    const body = await request.clone().json();
+    const { turnstileToken, ...reportData } = body;
 
     if (!reportData.pharmacy?.osm_id || !reportData.reportType) {
       return new NextResponse(JSON.stringify({
@@ -69,17 +70,16 @@ export async function POST(request: NextRequest) {
       });
     }
 
-// Validate report type
-if (!['success', 'denial'].includes(reportData.reportType)) {
-  return new NextResponse(JSON.stringify({
-    success: false,
-    error: 'Invalid report type'
-  }), {
-    status: 400,
-    headers: corsHeaders,
-  });
-}
-
+    // Validate report type
+    if (!['success', 'denial'].includes(reportData.reportType)) {
+      return new NextResponse(JSON.stringify({
+        success: false,
+        error: 'Invalid report type'
+      }), {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
 
     // --- Turnstile Verification ---
     if (!turnstileToken) {
@@ -102,11 +102,11 @@ if (!['success', 'denial'].includes(reportData.reportType)) {
     });
 
     const verificationData = await verificationResponse.json();
-      console.log('Turnstile verification:', {
-        success: verificationData?.success,
-        token: turnstileToken?.substring(0, 10) + '...',
-        env: process.env.NODE_ENV
-      });
+    console.log('Turnstile verification:', {
+      success: verificationData?.success,
+      token: turnstileToken?.substring(0, 10) + '...',
+      env: process.env.NODE_ENV
+    });
 
     if (!verificationData?.success) {
       return new NextResponse(JSON.stringify({
@@ -118,15 +118,20 @@ if (!['success', 'denial'].includes(reportData.reportType)) {
       });
     }
 
+    // Map translated standardized notes back to their original keys
+    const standardizedNotes = reportData.standardizedNotes ?
+      mapLabelsToKeys(reportData.standardizedNotes) :
+      [];
+
     // --- Sanitize only the notes field ---
-  const sanitize = (input: string | undefined) => {
-  if (!input) return undefined;
-  return input
-    .replace(/[<>\"'&]/g, '') // Remove HTML special chars
-    .replace(/javascript:/gi, '') // Remove javascript protocol
-    .substring(0, 500) // Limit length
-    .trim();
-};
+    const sanitize = (input: string | undefined) => {
+      if (!input) return undefined;
+      return input
+        .replace(/[<>\\\"'&]/g, '') // Remove HTML special chars
+        .replace(/javascript:/gi, '') // Remove javascript protocol
+        .substring(0, 500) // Limit length
+        .trim();
+    };
 
     // --- Airtable Submission ---
     const airtableRecord = {
@@ -143,13 +148,14 @@ if (!['success', 'denial'].includes(reportData.reportType)) {
           phone_number: reportData.pharmacy.phone_number,
           report_type: reportData.reportType,
           formulation: reportData.formulations,
-          standardized_notes: reportData.standardizedNotes, // Not sanitized as it's a checklist
+          standardized_notes: standardizedNotes, // Use mapped keys
           notes: sanitize(reportData.notes), // Only sanitize the free-text notes
         },
       }],
     };
 
     // Log the payload being sent to Airtable for debugging
+    console.log('Airtable payload:', airtableRecord);
 
     const response = await fetch(AIRTABLE_API_URL, {
       method: 'POST',

@@ -557,54 +557,60 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   setIsSubmitting(true);
   setSubmitStatus('idle');
-  console.log('handleSubmit called'); // ADD THIS
-  
+  console.log('handleSubmit called');
+
   const sanitizedNotes = sanitize(notes);
+
+  // Map standardized note keys to their labels
+  const mappedStandardizedNotes = selectedStandardizedNotes.map(key => getStandardizedNoteLabel(key));
+
+  // Debugging log
+  console.log('Submitting standardized notes:', mappedStandardizedNotes);
 
   const reportData = {
     pharmacy: selectedPharmacy,
     reportType,
     formulations,
-    standardizedNotes: selectedStandardizedNotes,
-    notes: sanitizedNotes, // Use sanitized notes
+    standardizedNotes: mappedStandardizedNotes, // Use mapped labels
+    notes: sanitizedNotes,
     turnstileToken,
   };
-  
+
   const response = await fetch('/api/submit-report', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(reportData),
-});
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(reportData),
+  });
 
-if (response.ok) {
-  // Reset Turnstile
-  if (turnstile && typeof turnstile.reset === 'function') {
-    turnstile.reset();
-    setTurnstileToken(null);
+  if (response.ok) {
+    // Reset Turnstile
+    if (turnstile && typeof turnstile.reset === 'function') {
+      turnstile.reset();
+      setTurnstileToken(null);
+    }
+
+    // Refresh pharmacy data to show the new submission
+    if (locationCoords) {
+      const [lat, lon] = locationCoords;
+      const refreshResponse = await fetch(`/api/pharmacies?lat=${lat}&lon=${lon}&t=${Date.now()}`);
+      const refreshedData: Report[] = await refreshResponse.json();
+      setAllReports(refreshedData);
+    }
+
+    setSubmitStatus('success');
+  } else {
+    // Reset Turnstile on failure to get a fresh token
+    if (turnstile && typeof turnstile.reset === 'function') {
+      turnstile.reset();
+      setTurnstileToken(null);
+    }
+    setSubmitStatus('error');
   }
 
-  // Refresh pharmacy data to show the new submission
-  if (locationCoords) {
-    const [lat, lon] = locationCoords;
-    const refreshResponse = await fetch(`/api/pharmacies?lat=${lat}&lon=${lon}&t=${Date.now()}`);
-    const refreshedData: Report[] = await refreshResponse.json();
-    setAllReports(refreshedData);
-  }
-
-  setSubmitStatus('success');
-} else {
-  // ADD THIS ELSE BLOCK
-  // Reset Turnstile on failure to get a fresh token
-  if (turnstile && typeof turnstile.reset === 'function') {
-    turnstile.reset();
-    setTurnstileToken(null);
-  }
-  setSubmitStatus('error');
-}
-
-setIsSubmitting(false);
-
+  setIsSubmitting(false);
 };
+
+
 const SHARE_MESSAGE = "Need to find bupe? Know a pharmacies bupe availability? Help map access in our community:";
 const SHARE_URL = " https://findbupe.org"
   // --- Sharing helper ---
