@@ -4,6 +4,7 @@ import styles from '../Home.module.css';
 import Turnstile from 'react-turnstile';
 import { T } from '@/lib/i18n-markers';
 import { standardizedNoteKeys, getStandardizedNoteLabel } from '@/lib/form-options';
+import { analytics } from '@/lib/privacy-analytics';
 
 interface PharmacyData {
   osm_id: string;
@@ -183,6 +184,10 @@ export default function ManualPharmacyEntry({
     notes,
     turnstileToken
   );
+
+    // Track form submission
+  analytics.trackEvent('report-submitted', state);
+
   setIsValidating(false);
 };
 

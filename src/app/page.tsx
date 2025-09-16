@@ -115,10 +115,6 @@ export default function Home() {
     .filter(p => p.status === 'success')
     .sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()),
     [aggregatedPharmacies]);
-  // Calculate current items
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = successfulPharmacies.slice(indexOfFirstItem, indexOfLastItem);
 
   // Client-side rate limiting state
   const [lastRequestTime, setLastRequestTime] = useState(0);
@@ -754,34 +750,48 @@ const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting
               <button onClick={() => handleFilterClick(null)} className={`${styles.filterButton} ${styles.allTimeButton} ${dateFilter === null ? styles.active : ''}`}><T>All Time</T></button>
             </div>
             {/* This is the printable content container */}
-            <div className={styles.printableContent}>
-              <div className={styles.pharmacyList}>
-                {isLoadingPharmacies ? (
-                  <p><T>Loading pharmacies...</T></p>
-                ) : successfulPharmacies.length > 0 ? (
-                  <>
-                    <div className={styles.pharmacyList}>
-                      {currentItems.map(pharmacy => (
-                        <PharmacyListItem key={pharmacy.id} pharmacy={pharmacy} />
-                      ))}
+              <div className={styles.printableContent}>
+                <div className={styles.pharmacyList}>
+                  {isLoadingPharmacies ? (
+                    <p><T>Loading pharmacies...</T></p>
+                  ) : successfulPharmacies.length > 0 ? (
+                    <>
+                      <div className={styles.pharmacyList}>
+                        {successfulPharmacies.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(pharmacy => (
+                          <PharmacyListItem key={pharmacy.id} pharmacy={pharmacy} />
+                        ))}
+                      </div>
+                      <div className={styles.pagination}>
+                        <button
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                          className={styles.submitButton}
+                        >
+                          <T>Previous</T>
+                        </button>
+                        <span>
+                          <T>Page {currentPage} of {Math.ceil(successfulPharmacies.length / itemsPerPage)}</T>
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage(prev => prev + 1)}
+                          disabled={currentPage >= Math.ceil(successfulPharmacies.length / itemsPerPage)}
+                          className={styles.submitButton}
+                        >
+                          <T>Next</T>
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className={styles.noReports}>
+                      <p><T>No reports in your area. Be the first!</T></p>
+                      <button
+                        onClick={() => setMode('report')}
+                        className={styles.submitButton}
+                      >
+                        <T>Report a Pharmacy</T>
+                      </button>
                     </div>
-                    <div className={styles.pagination}>
-                      {/* Pagination controls */}
-                    </div>
-                  </>
-                ) : (
-                  <div className={styles.noReports}>
-                    <p><T>No reports in your area. Be the first!</T></p>
-                    <button
-                      onClick={() => {
-                        setMode('report');
-                      }}
-                      className={styles.submitButton}
-                    >
-                      <T>Report a Pharmacy</T>
-                    </button>
-                  </div>
-                )}
+                  )}
               </div>
               <div className={styles.printFooter}>
                 <p><T>For the latest updates, visit findbupe.org</T></p>
