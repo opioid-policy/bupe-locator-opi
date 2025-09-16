@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+import { AirtableRecord, AnalyticsData, EventType } from '@/types/airtable';
+
+
 
 export async function GET() {
   try {
@@ -30,22 +33,22 @@ export async function GET() {
     const data = await response.json();
     
     // Process analytics data for past month and all time
-    const byState: Record<string, any> = {};
-    const totals: Record<string, number> = {
-      'find-pharmacy-click': 0,
-      'report-pharmacy-click': 0,
-      'report-submitted': 0,
-      'language-switched': 0
-    };
+const byState: AnalyticsData['byState'] = {};
+const totals: AnalyticsData['totals'] = {
+  'find-pharmacy-click': 0,
+  'report-pharmacy-click': 0,
+  'report-submitted': 0,
+  'language-switched': 0
+};
     
     // Get date 30 days ago for "past month" filter
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
-    data.records?.forEach((record: any) => {
-      const eventType = record.fields.event_type;
-      const count = record.fields.count || 0;
-      const state = record.fields.state;
+  data.records?.forEach((record: AirtableRecord) => {
+     const eventType = record.fields.event_type as EventType;
+     const count = record.fields.count || 0;
+     const state = record.fields.state;
       
       if (state) {
         if (!byState[state]) {
@@ -62,8 +65,9 @@ export async function GET() {
       totals[eventType] = (totals[eventType] || 0) + count;
     });
     
-    return NextResponse.json({ byState, totals });
-  } catch (error) {
+const result: AnalyticsData = { byState, totals };
+return NextResponse.json(result); 
+ } catch (error) {
     console.error('Analytics fetch error:', error);
     return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
   }

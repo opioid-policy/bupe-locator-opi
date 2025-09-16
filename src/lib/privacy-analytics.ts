@@ -57,7 +57,7 @@ class PrivacyAnalytics {
           timestamp: Date.now()
         })
       });
-    } catch (_error) {
+    } catch {
       // Silently fail - analytics shouldn't break user experience
       console.debug('Analytics batch failed - this is ok');
     }

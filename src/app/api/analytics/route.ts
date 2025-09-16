@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { AirtableRecord, AirtableUpdateRecord, AirtableCreateRecord } from '@/types/airtable';
+
 
 async function storeAnalytics(events: Array<{event: string, state?: string}>) {
   const AIRTABLE_PERSONAL_ACCESS_TOKEN = process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN;
@@ -42,8 +44,9 @@ async function storeAnalytics(events: Array<{event: string, state?: string}>) {
     });
     
     // Update existing records or create new ones
-    const updates: any[] = [];
-    const creates: any[] = [];
+const updates: AirtableUpdateRecord[] = [];
+const creates: AirtableCreateRecord[] = [];
+
     
     // Process national counts
     for (const [eventType, count] of Object.entries(nationalCounts)) {
@@ -73,7 +76,7 @@ async function storeAnalytics(events: Array<{event: string, state?: string}>) {
     // Process state counts
     for (const [state, eventCounts] of Object.entries(stateCounts)) {
       for (const [eventType, count] of Object.entries(eventCounts)) {
-        const existing = existingRecords.find((r: any) => 
+      const existing = existingRecords.find((r: AirtableRecord) => 
           r.fields.event_type === eventType && 
           r.fields.state === state &&
           r.fields.aggregation_level === 'state'

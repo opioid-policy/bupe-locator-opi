@@ -57,7 +57,7 @@ if (lang === 'es') {
     const translations = await response.json();
     translationsCache[lang] = translations;
     return translations;
-  } catch (error) {
+  } catch {
     console.warn(`Failed to load ${lang} translations, falling back to English`);
     
     // Fallback to English
