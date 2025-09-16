@@ -3,8 +3,6 @@
 
 import Image from 'next/image';
 import styles from '../Home.module.css';
-import { T, NoTranslate } from '@/lib/i18n-markers';
-
 
 interface TrendIndicatorProps {
   trend: 'up' | 'down' | 'neutral';

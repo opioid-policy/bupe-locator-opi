@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { T, NoTranslate } from '@/lib/i18n-markers';
+import { T } from '@/lib/i18n-markers';
 
 
 // Create a separate component for the content that might use dynamic features

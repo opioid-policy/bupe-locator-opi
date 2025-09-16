@@ -6,7 +6,7 @@ import TrendIndicator from './TrendIndicator';
 // import { getDirectionsUrl } from '../lib/directions'; // <-- REMOVED this line
 import ErrorBoundary from './ErrorBoundary';
 import MapLoading from './MapLoading';
-import { T, NoTranslate } from '@/lib/i18n-markers';
+import { T } from '@/lib/i18n-markers';
 import { getStandardizedNoteLabel } from '@/lib/form-options';
 
 
@@ -172,7 +172,7 @@ const openMobileMaps = () => {
               disabled={isCallLoading}
               aria-label={`Call ${pharmacy.name}`}
             >
-              {isCallLoading ? <MapLoading /> :<T>'Call Pharmacy 📞'</T>}
+              {isCallLoading ? <MapLoading /> :<T>Call Pharmacy 📞</T>}
             </button>
           )}
           {latitude && longitude && directionsUrl && (
@@ -183,7 +183,7 @@ const openMobileMaps = () => {
                 disabled={isDirectionsLoading}
                 aria-label={`Get directions to ${pharmacy.name}`}
               >
-                {isDirectionsLoading ? <MapLoading /> : <T>'Get Directions 🚌'</T>}
+                {isDirectionsLoading ? <MapLoading /> : <T>Get Directions 🚌</T>}
               </button>
 
               {showPrivacyWarning && (

@@ -53,7 +53,6 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const lat = parseFloat(searchParams.get('lat')!);
   const lon = parseFloat(searchParams.get('lon')!);
-  const zip = searchParams.get('zip');   
 
   const cacheKey = generateCacheKey(lat, lon);
   const headers = {

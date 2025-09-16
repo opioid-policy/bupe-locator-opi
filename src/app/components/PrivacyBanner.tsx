@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import styles from './PrivacyBanner.module.css';
-import { T, NoTranslate } from '@/lib/i18n-markers';
+import { T } from '@/lib/i18n-markers';
 
 
 declare global {

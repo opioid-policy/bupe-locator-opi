@@ -1,31 +1,59 @@
+/* src/app/demo/Demo.module.css */
 .demoContainer {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 1rem;
 }
 
-.demoSection {
-  margin: 3rem 0;
-}
-
-.screenshot {
-  margin: 1rem 0;
-  border: 2px solid var(--border-color);
+.slideshow {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  overflow: hidden;
+  padding: 2rem;
+  min-height: 300px;
 }
 
-.screenshot img {
-  width: 100%;
-  height: auto;
+.slide h2 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
 }
 
-.backButton {
-  display: inline-block;
-  padding: 1rem 2rem;
+.slide ul {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.controls button {
+  padding: 0.5rem 1rem;
   background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.startButton {
+  display: block;
+  text-align: center;
+  margin-top: 2rem;
+  padding: 1rem 2rem;
+  background: var(--success-color);
   color: white;
   text-decoration: none;
   border-radius: 4px;
-  margin-top: 2rem;
+  font-weight: bold;
 }

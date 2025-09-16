@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import styles from '../Home.module.css';
 import Turnstile from 'react-turnstile';
-import { T, NoTranslate } from '@/lib/i18n-markers';
+import { T } from '@/lib/i18n-markers';
 import { standardizedNoteKeys, getStandardizedNoteLabel} from '@/lib/form-options';
 
 

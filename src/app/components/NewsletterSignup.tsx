@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'; // Add useRef
 import styles from './NewsletterSignup.module.css';
-import { T, NoTranslate } from '@/lib/i18n-markers';
+import { T } from '@/lib/i18n-markers';
 
 
 // Add global Turnstile callback

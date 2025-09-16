@@ -12,8 +12,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { sanitize } from '@/utils/sanitize';
 import { analytics } from '@/lib/privacy-analytics';
 import { getStateFromZipCode } from '@/utils/state-utils';
-import { T, NoTranslate } from '@/lib/i18n-markers';
-import { standardizedNoteKeys, standardizedNoteLabels, getStandardizedNoteLabel} from '@/lib/form-options';
+import { T } from '@/lib/i18n-markers';
+import { standardizedNoteKeys, getStandardizedNoteLabel} from '@/lib/form-options';
 
 
 const STATE_ABBR_TO_NAME: Record<string, string> = {

@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import styles from './Dashboard.module.css';
-import { T, NoTranslate } from '@/lib/i18n-markers';
-
 
 // Define types matching your Airtable structure
 type ReportType = 'success' | 'denial';

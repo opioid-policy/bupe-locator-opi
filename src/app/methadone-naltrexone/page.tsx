@@ -1,7 +1,7 @@
 // src/app/methadone-naltrexone/page.tsx
 
 import styles from '../about/About.module.css'; // UPDATED: Use the 'About' page's styles
-import { T, NoTranslate } from '@/lib/i18n-markers';
+import { T } from '@/lib/i18n-markers';
 
 export default function MethadoneNaltrexonePage() {
   return (
@@ -45,7 +45,7 @@ export default function MethadoneNaltrexonePage() {
           Find Methadone,  Naltrexone, and Long-acting Injectable Buprenorphine Treatment
         </h4>
         <p>
-         <T> If you're in the United States, we recommend SAMHSA&apos;s Treatment Locator to find programs that use these medications (they should also include folks that prescribe bupe!).</T>
+         <T> If you&apos;re in the United States, we recommend SAMHSA&apos;s Treatment Locator to find programs that use these medications (they should also include folks that prescribe bupe!).</T>
         </p>
         <a 
           href="https://www.findtreatment.gov" 

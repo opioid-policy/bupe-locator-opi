@@ -12,7 +12,7 @@ import HashNavigator from './components/HashNavigator';
 import { useTranslations } from '@/lib/i18n-client';
 import { getTextDirection } from '@/lib/i18n';
 import { useEffect } from 'react';
-import { T, NoTranslate } from '@/lib/i18n-markers';
+import { T } from '@/lib/i18n-markers';
 import TranslationNotice from './components/TranslationNotice';
 
 // Initialize fonts

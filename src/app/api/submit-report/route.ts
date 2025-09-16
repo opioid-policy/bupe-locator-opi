@@ -9,32 +9,28 @@ const AIRTABLE_HEADERS = {
 };
 
 // --- CORS Middleware ---
-const allowedOrigins = process.env.NODE_ENV === 'development' 
-  ? [/\.opioidpolicy\.org$/, 'http://localhost:3000']
-  : [/\.opioidpolicy\.org$/];
-
-
+// Simplified CORS that actually works
 function getCorsHeaders(request: NextRequest): Record<string, string> {
-  const origin = request.headers.get('origin');
-  const defaultHeaders = {
+  const origin = request.headers.get('origin') || '';
+  
+  // Always return these headers
+  const headers: Record<string, string> = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
-
-  if (!origin) return defaultHeaders;
-
-  const isAllowed = allowedOrigins.some(allowedOrigin =>
-    typeof allowedOrigin === 'string'
-      ? origin === allowedOrigin
-      : allowedOrigin.test(origin)
-  );
-
-  return isAllowed
-    ? {
-        ...defaultHeaders,
-        'Access-Control-Allow-Origin': origin,
-      }
-    : defaultHeaders;
+  
+  // In development, allow localhost
+  if (process.env.NODE_ENV === 'development' && origin.includes('localhost')) {
+    headers['Access-Control-Allow-Origin'] = origin;
+    return headers;
+  }
+  
+  // In production, allow your domains
+  if (origin.includes('opioidpolicy.org') || origin.includes('findbupe.org')) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  }
+  
+  return headers;
 }
 
 // Handle OPTIONS for preflight requests
@@ -106,6 +102,11 @@ if (!['success', 'denial'].includes(reportData.reportType)) {
     });
 
     const verificationData = await verificationResponse.json();
+      console.log('Turnstile verification:', {
+        success: verificationData?.success,
+        token: turnstileToken?.substring(0, 10) + '...',
+        env: process.env.NODE_ENV
+      });
 
     if (!verificationData?.success) {
       return new NextResponse(JSON.stringify({

@@ -1,7 +1,7 @@
 // src/app/components/MapLegend.tsx
 
 import styles from './MapLegend.module.css';
-import { T, NoTranslate } from '@/lib/i18n-markers';
+import { T } from '@/lib/i18n-markers';
 
 
 export default function MapLegend() {
