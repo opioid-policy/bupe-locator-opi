@@ -80,7 +80,7 @@ export default function RootLayout({
             </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/about" className={styles.styledLink}>
-                <T>About This Project</T>
+                <T>About</T>
               </Link>
             </p>
             <p style={{marginTop: '0.5rem'}}>

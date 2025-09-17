@@ -72,6 +72,13 @@ export default function AboutPage() {
          <T>*What About Methadone, Naltrexone, and Long Acting Injectable Bupe?</T>
           </Link>
           </p>
+
+ <hr style={{ margin: '3rem 0', border: 'none', borderTop: '1px solid var(--border-color)' }} />
+
+          <h3><T>Translations</T></h3>
+          <p>
+         <T>To increase accessibility, we are working on translating this tool into multiple languages. To be consistent with our principles, that means doing it in a privacy preserving way, but this approach is not perfect and there might be issues with the translations we use. Feel free to reach out if you see something wrong or make edits to the GitHub or Codeberg translations files for the language you are interested helping with. Just compare the English extraction file with the langauge you want to help with. If you do not know how to do that but would like to help with translations, please let us know through our contact form! If you would like more languages, also let us know!</T>
+         </p>
       </div>
     </div>
   );

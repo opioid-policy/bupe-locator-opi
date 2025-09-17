@@ -1,101 +1,100 @@
 // src/app/demo/page.tsx
 "use client";
+import React from 'react';
 import { useState } from 'react';
 import styles from './Demo.module.css';
 import Link from 'next/link';
 import { T } from '@/lib/i18n-markers';
 
-type Slide = {
-  title: string;
-  content: string;
-  subheading?: string;
-  bullets: string[];
-};
-
 export default function DemoPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  const slides: Slide[] = [
-    {
-      title: "Welcome to the Bupe Access Tool",
-      content: "This tool helps people find and report pharmacies that fill buprenorphine prescriptions.",
-      subheading: "Principles",
-      bullets: [
-        "Community-driven data",
-        "Privacy-focused design",
-        "Help others access treatment"
-      ]
-    },
-    {
-      title: "Finding Pharmacies with Bupe",
-      content: "Step 1: Enter your ZIP code",
-      bullets: [
-        "See pharmacies within 30 miles",
-        "View success/denial reports",
-        "Check recent trends",
-        "Print a list of pharmacies that have bupe in your area"
-      ]
-    },
-    {
-      title: "Reporting Your Experience",
-      content: "Step 2: Share your experience filling a buprenorphine prescription",
-      bullets: [
-        "Search for your pharmacy",
-        "Report success or denial",
-        "Add helpful notes for others"
-      ]
+  // Render slide content directly in JSX with T components
+  const renderSlide = (slideIndex: number) => {
+    switch (slideIndex) {
+      case 0:
+        return (
+          <>
+            <h2 className={styles.slideTitle}>
+              <T id="demo.slide0.title">Welcome to the Bupe Access Tool</T>
+            </h2>
+            <p className={styles.slideContent}>
+              <T id="demo.slide0.content">This tool helps people find and report pharmacies that fill buprenorphine prescriptions.</T>
+            </p>
+            <h3 className={styles.slideSubheading}>
+              <T id="demo.slide0.subheading">Principles</T>
+            </h3>
+            <ul className={styles.slideList}>
+              <li className={styles.slideListItem}><T id="demo.slide0.bullet0">Community-driven data</T></li>
+              <li className={styles.slideListItem}><T id="demo.slide0.bullet1">Privacy-focused design</T></li>
+              <li className={styles.slideListItem}><T id="demo.slide0.bullet2">Help others access treatment</T></li>
+            </ul>
+          </>
+        );
+      case 1:
+        return (
+          <>
+            <h2 className={styles.slideTitle}>
+              <T id="demo.slide1.title">Finding Pharmacies with Bupe</T>
+            </h2>
+            <p className={styles.slideContent}>
+              <T id="demo.slide1.content">Step 1: Enter your ZIP code</T>
+            </p>
+            <ul className={styles.slideList}>
+              <li className={styles.slideListItem}><T id="demo.slide1.bullet0">See pharmacies within 30 miles</T></li>
+              <li className={styles.slideListItem}><T id="demo.slide1.bullet1">View success/denial reports</T></li>
+              <li className={styles.slideListItem}><T id="demo.slide1.bullet2">Check recent trends</T></li>
+              <li className={styles.slideListItem}><T id="demo.slide1.bullet3">Print a list of pharmacies that have bupe in your area</T></li>
+            </ul>
+          </>
+        );
+      case 2:
+        return (
+          <>
+            <h2 className={styles.slideTitle}>
+              <T id="demo.slide2.title">Reporting Your Experience</T>
+            </h2>
+            <p className={styles.slideContent}>
+              <T id="demo.slide2.content">Step 2: Share your experience filling a buprenorphine prescription</T>
+            </p>
+            <ul className={styles.slideList}>
+              <li className={styles.slideListItem}><T id="demo.slide2.bullet0">Search for your pharmacy</T></li>
+              <li className={styles.slideListItem}><T id="demo.slide2.bullet1">Report success or denial</T></li>
+              <li className={styles.slideListItem}><T id="demo.slide2.bullet2">Add helpful notes for others</T></li>
+            </ul>
+          </>
+        );
+      default:
+        return null;
     }
-  ];
-
-  const currentSlideData = slides[currentSlide];
+  };
 
   return (
     <div className={styles.demoContainer}>
       <div className={styles.slideshow}>
         <div className={styles.slide}>
-          <h2 className={styles.slideTitle}>
-            <T id={`demo.slide${currentSlide}.title`}>{currentSlideData.title}</T>
-          </h2>
-          <p className={styles.slideContent}>
-            <T id={`demo.slide${currentSlide}.content`}>{currentSlideData.content}</T>
-          </p>
-          {currentSlideData.subheading && (
-            <h3 className={styles.slideSubheading}>
-              <T id={`demo.slide${currentSlide}.subheading`}>{currentSlideData.subheading}</T>
-            </h3>
-          )}
-          {currentSlideData.bullets && (
-            <ul className={styles.slideList}>
-              {currentSlideData.bullets.map((bullet, index) => (
-              <li key={`slide-${currentSlide}-bullet-${index}`}>
-                <T id={`demo.slide${currentSlide}.bullet${index}`}>{bullet}</T>
-              </li>
-              ))}
-            </ul>
-          )}
+          {renderSlide(currentSlide)}
         </div>
-
         <div className={styles.controls}>
           <button
             className={styles.controlButton}
             onClick={() => setCurrentSlide(prev => Math.max(0, prev - 1))}
             disabled={currentSlide === 0}
           >
-            ← Previous
+            <T id="demo.controls.previous">← Previous</T>
           </button>
-          <span>{currentSlide + 1} / {slides.length}</span>
+          <span>{currentSlide + 1} / 3</span>
           <button
             className={styles.controlButton}
-            onClick={() => setCurrentSlide(prev => Math.min(slides.length - 1, prev + 1))}
-            disabled={currentSlide >= slides.length - 1}
+            onClick={() => setCurrentSlide(prev => Math.min(2, prev + 1))}
+            disabled={currentSlide >= 2}
           >
-            Next →
+            <T id="demo.controls.next">Next →</T>
           </button>
         </div>
       </div>
-
       <Link href="/" className={styles.startButton}>
-        <T>Start Using the Tool</T>
+        <T id="demo.startButton">Start Using the Tool</T>
       </Link>
     </div>
   );
