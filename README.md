@@ -1,9 +1,9 @@
 # Opioid Policy Institute Bupe Locator 
 
-![Version](https://img.shields.io/badge/version-1.0.0-green)
+![Version](https://img.shields.io/badge/version-2.0.0-green)
 ![Release](https://img.shields.io/badge/release-stable-brightgreen)
 
-[**Latest Stable Release: v1.0.0 🤘**](https://github.com/opioid-policy/bupe-locator-opi/releases/tag/v1.0.0)
+[**Latest Stable Release: v2.0.0 🤘**](https://github.com/opioid-policy/bupe-locator-opi/releases/tag/v2.0.0)
 
 
 ## Technical Setup
@@ -17,8 +17,8 @@
 1. Clone the repository
 2. Copy `.env.example` to `.env.local`
 3. Fill in your API keys
-4. Run `npm install`
-5. Run `npm run dev` for development
+4. Run `pnpm install`
+5. Run `pnpm run dev` for development
 
 ### Deployment
 This project is configured for Vercel deployment.

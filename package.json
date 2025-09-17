@@ -1,7 +1,7 @@
 {
   "name": "bupe-finder",
-  "version": "1.0.0",
-  "description": "Opioid Policy Institute Bupe Locator - Stable Release v1.0.0",
+  "version": "2.0.0",
+  "description": "Opioid Policy Institute Bupe Locator - Stable Release v2.0.0",
   "author": "Opioid Policy Institute",
   "license": "GNU AGPLv3",
   "private": true,

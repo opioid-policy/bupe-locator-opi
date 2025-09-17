@@ -9,6 +9,13 @@ import { T } from '@/lib/i18n-markers';
 export default function DemoPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  const handleNextPage = () => {
+  setCurrentSlide(prev => Math.min(2, prev + 1));
+};
+
+const handlePrevPage = () => {
+  setCurrentSlide(prev => Math.max(0, prev - 1));
+};
   // Render slide content directly in JSX with T components
   const renderSlide = (slideIndex: number) => {
     switch (slideIndex) {
@@ -75,23 +82,23 @@ export default function DemoPage() {
         <div className={styles.slide}>
           {renderSlide(currentSlide)}
         </div>
-        <div className={styles.controls}>
-          <button
-            className={styles.controlButton}
-            onClick={() => setCurrentSlide(prev => Math.max(0, prev - 1))}
-            disabled={currentSlide === 0}
-          >
-            <T id="demo.controls.previous">← Previous</T>
-          </button>
-          <span>{currentSlide + 1} / 3</span>
-          <button
-            className={styles.controlButton}
-            onClick={() => setCurrentSlide(prev => Math.min(2, prev + 1))}
-            disabled={currentSlide >= 2}
-          >
-            <T id="demo.controls.next">Next →</T>
-          </button>
-        </div>
+          <div className={styles.controls}>
+            <button
+              className={styles.controlButton}
+              onClick={handlePrevPage}
+              disabled={currentSlide === 0}
+            >
+              <T id="demo.controls.previous">← Previous</T>
+            </button>
+            <span>{currentSlide + 1} / 3</span>
+            <button
+              className={styles.controlButton}
+              onClick={handleNextPage}
+              disabled={currentSlide >= 2}
+            >
+              <T id="demo.controls.next">Next →</T>
+            </button>
+          </div>
       </div>
       <Link href="/" className={styles.startButton}>
         <T id="demo.startButton">Start Using the Tool</T>
