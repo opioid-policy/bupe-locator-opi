@@ -2,6 +2,7 @@
 
 ![Version](https://img.shields.io/badge/version-2.0.0-green)
 ![Release](https://img.shields.io/badge/release-stable-brightgreen)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/opioid-policy/bupe-locator-opi)
 
 [**Latest Stable Release: v2.0.0 🤘**](https://github.com/opioid-policy/bupe-locator-opi/releases/tag/v2.0.0)
 
