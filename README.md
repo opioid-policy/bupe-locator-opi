@@ -9,6 +9,7 @@
 - Added support for multiple languages
 - Enhanced mobile experience
 - Demo mode
+- Privacy preserving analytics
 
 
 ## Technical Setup

@@ -5,6 +5,7 @@
 - Added support for multiple languages
 - Demo mode
 - Pagination for long lists
+- Privacy preserving analytics
 
 ### Fixed
 - Enhanced mobile experience
