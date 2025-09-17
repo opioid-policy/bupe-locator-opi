@@ -5,6 +5,11 @@
 
 [**Latest Stable Release: v2.0.0 🤘**](https://github.com/opioid-policy/bupe-locator-opi/releases/tag/v2.0.0)
 
+## What's New in Version 2.0
+- Added support for multiple languages
+- Enhanced mobile experience
+- Demo mode
+
 
 ## Technical Setup
 
