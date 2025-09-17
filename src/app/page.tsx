@@ -761,25 +761,25 @@ const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting
                           <PharmacyListItem key={pharmacy.id} pharmacy={pharmacy} />
                         ))}
                       </div>
-                      <div className={styles.pagination}>
-                        <button
-                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                          disabled={currentPage === 1}
-                          className={styles.submitButton}
-                        >
-                          <T>Previous</T>
-                        </button>
-                        <span>
-                          <T>Page {currentPage} of {Math.ceil(successfulPharmacies.length / itemsPerPage)}</T>
-                        </span>
-                        <button
-                          onClick={() => setCurrentPage(prev => prev + 1)}
-                          disabled={currentPage >= Math.ceil(successfulPharmacies.length / itemsPerPage)}
-                          className={styles.submitButton}
-                        >
-                          <T>Next</T>
-                        </button>
-                      </div>
+                        <div className={styles.pagination}>
+                          <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className={styles.submitButton}
+                          >
+                           <T>← Previous Page</T>
+                          </button>
+                          <span className={styles.paginationText}>
+                            {`Page ${currentPage} of ${Math.ceil(successfulPharmacies.length / itemsPerPage)}`}
+                          </span>
+                          <button
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            disabled={currentPage >= Math.ceil(successfulPharmacies.length / itemsPerPage)}
+                            className={styles.submitButton}
+                          >
+                           <T>Next Page →</T>
+                          </button>
+                        </div>
                     </>
                   ) : (
                     <div className={styles.noReports}>

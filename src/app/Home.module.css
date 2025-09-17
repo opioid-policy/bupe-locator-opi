@@ -251,7 +251,30 @@
   justify-content: center;
   align-items: center;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 2rem;
+  font-family: var(--font-family);
+}
+
+.paginationText {
+  font-size: 1rem;
+  color: var(--font-color);
+  font-weight: 500;
+}
+
+.pagination button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--button-bg-color);
+  color: var(--button-text-color);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: var(--button-hover-bg-color);
 }
 
 .pagination button:disabled {
@@ -1030,9 +1053,11 @@
   .findHeader,
   .trendLegend,
   .filterButton,
-  .backToZipLink {
+  .backToZipLink,
+  .pagination { /* Add this if you have a language selector */
     display: none !important;
   }
+
 
   /* Firefox-specific fix for blank first page */
   @-moz-document url-prefix() {

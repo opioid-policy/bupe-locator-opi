@@ -1,59 +1,140 @@
 /* src/app/demo/Demo.module.css */
+
+/* Container for the entire demo */
 .demoContainer {
-  max-width: 600px;
+  max-width: 800px;
   margin: 2rem auto;
   padding: 1rem;
+  color: var(--font-color-dark); /* Set default text color */
 }
 
+/* Slideshow container */
 .slideshow {
-  background: var(--card-background);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  background: var(--accent-cream); /* Light background */
+  border: 3px solid var(--border-color, #00ff85);
+  border-radius: 20px;
   padding: 2rem;
   min-height: 300px;
+  color: var(--font-color-dark); /* Ensure text is dark on light background */
 }
 
+/* Slide content container */
+.slide {
+  padding: 0;
+  max-width: 100%;
+  margin: 0;
+  text-align: left;
+  color: inherit; /* Inherit text color from parent */
+}
+
+/* Slide title */
 .slide h2 {
-  color: var(--primary-color);
+  font-size: 5rem; /* Increased from 3rem for better fit */
+  font-weight: 700;
+  color: var(--font-color-dark);
   margin-bottom: 1rem;
+  text-align: left;
+  line-height: 1.2;
 }
 
+/* Slide subheading (h3) */
+.slide h3 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--font-color-dark);
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+/* Slide subheading (h4) */
+.slide h4.subheading {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem 0;
+  color: var(--font-color-dark); /* Use accent color for emphasis */
+  font-style: normal;
+}
+
+/* Slide content paragraph */
+.slide p {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  color: var(--font-color-dark);
+}
+
+/* Slide list styling */
 .slide ul {
-  margin: 1rem 0;
   padding-left: 1.5rem;
+  margin: 0.5rem 0 1.5rem;
+  list-style-type: numbers;
 }
 
+/* Slide list items */
+.slide li {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0.5rem 0;
+  color: var(--font-color-dark);
+}
+
+/* Controls container */
 .controls {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  gap: 1rem;
   margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
 }
 
+/* Control buttons */
 .controls button {
   padding: 0.5rem 1rem;
-  background: var(--primary-color);
-  color: white;
-  border: none;
+  border: 1px solid var(--border-color, #00ff85);
   border-radius: 4px;
+  background-color: var(--accent-green); /* Use light background */
+  color: var(--font-color-dark); /* Dark text on light background */
   cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: background-color 0.3s;
 }
 
+/* Control buttons hover state */
+.controls button:hover:not(:disabled) {
+  background-color: var(--font-color-dark);
+  color: var(--accent-green);
+  font-weight: 500;
+  border: 2px solid var(--border-color, #00ff85);
+  border-radius: 4px; /* Use a light accent color */
+}
+
+/* Control buttons disabled state */
 .controls button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
+/* Start button styling */
 .startButton {
   display: block;
-  text-align: center;
-  margin-top: 2rem;
-  padding: 1rem 2rem;
-  background: var(--success-color);
-  color: white;
+  width: fit-content; /* Make button width fit its content */
+  margin: 2rem auto 0; /* Center horizontally and add space from controls */
+  padding: 0.75rem 1.5rem; /* Increased padding for better touch targets */
+  background-color: var(--accent-green, #4CAF50); /* Added fallback color */
+  color: var(--font-color-dark, #fff); /* Changed to white for better contrast */
+  border-radius: 0.375rem;
+  font-weight: 600;
   text-decoration: none;
-  border-radius: 4px;
-  font-weight: bold;
+  transition: all 0.2s ease-in-out;
+  text-align: center;
+}
+
+/* Start button hover state */
+.startButton:hover {
+    background-color: var(--font-color-dark);
+  color: var(--accent-green);
+  font-weight: 500;
+  border: 2px solid var(--border-color, #00ff85);
+  border-radius: 4px; /* Added fallback color */
 }

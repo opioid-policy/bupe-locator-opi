@@ -5,7 +5,7 @@ import { AirtableRecord, AirtableUpdateRecord, AirtableCreateRecord } from '@/ty
 async function storeAnalytics(events: Array<{event: string, state?: string}>) {
   const AIRTABLE_PERSONAL_ACCESS_TOKEN = process.env.AIRTABLE_PERSONAL_ACCESS_TOKEN;
   const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
-  const AIRTABLE_ANALYTICS_TABLE_NAME = process.env.AIRTABLE_ANALYTICS_TABLE_ID;
+  const AIRTABLE_ANALYTICS_TABLE_NAME = process.env.AIRTABLE_ANALYTICS_TABLE_NAME;
   
   // Get today's date for aggregation
   const today = new Date().toISOString().split('T')[0];
