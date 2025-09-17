@@ -1,7 +1,7 @@
 // src/app/demo/page.tsx
 "use client";
 import React from 'react';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import styles from './Demo.module.css';
 import Link from 'next/link';
 import { T } from '@/lib/i18n-markers';
@@ -9,13 +9,13 @@ import { T } from '@/lib/i18n-markers';
 export default function DemoPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  const handleNextPage = () => {
-  setCurrentSlide(prev => Math.min(2, prev + 1));
-};
+  const handlePrevPage = useCallback(() => {
+    setCurrentSlide(prev => Math.max(0, prev - 1));
+  }, []);
 
-const handlePrevPage = () => {
-  setCurrentSlide(prev => Math.max(0, prev - 1));
-};
+  const handleNextPage = useCallback(() => {
+    setCurrentSlide(prev => Math.min(2, prev + 1));
+  }, []);
   // Render slide content directly in JSX with T components
   const renderSlide = (slideIndex: number) => {
     switch (slideIndex) {
