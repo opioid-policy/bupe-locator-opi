@@ -28,8 +28,10 @@
 }
 
 .globeButton:hover {
-  background: var(--accent-cream);
-  color: var(--font-color-dark);
+  background: var(--font-color-dark);
+  color: var(--accent-green);
+  border: 2px solid var(--accent-green);
+  border-radius: 50px;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
@@ -74,33 +76,59 @@
 /* Language Selection Grid */
 .languageGrid {
   position: fixed;
-  bottom: 100px;
-  right: 20px;
+  bottom: 90px; /* Move up slightly to avoid keyboard overlap */
+  right: 10px; /* Bring in from edge a bit */
+  left: 10px; /* Bring in from edge a bit */
   background: var(--accent-cream);
   border: 2px solid var(--accent-green);
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   z-index: 1001;
-  min-width: 320px;
-  max-width: 90vw;
+  min-width: auto; /* Remove fixed min-width */
+  width: calc(100vw - 20px); /* Full width minus padding */
+  max-width: 300px; /* Slightly narrower max width */
   max-height: 70vh;
   overflow-y: auto;
+  margin: 0 auto; /* Center horizontally */
 }
 
-/* Mobile responsive adjustments */
+/* Update mobile responsive adjustments */
 @media (max-width: 480px) {
   .languageGrid {
-    position: fixed;
     bottom: 10px;
     left: 10px;
     right: 10px;
-    max-width: none;
-    max-height: 80vh;
+    width: auto; /* Reset width for mobile */
+    max-width: none; /* Remove max-width constraint */
   }
-  
+
   .languageSelector {
-    bottom: 10px;
+    bottom: 20px; /* Keep original positioning */
+    right: 20px;
+  }
+
+    /* Make columns stack on very small screens */
+  .languageColumns {
+    grid-template-columns: 1fr;
+  }
+
+  /* Increase touch target size on mobile */
+  .languageOption {
+    min-height: 56px; /* Larger touch target */
+    padding: 1rem 0.75rem;
+  }
+
+  /* Adjust font sizes for better mobile readability */
+  .languageName {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 600px) and (min-width: 481px) {
+  .languageGrid {
+    left: 10px;
     right: 10px;
+    width: auto;
   }
 }
 

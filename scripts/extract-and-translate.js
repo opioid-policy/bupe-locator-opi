@@ -21,7 +21,9 @@ const CONFIG = {
     { code: 'de', name: 'German', nativeName: 'Deutsch' },
     { code: 'it', name: 'Italian', nativeName: 'Italiano' },
     { code: 'pl', name: 'Polish', nativeName: 'Polski' },
-    { code: 'scn', name: 'Sicilian', nativeName: 'Sicilianu' }
+    { code: 'scn', name: 'Sicilian', nativeName: 'Sicilianu' },
+    { code: 'ru', name: 'Russian', nativeName: 'Русский' },
+    { code: 'uk', name: 'Ukrainian', nativeName: 'Українська' }
     ]
   },
   OLLAMA_HOST: 'http://localhost:11434',

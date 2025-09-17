@@ -1,83 +1,75 @@
 // src/app/demo/page.tsx
 "use client";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import styles from './Demo.module.css';
 import Link from 'next/link';
 import { T } from '@/lib/i18n-markers';
 
 type Slide = {
-  title: React.ReactNode;
-  content: React.ReactNode;
-  subheading?: React.ReactNode;
-  bullets: React.ReactNode[];
+  title: string;
+  content: string;
+  subheading?: string;
+  bullets: string[];
 };
 
 export default function DemoPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Define slides outside the component function to prevent recreation on each render
   const slides: Slide[] = [
     {
-      title: <T id="demo.welcome.title">Welcome to the Bupe Access Tool</T>,
-      content: <T id="demo.welcome.content">This tool helps people find and report pharmacies that fill buprenorphine prescriptions.</T>,
-      subheading: <T id="demo.welcome.subheading">Principles</T>,
+      title: "Welcome to the Bupe Access Tool",
+      content: "This tool helps people find and report pharmacies that fill buprenorphine prescriptions.",
+      subheading: "Principles",
       bullets: [
-        <T id="demo.welcome.bullet1" key="bullet1">Community-driven data</T>,
-        <T id="demo.welcome.bullet2" key="bullet2">Privacy-focused design</T>,
-        <T id="demo.welcome.bullet3" key="bullet3">Help others access treatment</T>
+        "Community-driven data",
+        "Privacy-focused design",
+        "Help others access treatment"
       ]
     },
     {
-      title: <T id="demo.finding.title">Finding Pharmacies</T>,
-      content: <T id="demo.finding.content">Step 1: Enter your ZIP code</T>,
+      title: "Finding Pharmacies with Bupe",
+      content: "Step 1: Enter your ZIP code",
       bullets: [
-        <T id="demo.finding.bullet1" key="bullet1">See pharmacies within 30 miles</T>,
-        <T id="demo.finding.bullet2" key="bullet2">View success/denial reports</T>,
-        <T id="demo.finding.bullet3" key="bullet3">Check recent trends</T>
+        "See pharmacies within 30 miles",
+        "View success/denial reports",
+        "Check recent trends",
+        "Print a list of pharmacies that have bupe in your area"
       ]
     },
     {
-      title: <T id="demo.reporting.title">Reporting Your Experience</T>,
-      content: <T id="demo.reporting.content">Step 2: Share if you could fill your prescription</T>,
+      title: "Reporting Your Experience",
+      content: "Step 2: Share your experience filling a buprenorphine prescription",
       bullets: [
-        <T id="demo.reporting.bullet1" key="bullet1">Search for your pharmacy</T>,
-        <T id="demo.reporting.bullet2" key="bullet2">Report success or denial</T>,
-        <T id="demo.reporting.bullet3" key="bullet3">Add helpful notes for others</T>
-      ]
-    },
-    {
-      title: <T id="demo.privacy.title">Privacy Protected</T>,
-      content: <T id="demo.privacy.content">Your privacy is our priority</T>,
-      bullets: [
-        <T id="demo.privacy.bullet1" key="bullet1">No personal information collected</T>,
-        <T id="demo.privacy.bullet2" key="bullet2">No IP address tracking</T>,
-        <T id="demo.privacy.bullet3" key="bullet3">Anonymous reporting only</T>
+        "Search for your pharmacy",
+        "Report success or denial",
+        "Add helpful notes for others"
       ]
     }
   ];
 
-  // Ensure currentSlide is within bounds
-  useEffect(() => {
-    if (currentSlide < 0) {
-      setCurrentSlide(0);
-    } else if (currentSlide >= slides.length) {
-      setCurrentSlide(slides.length - 1);
-    }
-  }, [currentSlide, slides.length]);
-
-  const currentSlideData = slides[currentSlide] || slides[0]; // Fallback to first slide if currentSlide is invalid
+  const currentSlideData = slides[currentSlide];
 
   return (
     <div className={styles.demoContainer}>
       <div className={styles.slideshow}>
         <div className={styles.slide}>
-          {currentSlideData.title && currentSlideData.title}
-          <p>{currentSlideData.content && currentSlideData.content}</p>
-          {currentSlideData.subheading && <h4 className={styles.subheading}>{currentSlideData.subheading}</h4>}
+          <h2 className={styles.slideTitle}>
+            <T id={`demo.slide${currentSlide}.title`}>{currentSlideData.title}</T>
+          </h2>
+          <p className={styles.slideContent}>
+            <T id={`demo.slide${currentSlide}.content`}>{currentSlideData.content}</T>
+          </p>
+          {currentSlideData.subheading && (
+            <h3 className={styles.slideSubheading}>
+              <T id={`demo.slide${currentSlide}.subheading`}>{currentSlideData.subheading}</T>
+            </h3>
+          )}
           {currentSlideData.bullets && (
-            <ul>
-              {Array.isArray(currentSlideData.bullets) && currentSlideData.bullets.map((bullet, index) => (
-                <li key={index}>{bullet}</li>
+            <ul className={styles.slideList}>
+              {currentSlideData.bullets.map((bullet, index) => (
+              <li key={`slide-${currentSlide}-bullet-${index}`}>
+                <T id={`demo.slide${currentSlide}.bullet${index}`}>{bullet}</T>
+              </li>
               ))}
             </ul>
           )}
@@ -85,6 +77,7 @@ export default function DemoPage() {
 
         <div className={styles.controls}>
           <button
+            className={styles.controlButton}
             onClick={() => setCurrentSlide(prev => Math.max(0, prev - 1))}
             disabled={currentSlide === 0}
           >
@@ -92,6 +85,7 @@ export default function DemoPage() {
           </button>
           <span>{currentSlide + 1} / {slides.length}</span>
           <button
+            className={styles.controlButton}
             onClick={() => setCurrentSlide(prev => Math.min(slides.length - 1, prev + 1))}
             disabled={currentSlide >= slides.length - 1}
           >

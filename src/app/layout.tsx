@@ -75,7 +75,7 @@ export default function RootLayout({
             </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/demo" className={styles.styledLink}>
-                <T>Demo Mode</T>
+                <T>How It Works</T>
               </Link>
             </p>
             <p style={{marginTop: '0.5rem'}}>
@@ -85,7 +85,7 @@ export default function RootLayout({
             </p>
             <p style={{marginTop: '0.5rem'}}>
               <Link href="/dashboard" className={styles.styledLink}>
-                <T>Check Out Our Dashboard</T>
+                <T>Dashboard</T>
               </Link>
             </p>
             <p style={{marginTop: '0.5rem'}}>
@@ -112,6 +112,16 @@ export default function RootLayout({
               <Link href="/privacy" className={styles.styledLink}>
                 <T>🔒 Privacy Info & Tips 🔒</T>
               </Link>
+            </p>
+             <p style={{marginTop: '0.5rem'}}>
+              <a 
+                href="https://opioidpolicy.fillout.com/contact-form" 
+                className={styles.styledLink}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <T>Need help?</T>
+              </a>
             </p>
             <a 
               href="https://buy.stripe.com/cN2g1p3jIdrw1W0cMM"

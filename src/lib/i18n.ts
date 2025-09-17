@@ -1,5 +1,5 @@
 // src/lib/i18n.ts - Complete translation system
-export type Language = 'en' | 'es' | 'zh' | 'tl' | 'vi' | 'ar' | 'fr' | 'ko' | 'pt' | 'he' | 'de' | 'it' | 'pl' | 'scn';
+export type Language = 'en' | 'es' | 'zh' | 'tl' | 'vi' | 'ar' | 'fr' | 'ko' | 'pt' | 'he' | 'de' | 'it' | 'pl' | 'scn' | 'ru' | 'uk';
 
 export interface LanguageConfig {
   code: Language;
@@ -23,7 +23,9 @@ export const languages: LanguageConfig[] = [
   { code: 'de', name: 'German', nativeName: 'Deutsch' },
   { code: 'it', name: 'Italian', nativeName: 'Italiano' },
   { code: 'pl', name: 'Polish', nativeName: 'Polski' },
-  { code: 'scn', name: 'Sicilian', nativeName: 'Sicilianu' }
+  { code: 'scn', name: 'Sicilian', nativeName: 'Sicilianu' },
+  { code: 'ru', name: 'Русский', nativeName: 'Русский' },
+  { code: 'uk', name: 'Українська', nativeName: 'Українська' }
 ];
 
 // Translation loading system
@@ -137,7 +139,8 @@ export function formatDateByLanguage(dateString: string, lang: Language): string
     const localeMap: Record<Language, string> = {
       en: 'en-US', es: 'es-ES', zh: 'zh-CN', tl: 'tl-PH', vi: 'vi-VN',
       ar: 'ar-SA', fr: 'fr-FR', ko: 'ko-KR', pt: 'pt-BR',
-      he: 'he-IL', de: 'de-DE', it: 'it-IT', pl: 'pl-PL', scn: 'it-IT'
+      he: 'he-IL', de: 'de-DE', it: 'it-IT', pl: 'pl-PL', 
+      scn: 'it-IT', ru: 'ru-RU', uk: 'uk-UA'
     };
     
     return date.toLocaleDateString(localeMap[lang] || 'en-US', {

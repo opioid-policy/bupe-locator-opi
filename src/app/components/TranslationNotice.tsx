@@ -20,16 +20,20 @@ export default function TranslationNotice() {
     de: 'Übersetzung in Arbeit - einige Abschnitte können auf Englisch erscheinen.',
     it: 'Traduzione in corso - alcune sezioni potrebbero apparire in inglese.',
     pl: 'Tłumaczenie w toku - niektóre sekcje mogą pojawić się po angielsku.',
-    scn: 'Traduzzioni in cursu - certi sezzioni ponnu appariri in inglisi.'
+    scn: 'Traduzzioni in cursu - certi sezzioni ponnu appariri in inglisi.',
+    ru: 'Перевод в процессе - некоторые разделы могут отображаться на английском языке.',
+    uk: 'Переклад триває - деякі розділи можуть відображатися англійською мовою.'
   };
   
   return (
     <p style={{ 
       fontStyle: 'italic', 
       opacity: 0.9,
-      marginTop: '0.5rem' 
+      marginTop: '0.5rem',
+      textAlign: 'center',
+      width: '100%'
     }}>
-      {messages[currentLang] || 'Translation in progress - some sections may appear in English.'}
+      {messages[currentLang] || 'Translation in progress - some sections may appear in English. See an issue? Let us know!'}
     </p>
   );
 }

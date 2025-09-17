@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, FormEvent, useMemo } from 'react';
+import { useState, useEffect, FormEvent, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Turnstile, { useTurnstile } from 'react-turnstile';
 import MapLoader from "./components/MapLoader";
@@ -109,6 +109,14 @@ export default function Home() {
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const handlePrevPage = useCallback(() => {
+  setCurrentPage(prev => Math.max(prev - 1, 1));
+}, []);
+
+const handleNextPage = useCallback(() => {
+  setCurrentPage(prev => prev + 1);
+}, []);
 
   const successfulPharmacies = useMemo(() =>
   Object.values(aggregatedPharmacies)
@@ -688,6 +696,7 @@ const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting
     );
   }
 
+
   return (
     <div className={styles.homeContainer}>
       {/* Only show map in 'find' mode */}
@@ -761,25 +770,25 @@ const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting
                           <PharmacyListItem key={pharmacy.id} pharmacy={pharmacy} />
                         ))}
                       </div>
-                        <div className={styles.pagination}>
-                          <button
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                            className={styles.submitButton}
-                          >
-                           <T>← Previous Page</T>
-                          </button>
-                          <span className={styles.paginationText}>
-                            {`Page ${currentPage} of ${Math.ceil(successfulPharmacies.length / itemsPerPage)}`}
-                          </span>
-                          <button
-                            onClick={() => setCurrentPage(prev => prev + 1)}
-                            disabled={currentPage >= Math.ceil(successfulPharmacies.length / itemsPerPage)}
-                            className={styles.submitButton}
-                          >
-                           <T>Next Page →</T>
-                          </button>
-                        </div>
+                       <div className={styles.pagination}>
+                        <button
+                          onClick={handlePrevPage}
+                          disabled={currentPage === 1}
+                          className={styles.submitButton}
+                        >
+                          <T>← Previous Page</T>
+                        </button>
+                        <span className={styles.paginationText}>
+                          {`Page ${currentPage} of ${Math.ceil(successfulPharmacies.length / itemsPerPage)}`}
+                        </span>
+                        <button
+                          onClick={handleNextPage}
+                          disabled={currentPage >= Math.ceil(successfulPharmacies.length / itemsPerPage)}
+                          className={styles.submitButton}
+                        >
+                          <T>Next Page →</T>
+                        </button>
+                      </div>
                     </>
                   ) : (
                     <div className={styles.noReports}>

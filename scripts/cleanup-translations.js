@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const languages = ['zh', 'tl', 'vi', 'ar', 'fr', 'ko', 'pt', 'he', 'de', 'it', 'pl', 'scn'];
+const languages = ['zh', 'tl', 'vi', 'ar', 'fr', 'ko', 'pt', 'he', 'de', 'it', 'pl', 'scn', 'ru', 'uk'];
 
 languages.forEach(lang => {
   const filePath = path.join(process.cwd(), 'src/translations', `${lang}.json`);
