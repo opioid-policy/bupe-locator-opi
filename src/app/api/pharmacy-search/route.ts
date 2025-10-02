@@ -152,7 +152,7 @@ function deduplicatePharmacies(results: NominatimSearchResult[]): NominatimSearc
 // GET endpoint for pharmacy search
 export async function GET(request: Request) {
   const corsHeaders = {
-    'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN || 'https://bupe.opioidpolicy.org',
+    'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN || 'https://findbupe.org',
     'Access-Control-Allow-Methods': 'GET, POST',
     'Content-Type': 'application/json',
   };
@@ -245,7 +245,7 @@ const endpoint = `https://nominatim.openstreetmap.org/search?` +
 
     const response = await fetch(endpoint, {
       headers: {
-        'User-Agent': 'BupeLocator/1.0 (https://bupe.opioidpolicy.org; contact@opioidpolicy.org)',
+        'User-Agent': 'BupeLocator/1.0 (https://findbupe.org; contact@opioidpolicy.org)',
         'Accept': 'application/json'
       },
       signal: AbortSignal.timeout(5000)
@@ -373,7 +373,7 @@ const deduplicated = deduplicatePharmacies(pharmacyResults);
 // POST endpoint for pharmacy details
 export async function POST(request: Request) {
   const corsHeaders = {
-    'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN || 'https://bupe.opioidpolicy.org',
+    'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN || 'https://findbupe.org',
     'Access-Control-Allow-Methods': 'GET, POST',
     'Content-Type': 'application/json',
   };
@@ -485,7 +485,7 @@ extratags=1`;
 
     const response = await fetch(endpoint, {
       headers: {
-        'User-Agent': 'BupeLocator/1.0 (https://bupe.opioidpolicy.org; contact@opioidpolicy.org)',
+        'User-Agent': 'BupeLocator/1.0 (https://findbupe.org; contact@opioidpolicy.org)',
         'Accept': 'application/json'
       },
       signal: AbortSignal.timeout(5000)

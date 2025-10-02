@@ -14,6 +14,7 @@ import { getTextDirection } from '@/lib/i18n';
 import { useEffect } from 'react';
 import { T } from '@/lib/i18n-markers';
 import TranslationNotice from './components/TranslationNotice';
+import NewsletterSignup from './components/NewsletterSignup';
 
 // Initialize fonts
 const raleway = Raleway({
@@ -63,9 +64,12 @@ export default function RootLayout({
             <p><T>We only have data on bupe availability that has been reported to this database.</T></p>
             <p><T>This tool is not a guarantee of service. This data is not comprehensive.</T></p>
             <TranslationNotice />
+             <div style={{marginTop: '1.5rem', width: '100%', maxWidth: '500px'}}>
+             <NewsletterSignup />
+            </div>
             <p style={{marginTop: '0.5rem'}}>
               <a 
-                href="https://bupe.opioidpolicy.org" 
+                href="https://findbupe.org" 
                 className={styles.styledLink}
                 target="_blank"
                 rel="noopener noreferrer"

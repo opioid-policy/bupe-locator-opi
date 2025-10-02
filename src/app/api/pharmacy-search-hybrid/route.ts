@@ -265,7 +265,7 @@ function similarPharmacy(a: SearchSuggestion, b: SearchSuggestion): boolean {
 // ============= MAIN ENDPOINT =============
 export async function GET(request: Request) {
   const corsHeaders = {
-    'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN || 'https://bupe.opioidpolicy.org',
+    'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN || 'https://findbupe.org',
     'Access-Control-Allow-Methods': 'GET, POST'
   };
 

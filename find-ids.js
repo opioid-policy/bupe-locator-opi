@@ -30,7 +30,7 @@ async function geocodeWithNominatim(address) {
   try {
     const response = await fetch(endpoint, {
       headers: {
-        'User-Agent': 'BupeLocator-BulkUpload/1.0 (https://bupe.opioidpolicy.org; contact@opioidpolicy.org)',
+        'User-Agent': 'BupeLocator-BulkUpload/1.0 (https://findbupe.org; contact@opioidpolicy.org)',
         'Accept': 'application/json'
       }
     });

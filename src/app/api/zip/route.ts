@@ -74,7 +74,7 @@ export async function GET(request: Request) {
     
     const response = await fetch(endpoint, {
       headers: {
-        'User-Agent': 'BupeLocator/1.0 (https://bupe.opioidpolicy.org; code@opioidpolicy.org)',
+        'User-Agent': 'BupeLocator/1.0 (https://findbupe.org; code@opioidpolicy.org)',
         'Accept': 'application/json'
       }
     });

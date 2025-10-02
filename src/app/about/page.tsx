@@ -69,7 +69,7 @@ export default function AboutPage() {
           </p>
           <p>
          <T>We don&apos;t favor any approach to treating opioid addiction besides evidence-based approaches. Learn more about why this project is about bupe on this page:</T> <Link href="/methadone-naltrexone" className={styles.styledLink}>
-         <T>*What About Methadone, Naltrexone, and Long Acting Injectable Bupe?</T>
+         <T>*What About Methadon and Naltrexone?</T>
           </Link>
           </p>
 
