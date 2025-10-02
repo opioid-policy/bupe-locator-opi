@@ -123,12 +123,6 @@ export default function Home({
   setCurrentPage(prev => Math.max(prev - 1, 1));
 }, []);
 
-const [resolvedSearchParams, setResolvedSearchParams] = useState<{ [key: string]: string | string[] | undefined }>({});
-
-// Add this useEffect to resolve the searchParams Promise
-useEffect(() => {
-  searchParams.then(params => setResolvedSearchParams(params));
-}, [searchParams]);
 
 const handleNextPage = useCallback(() => {
   setCurrentPage(prev => prev + 1);
