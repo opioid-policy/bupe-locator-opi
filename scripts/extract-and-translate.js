@@ -23,7 +23,10 @@ const CONFIG = {
     { code: 'pl', name: 'Polish', nativeName: 'Polski' },
     { code: 'scn', name: 'Sicilian', nativeName: 'Sicilianu' },
     { code: 'ru', name: 'Russian', nativeName: 'Русский' },
-    { code: 'uk', name: 'Ukrainian', nativeName: 'Українська' }
+    { code: 'uk', name: 'Ukrainian', nativeName: 'Українська' },
+    { code: 'hmn', name: 'Hmong', nativeName: 'Hmoob' },
+    { code: 'so', name: 'Somali', nativeName: 'Soomaali' },
+    { code: 'prs', name: 'Dari', nativeName: 'دری', rtl: true }
     ]
   },
   OLLAMA_HOST: 'http://localhost:11434',
@@ -48,6 +51,8 @@ const CONFIG = {
     'methadone',
     'naltrexone',
     'suboxone',
+    'sublocade',
+    'brixadi',
     'zubsolv',
     'API',
     'URL',

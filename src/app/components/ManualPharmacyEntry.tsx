@@ -48,7 +48,10 @@ const US_STATES = [
 
 const formulationOptions = [
 'Suboxone (film)', 'Buprenorphine/Naloxone (film; generic)', 'Buprenorphine/Naloxone (tablet; generic)', 
-'Buprenorphine (tablet; mono product; generic)', 'Zubsolv (tablet)'
+'Buprenorphine (tablet; mono product; generic)', 'Zubsolv (tablet)',   'Sublocade shot (fills prescription)',
+  'Sublocade shot (gives shot)',
+  'Brixadi shot (fills prescription)',
+  'Brixadi shot (gives shot)'
 ];
 
 // Sanitize input to prevent XSS

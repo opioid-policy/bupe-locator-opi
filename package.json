@@ -14,7 +14,6 @@
     "ai-translate": "node scripts/ai-translate.js",
     "translate": "npm run extract-text && npm run ai-translate",
     "translate-dev": "npm run translate && npm run dev"
-
   },
   "dependencies": {
     "axios": "^1.11.0",
@@ -31,7 +30,8 @@
     "react-dom": "^19.1.1",
     "react-leaflet": "^5.0.0",
     "react-leaflet-markercluster": "^5.0.0-rc.0",
-    "react-turnstile": "^1.1.4"
+    "react-turnstile": "^1.1.4",
+    "zip-state": "^1.0.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

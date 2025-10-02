@@ -155,8 +155,20 @@ function isValidUSState(state: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    // No IP logging, no user agent, no fingerprinting
-    const body = await request.json();
+    // Check if request has a body
+    const contentType = request.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      return NextResponse.json({ success: true }); // Silently ignore non-JSON requests
+    }
+
+    // Try to read the body text first
+    const text = await request.text();
+    if (!text || text.trim() === '') {
+      return NextResponse.json({ success: true }); // Silently ignore empty requests
+    }
+
+    // Now parse the JSON
+    const body = JSON.parse(text);
     const { events = [], timestamp } = body;
     
     // Basic rate limiting: reject if too many events at once
@@ -170,8 +182,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Filter and validate events
-const validEvents = events.filter((event: { event: string; state?: string }) => {
-        const allowedEvents = [
+    const validEvents = events.filter((event: { event: string; state?: string }) => {
+      const allowedEvents = [
         'find-pharmacy-click',
         'report-pharmacy-click',
         'report-submitted',
@@ -194,6 +206,6 @@ const validEvents = events.filter((event: { event: string; state?: string }) => 
   } catch (error) {
     console.error('Analytics error:', error);
     // Generic error response (no details)
-    return NextResponse.json({ error: 'Failed' }, { status: 500 });
+    return NextResponse.json({ success: true }); // Changed to success to avoid console spam
   }
 }

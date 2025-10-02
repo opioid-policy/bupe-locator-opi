@@ -65,7 +65,10 @@ interface DashboardData {
 
 // Define these constants directly in the file
 const formulationOptions = [
-'Suboxone (film)', 'Buprenorphine/Naloxone (film; generic)', 'Buprenorphine/Naloxone (tablet; generic)', 'Buprenorphine (tablet; mono product; generic)', 'Zubsolv (tablet)'
+'Suboxone (film)', 'Buprenorphine/Naloxone (film; generic)', 'Buprenorphine/Naloxone (tablet; generic)', 'Buprenorphine (tablet; mono product; generic)', 'Zubsolv (tablet)',   'Sublocade shot (fills prescription)',
+  'Sublocade shot (gives shot)',
+  'Brixadi shot (fills prescription)',
+  'Brixadi shot (gives shot)'
 ];
 
 const standardizedNoteOptions = [

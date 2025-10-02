@@ -14,6 +14,7 @@ import { analytics } from '@/lib/privacy-analytics';
 import { getStateFromZipCode } from '@/utils/state-utils';
 import { T } from '@/lib/i18n-markers';
 import { standardizedNoteKeys, getStandardizedNoteLabel} from '@/lib/form-options';
+import { SponsorLogo } from "@/app/components/SponsorLogo";
 
 
 const STATE_ABBR_TO_NAME: Record<string, string> = {
@@ -80,8 +81,16 @@ interface Report {
   phoneNumber: string;
   standardizedNotes: string[];
 }
-const formulationOptions = [ 'Suboxone (film)', 'Buprenorphine/Naloxone (film; generic)', 'Buprenorphine/Naloxone (tablet; generic)', 'Buprenorphine (tablet; mono product; generic)', 'Zubsolv (tablet)' ];
-export default function Home() {
+const formulationOptions = [ 'Suboxone (film)', 'Buprenorphine/Naloxone (film; generic)', 'Buprenorphine/Naloxone (tablet; generic)', 'Buprenorphine (tablet; mono product; generic)', 'Zubsolv (tablet)',
+  'Sublocade shot (fills prescription)',
+  'Sublocade shot (gives shot)',
+  'Brixadi shot (fills prescription)',
+  'Brixadi shot (gives shot)' ];
+export default function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const [zipCode, setZipCode] = useState("");
   const [locationCoords, setLocationCoords] = useState<Coords | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
@@ -113,6 +122,13 @@ export default function Home() {
   const handlePrevPage = useCallback(() => {
   setCurrentPage(prev => Math.max(prev - 1, 1));
 }, []);
+
+const [resolvedSearchParams, setResolvedSearchParams] = useState<{ [key: string]: string | string[] | undefined }>({});
+
+// Add this useEffect to resolve the searchParams Promise
+useEffect(() => {
+  searchParams.then(params => setResolvedSearchParams(params));
+}, [searchParams]);
 
 const handleNextPage = useCallback(() => {
   setCurrentPage(prev => prev + 1);
@@ -692,6 +708,7 @@ const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting
             <T>Find a Bupe-Friendly Pharmacy</T>
             </button>
         </div>
+        <SponsorLogo zipCode={zipCode} />
       </div>
     );
   }

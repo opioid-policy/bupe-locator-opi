@@ -74,8 +74,8 @@ const handleLanguageChange = async (newLang: Language) => {
   const currentLanguage = languages.find(l => l.code === currentLang);
 
   // Split languages into two columns for better mobile UX
-  const leftColumn = languages.slice(0, 8);
-  const rightColumn = languages.slice(8);
+  const leftColumn = languages.slice(0, 10);
+  const rightColumn = languages.slice(10);
 
   return (
     <div className={styles.languageSelector} ref={selectorRef}>
