@@ -72,8 +72,8 @@ const handleSubmit = async (e: React.FormEvent) => {
     const checkToken = setInterval(() => {
       if (turnstileToken) {
         clearInterval(checkToken);
-        // Token received, retry submit
-        handleSubmit(e);
+        // Token received, retry submit - void operator tells linter we're intentionally not awaiting
+        void handleSubmit(e);
       }
     }, 100);
     
