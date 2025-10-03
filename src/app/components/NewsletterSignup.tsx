@@ -70,14 +70,14 @@ export default function NewsletterSignup({ className }: NewsletterSignupProps) {
   const canSubmit = email && consent && !isSubmitting;
 
   // Turnstile callbacks defined outside JSX for performance
-  const handleTurnstileVerify = (token: string) => {
+  function handleTurnstileVerify(token: string) {
     setTurnstileToken(token);
-  };
+  }
 
-  const handleTurnstileError = () => {
+  function handleTurnstileError() {
     setStatus('error');
     setMessage('Security check failed. Please refresh and try again.');
-  };
+  }
 
   return (
     <div className={`${styles.newsletterContainer} ${className || ''}`}>
