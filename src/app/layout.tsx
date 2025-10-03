@@ -6,6 +6,7 @@ import { Raleway, Merriweather } from 'next/font/google';
 import styles from "./Layout.module.css";
 import PrivacyBanner from './components/PrivacyBanner';
 import LanguageSelector from './components/LanguageSelector';
+import "./globals.css";
 import ScrollToTop from './components/ScrollToTop';
 import HashNavigator from './components/HashNavigator';
 import { useTranslations } from '@/lib/i18n-client';

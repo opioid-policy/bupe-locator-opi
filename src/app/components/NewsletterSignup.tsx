@@ -73,7 +73,12 @@ const handleSubmit = async (e: React.FormEvent) => {
       if (turnstileToken) {
         clearInterval(checkToken);
         // Token received, retry submit - void operator tells linter we're intentionally not awaiting
-        void handleSubmit(e);
+        handleSubmit(e).catch(error => {
+          console.error('Newsletter retry submission error:', error);
+          setIsSubmitting(false);
+          setStatus('error');
+          setMessage('An error occurred. Please try again.');
+        });
       }
     }, 100);
     
