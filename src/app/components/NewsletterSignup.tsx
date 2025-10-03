@@ -69,6 +69,16 @@ export default function NewsletterSignup({ className }: NewsletterSignupProps) {
 
   const canSubmit = email && consent && !isSubmitting;
 
+  // Turnstile callbacks defined outside JSX for performance
+  const handleTurnstileVerify = (token: string) => {
+    setTurnstileToken(token);
+  };
+
+  const handleTurnstileError = () => {
+    setStatus('error');
+    setMessage('Security check failed. Please refresh and try again.');
+  };
+
   return (
     <div className={`${styles.newsletterContainer} ${className || ''}`}>
       <h3 className={styles.title}>
@@ -110,11 +120,8 @@ export default function NewsletterSignup({ className }: NewsletterSignupProps) {
         {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? (
           <Turnstile
             sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-            onVerify={(token) => setTurnstileToken(token)}
-            onError={() => {
-              setStatus('error');
-              setMessage('Security check failed. Please refresh and try again.');
-            }}
+            onVerify={handleTurnstileVerify}
+            onError={handleTurnstileError}
             theme="light"
           />
         ) : (
