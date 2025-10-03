@@ -67,7 +67,7 @@ export default function NewsletterSignup({ className }: NewsletterSignupProps) {
     }
   };
 
-  const canSubmit = email && consent && turnstileToken && !isSubmitting;
+const canSubmit = email && consent && !isSubmitting;
 
   return (
     <div className={`${styles.newsletterContainer} ${className || ''}`}>
