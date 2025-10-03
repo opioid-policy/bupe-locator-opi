@@ -23,11 +23,30 @@ export default function NewsletterSignup({ className }: NewsletterSignupProps) {
     
     if (!email || !consent || isSubmitting) return;
 
-    // Check if we have a turnstile token
+    // If we don't have a token yet, we need to trigger the invisible widget
     if (!turnstileToken) {
-      setStatus('error');
-      setMessage('Security check failed. Please refresh and try again.');
+      // The invisible widget should auto-execute, but let's set a waiting state
+      setIsSubmitting(true);
+      setStatus('idle');
+      
+      // The onVerify callback will set the token and we need to retry submission
+      // Set a timeout to show error if token doesn't arrive
+      const timeoutId = setTimeout(() => {
+        if (!turnstileToken) {
+          setIsSubmitting(false);
+          setStatus('error');
+          setMessage('Security check timed out. Please refresh and try again.');
+        }
+      }, 10000); // 10 second timeout
+
+      // Store the timeout ID so we can clear it
+      (window as any).newsletterTurnstileTimeout = timeoutId;
       return;
+    }
+
+    // Clear any existing timeout
+    if ((window as any).newsletterTurnstileTimeout) {
+      clearTimeout((window as any).newsletterTurnstileTimeout);
     }
 
     setIsSubmitting(true);
@@ -111,13 +130,15 @@ const canSubmit = email && consent && !isSubmitting;
           <div className={styles.turnstileContainer}>
             <Turnstile
               sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-              onVerify={(token) => setTurnstileToken(token)}
-              onError={() => {
-                // Only show error if user actually tried to submit
+              onVerify={(token) => {
+                setTurnstileToken(token);
+                // If we're in submitting state, retry the submit now that we have token
                 if (isSubmitting) {
-                  setStatus('error');
-                  setMessage('Security check failed. Please refresh and try again.');
-                  setIsSubmitting(false);
+                  // Trigger form submission by creating a synthetic event
+                  const form = document.querySelector('form');
+                  if (form) {
+                    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                  }
                 }
               }}
               onExpire={() => setTurnstileToken(null)}
