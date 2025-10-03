@@ -1,24 +1,25 @@
 # Opioid Policy Institute Bupe Locator 
 
-![Version](https://img.shields.io/badge/version-2.0.0-green)
+![Version](https://img.shields.io/badge/version-2.1-green)
 ![Release](https://img.shields.io/badge/release-stable-brightgreen)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/opioid-policy/bupe-locator-opi)
 
-[**Latest Stable Release: v2.0.0 🤘**](https://github.com/opioid-policy/bupe-locator-opi/releases/tag/v2.0.0)
+[**Latest Stable Release: v2.1 🤘**](https://github.com/opioid-policy/bupe-locator-opi/releases/tag/v2.1)
 
-## What's New in Version 2.0
-- Added support for multiple languages
-- Enhanced mobile experience
-- Demo mode
-- Privacy preserving analytics
+## What's New in Version 2.1
+- More languages
+- Long-acting injectable bupe as an option
+- Responsive collaborator logos
 
 
 ## Technical Setup
 
 ### Prerequisites
 - Node.js 18+ 
-- npm or yarn
+- pnpm
 - Accounts: Airtable, Cloudflare Turnstile, Vercel, GitHub, Codeberg, Cloudflare DNS
+- Git
+- IDE (I use VS Code)
 
 ### Installation
 1. Clone the repository
