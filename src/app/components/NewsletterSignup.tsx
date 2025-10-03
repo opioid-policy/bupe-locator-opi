@@ -23,30 +23,11 @@ export default function NewsletterSignup({ className }: NewsletterSignupProps) {
     
     if (!email || !consent || isSubmitting) return;
 
-    // If we don't have a token yet, we need to trigger the invisible widget
+    // Check if we have a turnstile token
     if (!turnstileToken) {
-      // The invisible widget should auto-execute, but let's set a waiting state
-      setIsSubmitting(true);
-      setStatus('idle');
-      
-      // The onVerify callback will set the token and we need to retry submission
-      // Set a timeout to show error if token doesn't arrive
-      const timeoutId = setTimeout(() => {
-        if (!turnstileToken) {
-          setIsSubmitting(false);
-          setStatus('error');
-          setMessage('Security check timed out. Please refresh and try again.');
-        }
-      }, 10000); // 10 second timeout
-
-      // Store the timeout ID so we can clear it
-      (window as any).newsletterTurnstileTimeout = timeoutId;
+      setStatus('error');
+      setMessage('Security check failed. Please refresh and try again.');
       return;
-    }
-
-    // Clear any existing timeout
-    if ((window as any).newsletterTurnstileTimeout) {
-      clearTimeout((window as any).newsletterTurnstileTimeout);
     }
 
     setIsSubmitting(true);
@@ -86,7 +67,7 @@ export default function NewsletterSignup({ className }: NewsletterSignupProps) {
     }
   };
 
-const canSubmit = email && consent && !isSubmitting;
+  const canSubmit = email && consent && !isSubmitting;
 
   return (
     <div className={`${styles.newsletterContainer} ${className || ''}`}>
@@ -125,27 +106,17 @@ const canSubmit = email && consent && !isSubmitting;
           </label>
         </div>
 
-        {/* Turnstile widget - using the proper react-turnstile component */}
+        {/* Turnstile widget - matches your working ManualPharmacyEntry pattern */}
         {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? (
-          <div className={styles.turnstileContainer}>
-            <Turnstile
-              sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-              onVerify={(token) => {
-                setTurnstileToken(token);
-                // If we're in submitting state, retry the submit now that we have token
-                if (isSubmitting) {
-                  // Trigger form submission by creating a synthetic event
-                  const form = document.querySelector('form');
-                  if (form) {
-                    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-                  }
-                }
-              }}
-              onExpire={() => setTurnstileToken(null)}
-              theme="light"
-              size="invisible"
-            />
-          </div>
+          <Turnstile
+            sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+            onVerify={(token) => setTurnstileToken(token)}
+            onError={() => {
+              setStatus('error');
+              setMessage('Security check failed. Please refresh and try again.');
+            }}
+            theme="light"
+          />
         ) : (
           <div className={styles.errorMessage}>
             Security configuration error. Please contact support.
