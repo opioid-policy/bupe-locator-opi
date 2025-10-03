@@ -168,6 +168,19 @@ const openMobileMaps = () => {
                 })}
               </div>
             )}
+            {pharmacy.formulations && pharmacy.formulations.length > 0 && (
+              <div className={styles.tagContainer} style={{ marginTop: '0.5rem' }}>
+                {pharmacy.formulations.map((formulation, index) => (
+                  <span key={`${formulation}-${index}`} className={styles.tag} style={{ 
+                    backgroundColor: '#d4edda', 
+                    color: '#155724',
+                    borderLeft: '3px solid #28a745'
+                  }}>
+                    {formulation}
+                  </span>
+                ))}
+              </div>
+            )}
         </div>
         <div className={styles.listItemActions}>
           {pharmacy.phone_number && (

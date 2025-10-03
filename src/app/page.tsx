@@ -63,6 +63,7 @@ export interface AggregatedPharmacy {
   state?: string;  
   zip?: number;  
   standardizedNotes: string[];
+  formulations: string[];
   trend: 'up' | 'down' | 'neutral';
 }
 
@@ -80,6 +81,7 @@ interface Report {
   zipCode: string;
   phoneNumber: string;
   standardizedNotes: string[];
+  formulations: string[];
 }
 const formulationOptions = [ 'Suboxone (film)', 'Buprenorphine/Naloxone (film; generic)', 'Buprenorphine/Naloxone (tablet; generic)', 'Buprenorphine (tablet; mono product; generic)', 'Zubsolv (tablet)',
   'Sublocade shot (fills prescription)',
@@ -348,22 +350,23 @@ useEffect(() => {
       // Create the full address string
       const fullAddress = `${report.streetAddress}, ${report.city}, ${report.state} ${report.zipCode}`;
       
-      summary[report.pharmacyId] = {
-        id: report.pharmacyId,  // Use 'id' not 'pharmacyId'
-        name: report.pharmacyName,  // Use 'name' not 'pharmacyName'
-        coords: [report.latitude, report.longitude],
-        status: 'denial',
-        successCount: 0,
-        denialCount: 0,
-        lastUpdated: report.submissionTime,
-        full_address: fullAddress,  // Use 'full_address' not separate fields
-        phone_number: report.phoneNumber,  // Use 'phone_number' not 'phoneNumber'
-        city: report.city,  // Add city
-        state: report.state,  // Add state
-        zip: parseInt(report.zipCode, 10),  // Add zip as number
-        standardizedNotes: [],
-        trend: 'neutral',
-      };
+        summary[report.pharmacyId] = {
+          id: report.pharmacyId,  // Use 'id' not 'pharmacyId'
+          name: report.pharmacyName,  // Use 'name' not 'pharmacyName'
+          coords: [report.latitude, report.longitude],
+          status: 'denial',
+          successCount: 0,
+          denialCount: 0,
+          lastUpdated: report.submissionTime,
+          full_address: fullAddress,  // Use 'full_address' not separate fields
+          phone_number: report.phoneNumber,  // Use 'phone_number' not 'phoneNumber'
+          city: report.city,  // Add city
+          state: report.state,  // Add state
+          zip: parseInt(report.zipCode, 10),  // Add zip as number
+          standardizedNotes: [],
+          formulations: [],
+          trend: 'neutral',
+        };
       pharmacyNotesWithTime[report.pharmacyId] = [];
     }
     
@@ -386,6 +389,13 @@ useEffect(() => {
           timestamp: report.submissionTime,
           reportType: report.reportType
         });
+      });
+    }
+     if (report.formulations && report.formulations.length > 0) {
+      report.formulations.forEach(formulation => {
+        if (!summary[report.pharmacyId].formulations.includes(formulation)) {
+          summary[report.pharmacyId].formulations.push(formulation);
+        }
       });
     }
   }

@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
         'pharmacy_id', 'pharmacy_name', 'report_type',
         'latitude', 'longitude', 'submission_time',
         'street_address', 'city', 'state', 'zip_code',
-        'phone_number', 'standardized_notes'
+        'phone_number', 'standardized_notes', 'formulation'
       ]
     });
 
@@ -85,6 +85,7 @@ export async function GET(request: NextRequest) {
       zipCode: record.fields.zip_code as string,
       phoneNumber: record.fields.phone_number as string,
       standardizedNotes: (record.fields.standardized_notes as string[]) || [],
+      formulations: (record.fields.formulation as string[]) || [],
       distance: 0,
     }));
 
