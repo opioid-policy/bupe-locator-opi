@@ -54,16 +54,39 @@ const handleSubmit = async (e: React.FormEvent) => {
   
   if (!email || !consent || isSubmitting) return;
 
-  // If no turnstile token yet, the invisible widget should auto-execute
-  // Just wait for the token (it should execute automatically on form submit)
+  // Wait for Turnstile token with invisible widget
   if (!turnstileToken) {
-    // Give Turnstile a moment to execute
+    setIsSubmitting(true);
+    setStatus('idle');
+    
+    // Manually trigger Turnstile execution if available
+    if (window.turnstile) {
+      try {
+        window.turnstile.execute();
+      } catch (error) {
+        console.error('Turnstile execute error:', error);
+      }
+    }
+    
+    // Wait for token with longer timeout for invisible widget
+    const checkToken = setInterval(() => {
+      if (turnstileToken) {
+        clearInterval(checkToken);
+        // Token received, retry submit
+        handleSubmit(e);
+      }
+    }, 100);
+    
+    // Safety timeout after 5 seconds
     setTimeout(() => {
+      clearInterval(checkToken);
       if (!turnstileToken) {
+        setIsSubmitting(false);
         setStatus('error');
         setMessage('Security check failed. Please refresh and try again.');
       }
-    }, 3000);
+    }, 5000);
+    
     return;
   }
 
