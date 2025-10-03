@@ -109,7 +109,7 @@ export default function RootLayout({
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <T>News</T>
+                <T>News!</T>
               </a>
             </p>
             <p style={{marginTop: '0.5rem'}}>
