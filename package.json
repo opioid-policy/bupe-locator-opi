@@ -16,6 +16,7 @@
     "translate-dev": "npm run translate && npm run dev"
   },
   "dependencies": {
+    "@google-cloud/translate": "^9.2.0",
     "axios": "^1.11.0",
     "canvas-confetti": "^1.9.3",
     "dompurify": "^3.2.6",
