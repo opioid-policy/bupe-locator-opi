@@ -113,8 +113,12 @@ export default function NewsletterSignup({ className }: NewsletterSignupProps) {
               sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
               onVerify={(token) => setTurnstileToken(token)}
               onError={() => {
-                setStatus('error');
-                setMessage('Security check failed. Please refresh and try again.');
+                // Only show error if user actually tried to submit
+                if (isSubmitting) {
+                  setStatus('error');
+                  setMessage('Security check failed. Please refresh and try again.');
+                  setIsSubmitting(false);
+                }
               }}
               onExpire={() => setTurnstileToken(null)}
               theme="light"
