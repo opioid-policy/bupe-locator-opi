@@ -104,12 +104,12 @@ export default function RootLayout({
             </p>
             <p style={{marginTop: '0.5rem'}}>
               <a 
-                href="https://news.opioidpolicy.org/#/portal" 
+                href="https://news.opioidpolicy.org/tag/find-bupe/" 
                 className={styles.styledLink}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <T>Join Our Newsletter</T>
+                <T>News</T>
               </a>
             </p>
             <p style={{marginTop: '0.5rem'}}>
