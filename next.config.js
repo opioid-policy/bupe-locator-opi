@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
+  // Pin the workspace root so Turbopack never infers a parent folder
+  // (this repo lives inside a synced Drive tree with other lockfiles).
+  turbopack: { root: __dirname },
+
   // Add react-leaflet transpilation
   transpilePackages: ['react-leaflet', '@react-leaflet/core'],
   

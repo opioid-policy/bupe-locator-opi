@@ -66,3 +66,5 @@ Thumbs.db
 # Cache files
 /tmp/
 *.cache
+# local Claude Code launch config
+.claude/

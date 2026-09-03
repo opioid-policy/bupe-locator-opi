@@ -1,12 +1,13 @@
 # Opioid Policy Institute Bupe Locator 
 
-![Version](https://img.shields.io/badge/version-2.1-green)
+![Version](https://img.shields.io/badge/version-2.1.1-green)
 ![Release](https://img.shields.io/badge/release-stable-brightgreen)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/opioid-policy/bupe-locator-opi)
 
-[**Latest Stable Release: v2.1 🤘**](https://github.com/opioid-policy/bupe-locator-opi/releases/tag/v2.1)
+[**Latest Stable Release: v2.1 🤘**](https://github.com/opioid-policy/bupe-locator-opi/releases/tag/v2.1.1)
 
-## What's New in Version 2.1
+## What's New in Version 2.1.1
+- Patch next.js & react for 12.3.25 vulnerability
 - More languages
 - Long-acting injectable bupe as an option
 - Responsive collaborator logos
@@ -15,7 +16,7 @@
 ## Technical Setup
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 24 (Vercel runs Node 24.x; Node 20 is end-of-life)
 - pnpm
 - Accounts: Airtable, Cloudflare Turnstile, Vercel, GitHub, Codeberg, Cloudflare DNS
 - Git
