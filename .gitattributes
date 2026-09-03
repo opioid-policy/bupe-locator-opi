@@ -24,3 +24,5 @@
 *.woff2 binary
 *.ttf binary
 *.eot binary
+# Vendored upstream chrome: keep byte-for-byte, no EOL conversion
+public/opi/** -text
