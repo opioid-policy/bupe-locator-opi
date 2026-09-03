@@ -84,7 +84,7 @@
   border-radius: 0.375rem;
   font-size: 1rem;
   font-family: inherit;
-  background-color: #fff;
+  background-color: var(--color-off-white);
   color: var(--font-color-dark);
 }
 
@@ -113,7 +113,7 @@
   width: 100%;
   padding: 0.75rem 1rem;
   text-align: left;
-  background-color: #fff;
+  background-color: var(--color-off-white);
   border: none;
   border-bottom: 1px solid var(--border-color);
   cursor: pointer;
@@ -549,8 +549,8 @@
 }
 
 .tag {
-  background-color: #e9ecef;
-  color: #495057;
+  background-color: var(--color-cream);
+  color: var(--color-black);
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   font-size: 0.75rem;
@@ -806,7 +806,7 @@
   width: 100%;
   padding: 0.75rem 1rem;
   text-align: left;
-  background-color: #fff;
+  background-color: var(--color-off-white);
   border: none;
   border-bottom: 1px solid var(--border-color);
   cursor: pointer;

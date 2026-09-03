@@ -1,5 +1,6 @@
 // src/app/api/submit-report/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { checkAntiSpam } from '@/lib/anti-spam';
 
 // --- Config ---
 const AIRTABLE_API_URL = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_NAME}`;
@@ -8,24 +9,20 @@ const AIRTABLE_HEADERS = {
   'Content-Type': 'application/json',
 };
 
-// --- CORS Middleware ---
-// Simplified CORS that actually works
+// --- CORS ---
 function getCorsHeaders(request: NextRequest): Record<string, string> {
   const origin = request.headers.get('origin') || '';
 
-  // Always return these headers
   const headers: Record<string, string> = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  // In development, allow localhost
   if (process.env.NODE_ENV === 'development' && origin.includes('localhost')) {
     headers['Access-Control-Allow-Origin'] = origin;
     return headers;
   }
 
-  // In production, allow your domains
   if (origin.includes('opioidpolicy.org') || origin.includes('findbupe.org')) {
     headers['Access-Control-Allow-Origin'] = origin;
   }
@@ -33,7 +30,10 @@ function getCorsHeaders(request: NextRequest): Record<string, string> {
   return headers;
 }
 
-// Handle OPTIONS for preflight requests
+function json(body: unknown, status: number, headers: Record<string, string>) {
+  return new NextResponse(JSON.stringify(body), { status, headers });
+}
+
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 204,
@@ -46,91 +46,39 @@ export async function POST(request: NextRequest) {
 
   const contentLength = request.headers.get('content-length');
   if (contentLength && parseInt(contentLength) > 10240) {
-    return new NextResponse(JSON.stringify({
-      success: false,
-      error: 'Request too large'
-    }), {
-      status: 413,
-      headers: corsHeaders,
-    });
+    return json({ success: false, error: 'Request too large' }, 413, corsHeaders);
   }
 
   try {
-    const body = await request.clone().json();
-    const { turnstileToken, standardizedNotes, ...reportData } = body;
+    const body = await request.json();
+    // `website` (honeypot) and `_t` (form load time) replace the old Turnstile token.
+    const { website, _t, standardizedNotes, ...reportData } = body;
 
     if (!reportData.pharmacy?.osm_id || !reportData.reportType) {
-      return new NextResponse(JSON.stringify({
-        success: false,
-        error: 'Missing required fields'
-      }), {
-        status: 400,
-        headers: corsHeaders,
-      });
+      return json({ success: false, error: 'Missing required fields' }, 400, corsHeaders);
     }
 
-    // Validate report type
     if (!['success', 'denial'].includes(reportData.reportType)) {
-      return new NextResponse(JSON.stringify({
-        success: false,
-        error: 'Invalid report type'
-      }), {
-        status: 400,
-        headers: corsHeaders,
-      });
+      return json({ success: false, error: 'Invalid report type' }, 400, corsHeaders);
     }
 
-    // --- Turnstile Verification ---
-    if (!turnstileToken) {
-      return new NextResponse(JSON.stringify({
-        success: false,
-        error: 'Turnstile token missing'
-      }), {
-        status: 400,
-        headers: corsHeaders,
-      });
+    const spam = checkAntiSpam({ website, _t });
+    if (!spam.ok) {
+      return json({ success: false, error: spam.error }, spam.status, corsHeaders);
     }
 
-    const formData = new FormData();
-    formData.append('secret', process.env.TURNSTILE_SECRET_KEY!);
-    formData.append('response', turnstileToken);
+    const notes = Array.isArray(standardizedNotes) ? standardizedNotes : [];
 
-    const verificationResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-      method: 'POST',
-      body: formData,
-    });
-
-    const verificationData = await verificationResponse.json();
-    console.log('Turnstile verification:', {
-      success: verificationData?.success,
-      token: turnstileToken?.substring(0, 10) + '...',
-      env: process.env.NODE_ENV
-    });
-
-    if (!verificationData?.success) {
-      return new NextResponse(JSON.stringify({
-        success: false,
-        error: 'Turnstile verification failed'
-      }), {
-        status: 403,
-        headers: corsHeaders,
-      });
-    }
-
-    // No mapping needed since we are sending labels directly from page.tsx
-    const notes = standardizedNotes || [];
-
-    // --- Sanitize only the notes field ---
+    // Sanitize only the free-text notes field
     const sanitize = (input: string | undefined) => {
       if (!input) return undefined;
       return input
-        .replace(/[<>\\\"'&]/g, '') // Remove HTML special chars
-        .replace(/javascript:/gi, '') // Remove javascript protocol
-        .substring(0, 500) // Limit length
+        .replace(/[<>\\"'&]/g, '')
+        .replace(/javascript:/gi, '')
+        .substring(0, 500)
         .trim();
     };
 
-    // --- Airtable Submission ---
     const airtableRecord = {
       records: [{
         fields: {
@@ -145,15 +93,13 @@ export async function POST(request: NextRequest) {
           phone_number: reportData.pharmacy.phone_number,
           report_type: reportData.reportType,
           formulation: reportData.formulations,
-          standardized_notes: notes, // Use notes directly
-          notes: sanitize(reportData.notes), // Only sanitize the free-text notes
+          standardized_notes: notes,
+          notes: sanitize(reportData.notes),
         },
       }],
     };
 
-    // Log the payload being sent to Airtable for debugging
-    console.log('Airtable payload:', airtableRecord);
-
+    // Never log the payload: it is the report itself.
     const response = await fetch(AIRTABLE_API_URL, {
       method: 'POST',
       headers: AIRTABLE_HEADERS,
@@ -161,38 +107,15 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-
-      // Return more detailed error information
-      return new NextResponse(JSON.stringify({
-        success: false,
-        error: 'Failed to save report',
-        airtableError: errorData.error || `Airtable returned status ${response.status}`,
-        status: response.status
-      }), {
-        status: response.status,
-        headers: corsHeaders,
-      });
+      console.error('Airtable submit failed with status', response.status);
+      return json({ success: false, error: 'Failed to save report' }, 502, corsHeaders);
     }
 
     const result = await response.json();
-
-    return new NextResponse(JSON.stringify({
-      success: true,
-      recordId: result.records[0]?.id,
-    }), {
-      status: 200,
-      headers: corsHeaders,
-    });
+    return json({ success: true, recordId: result.records[0]?.id }, 200, corsHeaders);
 
   } catch (error) {
-    console.error('Submit error:', error);
-    return new NextResponse(JSON.stringify({
-      success: false,
-      error: 'Internal server error'
-    }), {
-      status: 500,
-      headers: corsHeaders,
-    });
+    console.error('Submit error:', error instanceof Error ? error.message : 'unknown');
+    return json({ success: false, error: 'Internal server error' }, 500, corsHeaders);
   }
 }

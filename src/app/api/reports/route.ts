@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { airtableAPI } from '@/lib/airtable-api';
 import { promises as fs } from 'fs';
 import path from 'path';
+import os from 'os';
 import { createHash } from 'crypto';
 
 // Constants for timeframes - only the ones we want to support
@@ -30,7 +31,8 @@ interface CachedData {
 }
 
 // Cache directory configuration
-const CACHE_DIR = path.join(process.cwd(), '.cache', 'dashboard');
+// os.tmpdir() is the only writable location on Vercel's read-only filesystem.
+const CACHE_DIR = path.join(os.tmpdir(), 'findbupe-dashboard-cache');
 const MAX_CACHE_FILES = 3;
 
 // Helper functions remain the same

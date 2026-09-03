@@ -1,20 +1,53 @@
+/* src/app/globals.css
+   OPI 2026 brand tokens (source of truth: opioidpolicy.org css/global.css,
+   vendored to public/opi/global.css inside @layer opi). The app's own CSS is
+   unlayered, so it always wins over the vendored chrome styles. */
+
 :root {
-  /* Brand Palette */
-  --bg-color: #001c3a;
-  --font-color-dark: #1f1f1f;
-  --accent-cream: #f2f1e8;
-  --accent-green: #00ff85;
-  --accent-green-focus: #2c7721;
-  --font-color-light: #f2f1e8;
-  --border-color: #00ff85;
-  --accent-red: #f37970;
-  --accent-blue: #04f5ff;
-  --accent-mint: #98ff98;
-  --accent-orange: #ff8500;
+  /* OPI 2026 Brand Palette */
+  --color-white: #ffffff;
+  --color-cream: #dad5c6;
+  --color-off-white: #F2F1E8;
+  --color-black: #1f1f1f;
+  --color-teal: #80ffc1;
+  --color-strong-green: #00ff85;
+  --color-dark-green: #1b7a3a;
+  --color-light-purple: #ccccff;
+  --color-dark-purple: #6a5acd;
+  --color-atomic-purple: #8f00ff;
+  --color-deep-purple: #4333a8;
+  --color-strong-yellow: #fdc919;
+  --color-blaze-orange: #ff580f;
+  --color-strong-red: #f71824;
+  --color-red-on-dark: #ff6b73; /* AA-safe red on the dark surface */
+
+  /* Fonts: set on <html> by next/font/local in layout.tsx */
+  --font-family: var(--font-body), system-ui, sans-serif;
+
+  /* Legacy names used throughout the CSS modules, mapped onto the 2026 tokens */
+  --bg-color: var(--color-black);
+  --font-color-dark: var(--color-black);
+  --font-color-light: var(--color-off-white);
+  --accent-cream: var(--color-off-white);
+  --accent-green: var(--color-strong-green);
+  --accent-green-focus: var(--color-dark-green);
+  --border-color: var(--color-strong-green);
+  --accent-red: var(--color-red-on-dark);
+  --accent-blue: var(--color-teal);
+  --accent-mint: var(--color-teal);
+  --accent-orange: var(--color-blaze-orange);
+  --font-merriweather: var(--font-display);
+  --font-raleway: var(--font-body);
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* App-wide reset. Written with :where() so it keeps zero specificity, and
+   scoped OUT of #opi-chrome so the vendored OPI footer keeps the spacing and
+   link styles from its own (layered) stylesheet. */
+:where(*:not(#opi-chrome *)) {
   padding: 0;
   margin: 0;
 }
@@ -26,17 +59,19 @@ body {
 }
 
 body {
-  color: var(--font-color-light); /* UPDATED */
-  background: var(--bg-color);
-   font-family: var(--font-raleway), sans-serif;
+  /* The vendored chrome reads --page-accent for buttons/footer accents. */
+  --page-accent: var(--color-strong-green);
+  color: var(--color-off-white);
+  background: var(--color-black);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-weight: 400;
 }
 
-/* NEW: Set all headings and buttons to use Merriweather */
 h1, h2, h3, h4, h5, h6, button {
-  font-family: var(--font-merriweather), serif;
+  font-family: var(--font-display), Georgia, serif;
 }
 
-a {
+:where(a:not(#opi-chrome *)) {
   color: inherit;
   text-decoration: none;
 }

@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, FormEvent, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import Turnstile, { useTurnstile } from 'react-turnstile';
 import MapLoader from "./components/MapLoader";
 import styles from "./Home.module.css";
 import PharmacyListItem from './components/PharmacyListItem';
@@ -88,11 +87,7 @@ const formulationOptions = [ 'Suboxone (film)', 'Buprenorphine/Naloxone (film; g
   'Sublocade shot (gives shot)',
   'Brixadi shot (fills prescription)',
   'Brixadi shot (gives shot)' ];
-export default function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+export default function Home() {
   const [zipCode, setZipCode] = useState("");
   const [locationCoords, setLocationCoords] = useState<Coords | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
@@ -107,7 +102,9 @@ export default function Home({
   const [selectedStandardizedNotes, setSelectedStandardizedNotes] = useState<string[]>([]); 
   const [notes, setNotes] = useState('');
   const [consentMap, setConsentMap] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  // Anti-spam: hidden honeypot + time the page was opened (see src/lib/anti-spam.ts)
+  const [formLoadedAt] = useState(() => Date.now());
+  const [honeypot, setHoneypot] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [copied, setCopied] = useState(false);
@@ -115,7 +112,6 @@ export default function Home({
   const [aggregatedPharmacies, setAggregatedPharmacies] = useState<Record<string, AggregatedPharmacy>>({});
   const [isLoadingPharmacies, setIsLoadingPharmacies] = useState(true);
   const [dateFilter, setDateFilter] = useState<number | null>(30);
-  const turnstile = useTurnstile();
   const [isSearching, setIsSearching] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -242,7 +238,7 @@ const handleManualPharmacySubmit = async (
   formulations: string[],
   standardizedNotes: string[],
   notes: string,
-  turnstileToken: string
+  antiSpam: { website: string; _t: number }
 ) => {
   const response = await fetch('/api/submit-report', {
     method: 'POST',
@@ -253,7 +249,8 @@ const handleManualPharmacySubmit = async (
       formulations,
       standardizedNotes: standardizedNotes.map(key => getStandardizedNoteLabel(key)),
       notes,
-      turnstileToken, // Ensure Turnstile token is included
+      website: antiSpam.website,
+      _t: antiSpam._t,
     }),
   });
 
@@ -594,15 +591,11 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   setIsSubmitting(true);
   setSubmitStatus('idle');
-  console.log('handleSubmit called');
 
   const sanitizedNotes = sanitize(notes);
 
   // Map standardized note keys to their labels
   const mappedStandardizedNotes = selectedStandardizedNotes.map(key => getStandardizedNoteLabel(key));
-
-  // Debugging log
-  console.log('Submitting standardized notes:', mappedStandardizedNotes);
 
   const reportData = {
     pharmacy: selectedPharmacy,
@@ -610,7 +603,8 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     formulations,
     standardizedNotes: mappedStandardizedNotes, // Use mapped labels
     notes: sanitizedNotes,
-    turnstileToken,
+    website: honeypot,
+    _t: formLoadedAt,
   };
 
   const response = await fetch('/api/submit-report', {
@@ -620,12 +614,6 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
   });
 
   if (response.ok) {
-    // Reset Turnstile
-    if (turnstile && typeof turnstile.reset === 'function') {
-      turnstile.reset();
-      setTurnstileToken(null);
-    }
-
     // Refresh pharmacy data to show the new submission
     if (locationCoords) {
       const [lat, lon] = locationCoords;
@@ -636,11 +624,6 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 
     setSubmitStatus('success');
   } else {
-    // Reset Turnstile on failure to get a fresh token
-    if (turnstile && typeof turnstile.reset === 'function') {
-      turnstile.reset();
-      setTurnstileToken(null);
-    }
     setSubmitStatus('error');
   }
 
@@ -660,7 +643,7 @@ const handleShare = () => {
 };
 
   // --- Form validation for submit button ---
-const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting && selectedPharmacy);  
+const canSubmit = !!(reportType && consentMap && !isSubmitting && selectedPharmacy);  
   const handleFilterClick = (days: number | null) => {
     if (dateFilter === days) {
       setDateFilter(null);
@@ -1012,9 +995,15 @@ const canSubmit = !!(reportType && consentMap && turnstileToken && !isSubmitting
                            <T> I understand my anonymous report will be used to update the public map (REQUIRED).</T>
                           </label>
                         </div>
-                        <Turnstile
-                          sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-                          onVerify={(token) => setTurnstileToken(token)}
+                        <input
+                          type="text"
+                          name="website"
+                          value={honeypot}
+                          onChange={(e) => setHoneypot(e.target.value)}
+                          tabIndex={-1}
+                          autoComplete="off"
+                          aria-hidden="true"
+                          style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 }}
                         />
                         <button
                           type="submit"

@@ -411,7 +411,7 @@
 }
 
 .error {
-  color: #e7f436;
+  color: var(--color-strong-yellow);
 }
 
 .lastUpdated {

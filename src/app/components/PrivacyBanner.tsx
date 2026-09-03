@@ -23,6 +23,9 @@ export default function PrivacyBanner() {
   useEffect(() => {
     const dismissed = sessionStorage.getItem('privacyBannerDismissed');
     if (!dismissed) {
+      // sessionStorage only exists in the browser, so this cannot be a lazy
+      // initial state (it would mismatch the server-rendered HTML).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowBanner(true);
     }
 

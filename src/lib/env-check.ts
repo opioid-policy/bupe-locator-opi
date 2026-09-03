@@ -4,8 +4,6 @@ export function checkRequiredEnvVars() {
     'AIRTABLE_PERSONAL_ACCESS_TOKEN',
     'AIRTABLE_BASE_ID',
     'AIRTABLE_TABLE_NAME',
-    'TURNSTILE_SECRET_KEY',
-    'NEXT_PUBLIC_TURNSTILE_SITE_KEY',
   ];
   
   const missing = required.filter(key => !process.env[key]);

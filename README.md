@@ -1,12 +1,17 @@
 # Opioid Policy Institute Bupe Locator 
 
-![Version](https://img.shields.io/badge/version-2.1.1-green)
+![Version](https://img.shields.io/badge/version-3.0.0-green)
 ![Release](https://img.shields.io/badge/release-stable-brightgreen)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/opioid-policy/bupe-locator-opi)
 
-[**Latest Stable Release: v2.1 🤘**](https://github.com/opioid-policy/bupe-locator-opi/releases/tag/v2.1.1)
+[**Latest Stable Release: v3.0.0 🤘**](https://github.com/opioid-policy/bupe-locator-opi/releases/tag/v3.0.0)
 
-## What's New in Version 2.1.1
+## What's New in Version 3.0.0
+- Zero third-party requests from the browser: map tiles proxied through our server, Turnstile replaced by a honeypot + timing check, fonts and marker images self-hosted
+- OPI 2026 brand and the shared OPI footer
+- Node.js 24, Next.js 16.3, fewer dependencies
+
+## What was new in 2.1.1
 - Patch next.js & react for 12.3.25 vulnerability
 - More languages
 - Long-acting injectable bupe as an option
@@ -18,7 +23,7 @@
 ### Prerequisites
 - Node.js 24 (Vercel runs Node 24.x; Node 20 is end-of-life)
 - pnpm
-- Accounts: Airtable, Cloudflare Turnstile, Vercel, GitHub, Codeberg, Cloudflare DNS
+- Accounts: Airtable, Vercel, GitHub, Codeberg, Cloudflare DNS, and a free CARTO basemap key (https://carto.com/basemaps/apikey)
 - Git
 - IDE (I use VS Code)
 
@@ -29,14 +34,20 @@
 4. Run `pnpm install`
 5. Run `pnpm run dev` for development
 
+Notes:
+- `pnpm build` first runs `scripts/sync-opi-chrome.mjs`, which refreshes the shared OPI footer/CSS in `public/opi/` from opioidpolicy.org. If that site is unreachable the committed copy is kept; if the upstream files change shape the build fails on purpose.
+- Keep the repo on a local disk. Google Drive breaks pnpm's links (the `.npmrc` here uses the hoisted layout as a workaround, but installs take ~25 minutes there).
+
 ### Deployment
-This project is configured for Vercel deployment.
+This project deploys to Vercel from the `main` branch (Node 24, set via `engines` in package.json). Set the same variables as `.env.example` in the Vercel project.
 
 ### Security & Privacy
 - No user data is stored except what is submitted through the form
 - No cookies or tracking
 - IP addresses are not logged
 - All submissions are anonymous
+- The browser only ever talks to findbupe.org: map tiles are proxied through `/api/tiles`, fonts, marker images and the OPI footer are served from this site, and the strict Content-Security-Policy in `next.config.js` blocks every other origin
+- Bot protection is a hidden honeypot field plus a form-timing check (`src/lib/anti-spam.ts`), not a third-party captcha
 
 
 
@@ -66,7 +77,7 @@ This tool is just the start—a way for us to support each other, share resource
  
 ##How We Did This
 
-We're using vercel, open street maps, cloudflare, airtable, github, codeberg as our tech stack (we know it's redundant..but codeberg and vercel didn’t play nice together, but I still wanted to use codeberg). We tried to make it perform well on mobile, because a lot of folks don’t have a computer or limited access. Because addiction is a protected health condition, we attempted to make this maximally privacy preserving for people reporting pharmacies, finding pharmacies, or just visiting the site.
+We're using vercel, open street maps, carto basemaps, airtable, github, codeberg as our tech stack (we know it's redundant..but codeberg and vercel didn’t play nice together, but I still wanted to use codeberg). We tried to make it perform well on mobile, because a lot of folks don’t have a computer or limited access. Because addiction is a protected health condition, we attempted to make this maximally privacy preserving for people reporting pharmacies, finding pharmacies, or just visiting the site.
 
 Any one of these things might have been messed up. We’ve never done a project like this from scratch (usually use WYSIWYG web tools), so I’m sure the code is a mess and we might have missed something. This effort is not funded so we tried to keep costs down while still accomplishing our end goals. 
 

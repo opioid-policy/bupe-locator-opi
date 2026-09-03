@@ -1,7 +1,6 @@
 // src/app/components/ManualPharmacyEntry.tsx
 import { useState } from 'react';
 import styles from '../Home.module.css';
-import Turnstile from 'react-turnstile';
 import { T } from '@/lib/i18n-markers';
 import { standardizedNoteKeys, getStandardizedNoteLabel } from '@/lib/form-options';
 import { analytics } from '@/lib/privacy-analytics';
@@ -30,7 +29,7 @@ interface ManualPharmacyEntryProps {
     formulations: string[],
     standardizedNotes: string[],
     notes: string,
-    turnstileToken: string
+    antiSpam: { website: string; _t: number }
   ) => void;
 }
 
@@ -91,7 +90,9 @@ export default function ManualPharmacyEntry({
   // Form state
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState('');
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  // Anti-spam: hidden honeypot + time the form was opened (see src/lib/anti-spam.ts)
+  const [loadedAt] = useState(() => Date.now());
+  const [honeypot, setHoneypot] = useState('');
 
   // Format phone number as user types
   const formatPhoneNumber = (value: string) => {
@@ -144,16 +145,8 @@ export default function ManualPharmacyEntry({
 
   // Handle form submission
   const handleSubmit = () => {
-  if (!turnstileToken) {
-    setValidationError('Please complete the security check.');
-    return;
-  }
-
   setIsValidating(true);
   setValidationError('');
-
-  // Log the Turnstile token for debugging
-  console.log('Turnstile token:', turnstileToken);
 
   const validationMessage = validateFields();
   if (validationMessage) {
@@ -185,7 +178,7 @@ export default function ManualPharmacyEntry({
     formulations,
     selectedStandardizedNotes,
     notes,
-    turnstileToken
+    { website: honeypot, _t: loadedAt }
   );
 
     // Track form submission
@@ -211,8 +204,7 @@ export default function ManualPharmacyEntry({
     pharmacyZip && 
     reportType &&
     consentMap &&
-    !isValidating &&
-    turnstileToken;
+    !isValidating;
 
   return (
     <div className={styles.manualEntry}>
@@ -443,17 +435,16 @@ export default function ManualPharmacyEntry({
         </div>
       )}
 
-      {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? (
-        <Turnstile
-          sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-          onVerify={(token) => setTurnstileToken(token)}
-          onError={() => setValidationError('Security check failed. Please refresh and try again.')}
-        />
-      ) : (
-        <div className={styles.errorMessage}>
-          Security configuration error. Please contact support.
-        </div>
-      )}
+      <input
+                          type="text"
+                          name="website"
+                          value={honeypot}
+                          onChange={(e) => setHoneypot(e.target.value)}
+                          tabIndex={-1}
+                          autoComplete="off"
+                          aria-hidden="true"
+                          style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 }}
+                        />
       <button
         type="button"
         onClick={handleSubmit}

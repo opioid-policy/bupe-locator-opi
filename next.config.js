@@ -1,82 +1,60 @@
 /** @type {import('next').NextConfig} */
 
+// Everything the browser loads comes from this origin: fonts, map tiles
+// (proxied via /api/tiles), marker images, and the vendored OPI footer
+// (public/opi/). No third-party origins are allowed by the CSP.
+const CSP = [
+  "default-src 'self'",
+  // 'unsafe-eval' / 'unsafe-inline' are needed by canvas-confetti and Next's
+  // inline runtime; there is no third-party script on the site.
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self' blob:",
+  "frame-src 'none'",
+  "object-src 'none'",
+  "worker-src 'self' blob:",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'self' https://*.opioidpolicy.org https://opioidpolicy.org",
+  "upgrade-insecure-requests",
+].join('; ');
+
 const nextConfig = {
   // Pin the workspace root so Turbopack never infers a parent folder
   // (this repo lives inside a synced Drive tree with other lockfiles).
   turbopack: { root: __dirname },
 
-  // Add react-leaflet transpilation
   transpilePackages: ['react-leaflet', '@react-leaflet/core'],
-  
-  // Additional privacy settings
+
   poweredByHeader: false,
 
-  // Security headers
+  // Cache-buster for the vendored chrome (public/opi/*), fixed per build.
+  env: { NEXT_PUBLIC_CHROME_V: String(Date.now()) },
+
   async headers() {
     return [
       {
-        // Apply to all routes
         source: '/:path*',
         headers: [
-          // Content Security Policy - Strict but allows necessary resources
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              // ADD 'unsafe-eval' for canvas-confetti to work
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://cdnjs.cloudflare.com",
-              "style-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com",
-              "img-src 'self' data: https: blob:",
-              "font-src 'self' data:",
-              // ADD blob: for canvas-confetti animations and Airtable API
-              "connect-src 'self' blob: https://nominatim.openstreetmap.org https://challenges.cloudflare.com https://*.basemaps.cartocdn.com https://api.airtable.com",
-              "frame-src https://challenges.cloudflare.com",
-              // ADD blob: for canvas worker
-              "worker-src 'self' blob:",
-              "base-uri 'self'",
-              "form-action 'self'",
-              "frame-ancestors 'self' https://*.opioidpolicy.org https://opioidpolicy.org",
-              "upgrade-insecure-requests"
-            ].join('; ')
-          },
-
-          // Prevent MIME type sniffing
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
-          },
-
-          // Control referrer information
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin'
-          },
-
-          // Prevent XSS attacks
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block'
-          },
-
-          // Control permissions/features
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(self), interest-cohort=()'
-          },
-
-          // Strict Transport Security (HTTPS only)
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains; preload'
-          },
-
-          // Prevent caching of sensitive pages
-          {
-            key: 'Cache-Control',
-            value: 'no-store, no-cache, must-revalidate, proxy-revalidate'
-          }
-        ]
-      }
+          { key: 'Content-Security-Policy', value: CSP },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          // Nothing on the site uses the camera, microphone, or geolocation.
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
+          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
+        ],
+      },
+      {
+        // Static, cacheable assets: tiles, vendored chrome, marker images.
+        source: '/(api/tiles|opi|leaflet)/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=86400, s-maxage=2592000' },
+        ],
+      },
     ];
   },
 };

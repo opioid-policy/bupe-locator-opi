@@ -14,6 +14,12 @@ class PrivacyAnalytics {
   }
 
   trackEvent(eventName: string, state?: string) {
+    // Honor Do Not Track / Global Privacy Control: count nothing at all.
+    if (typeof navigator !== 'undefined') {
+      const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
+      if (nav.doNotTrack === '1' || nav.globalPrivacyControl === true) return;
+    }
+
     // Client-side rate limiting (resets on page refresh)
     const sessionCount = this.sessionEventCounts[eventName] || 0;
     if (sessionCount >= 10) return; // Max 10 of same event per session

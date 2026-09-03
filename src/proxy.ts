@@ -1,12 +1,13 @@
-// Create this file at: src/middleware.ts (NOT in app folder)
-// This runs before every request to your API routes
+// src/proxy.ts (Next 16 name for middleware)
+// Runs before every API request: size cap + per-IP rate limit kept in memory.
+// The IP is used only as a rate-limit key for one minute and is never logged.
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // 1. Check request size to prevent DOS attacks
   const contentLength = request.headers.get('content-length');
   if (contentLength && parseInt(contentLength) > 100000) { // 100KB limit
@@ -62,7 +63,8 @@ export function middleware(request: NextRequest) {
   return response;
 }
 
-// Only run middleware on API routes
+// Only API routes, except the tile proxy: a single map pan loads dozens of
+// tiles and would exhaust the 60/min budget (tiles are CDN-cached anyway).
 export const config = {
-  matcher: '/api/:path*',
+  matcher: '/api/((?!tiles/).*)',
 };

@@ -88,7 +88,15 @@ export default function PrivacyPage() {
           <ul>
            <li>
             <strong><T>Spam Protection: </T></strong> 
-           <T>We use a tool called Cloudflare Turnstile to check if a submission is from a real person, not a robot. It does this without the annoying puzzles and without building an advertising profile about the websites you visit or what you enter into a form. We use this to protect the form from fake entries.</T></li>
+           <T>To keep robots from filling the form with fake reports, the form has a hidden field that only a robot would fill in, and we check that the form was open for at least a few seconds before it was sent. That is all: no puzzles, no third-party service, and nothing about you is stored.</T></li>
+            <br/>
+           <li>
+            <strong><T>Map images: </T></strong>
+           <T>The map pictures (tiles) are fetched by our server, not by your browser. The map company only ever sees our server, never your device or the area you are looking at.</T></li>
+            <br/>
+           <li>
+            <strong><T>Fonts and footer: </T></strong>
+           <T>Fonts, map markers, and the shared OPI footer are all served from findbupe.org. Your browser does not contact any other company while you use this site.</T></li>
             <br/>
            <li>
             <strong><T>Maps: </T></strong> 

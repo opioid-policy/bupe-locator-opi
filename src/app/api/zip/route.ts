@@ -70,8 +70,6 @@ export async function GET(request: Request) {
       `postalcode=${zipCode}&` +
       `addressdetails=1`;
     
-    console.log(`Querying Nominatim for ZIP: ${zipCode}`);
-    
     const response = await fetch(endpoint, {
       headers: {
         'User-Agent': 'BupeLocator/1.0 (https://findbupe.org; code@opioidpolicy.org)',

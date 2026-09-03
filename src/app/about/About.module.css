@@ -83,7 +83,7 @@
   display: block;
   margin-bottom: 2rem;
   padding: 1rem;
-  background-color: #f8f9fa;
+  background-color: var(--color-off-white);
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
@@ -149,5 +149,5 @@
   margin-top: 0;
   margin-bottom: 2rem;
   font-size: 2rem;
-  color: #333;
+  color: var(--color-black);
 }

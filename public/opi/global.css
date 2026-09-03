@@ -1,0 +1,3994 @@
+/* Vendored from https://opioidpolicy.org/css/global.css by scripts/sync-opi-chrome.mjs. Do not edit. */
+@layer opi {
+/* ==========================================================
+   OPI Global Styles
+   ----------------------------------------------------------
+   Loaded by every page via <link rel="stylesheet" href="/css/global.css">
+   Keep ONLY truly cross-page styles here:
+     - 2026 brand palette (:root vars)
+     - Base resets
+     - Universal a11y (skip-link, reduced-motion)
+     - Site-wide chrome that's identical everywhere
+       (research banner, divider-green)
+   Page-specific themes (manila, CLI, zine, hero layouts)
+   stay inline in each file's <style> block.
+   ==========================================================*/
+
+/* Fonts are SELF-HOSTED — @font-face rules live in /fonts/fonts.css
+   (linked before this file on every page). No third-party CDN/processor. */
+
+:root {
+    /* OPI 2026 Brand Palette */
+    --color-white: #ffffff;
+    --color-cream: #dad5c6;
+    --color-off-white: #F2F1E8;
+    --color-black: #1f1f1f;
+    --color-teal: #80ffc1;
+    --color-strong-green: #00ff85;
+    --color-dark-green: #1b7a3a;
+    --color-light-purple: #ccccff;
+    --color-dark-purple: #6a5acd;
+    --color-atomic-purple: #8f00ff;
+    --color-deep-purple: #4333a8;     /* AA-safe purple on light/cream bg (finding-treatment accent) */
+    --color-strong-yellow: #fdc919;
+    --color-blaze-orange: #ff580f;
+    --color-strong-red: #f71824;
+
+    /* Layout tokens */
+    --header-height: 90px;
+    --max-width: 1280px;
+    --toc-width: 240px;
+    /* Reading/content column width for TOC topic pages (naloxone, mission,
+       OSM dossiers, CLI pages, etc.). One token so the center channel is the
+       same width on every topic page. NOT --content-max (that's the 1280px
+       page container on a few pages). */
+    --content-col: 840px;
+    /* Right-edge lane reserved for the floating buttons (.opi-support-btn +
+       .opi-back-to-top): 1.5rem margin + 46px button + breathing gap. Content
+       grids clamp to `100vw - 2*--float-channel` so cards never slide under
+       the buttons. */
+    --float-channel: 5.5rem;
+
+    /* Elevation / shadow tokens (modern layered shadows) */
+    --shadow-sm:        0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-md:        0 2px 4px rgba(0, 0, 0, 0.06), 0 6px 16px rgba(0, 0, 0, 0.10);
+    --shadow-lg:        0 4px 8px rgba(0, 0, 0, 0.08), 0 16px 32px rgba(0, 0, 0, 0.14);
+    --shadow-xl:        0 6px 12px rgba(0, 0, 0, 0.10), 0 24px 48px rgba(0, 0, 0, 0.18);
+    /* Dark-bg cards: glow approach instead of drop shadow, since shadows are
+       invisible on dark. Default is a faint cream outline; hover lifts it
+       into a brighter green glow. */
+    --shadow-on-dark:        0 0 0 1px color-mix(in srgb, var(--color-off-white) 8%, transparent), 0 8px 24px rgba(0, 0, 0, 0.55);
+    --shadow-on-dark-hover:  0 0 0 2px color-mix(in srgb, var(--color-strong-green) 60%, transparent), 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 32px color-mix(in srgb, var(--color-strong-green) 18%, transparent);
+
+    /* Fonts (Phase C — Fraunces / Geist / JetBrains Mono / Sanchez / IM Fell English) */
+    --font-display:    'Fraunces', Georgia, serif;
+    --font-body:       'Geist', system-ui, -apple-system, sans-serif;
+    --font-logo:       'Sanchez', Georgia, serif;
+    --font-mono:       'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --font-editorial:  'Fraunces', Georgia, serif;
+    --font-typewriter: 'IM Fell English', Georgia, serif;
+
+    /* CLI / terminal tokens — shared by addiction-privacy.html and /cli.html.
+       Used by .terminal-window, .terminal-body, .scanlines, .cli-page etc.
+       (Originally defined locally on addiction-privacy; lifted here in Batch 11.) */
+    --cli-bg:          #0d0d0d;
+    --cli-surface:     #1a1a1a;
+    --cli-surface-2:   #242424;
+    --cli-border:      #333;
+    --cli-border-glow: rgba(0, 255, 133, 0.2);
+    --cli-green:       #00ff85;
+    --cli-green-dim:   rgba(0, 255, 133, 0.5);
+    --cli-purple:      #6a5acd;
+    --cli-orange:      #ff580f;
+    --cli-red:         #f71824;
+    --cli-yellow:      #fdc919;
+    --cli-cyan:        #80ffc1;
+    /* Off-white-based text tokens — more legible on the dark terminal bg
+       than the cream-based versions. Off-white (#F2F1E8) is the site's
+       canonical "text on dark" color. */
+    --cli-comment:     rgba(242, 241, 232, 0.6);    /* secondary text — labels, descriptions */
+    --cli-text:        rgba(242, 241, 232, 0.92);   /* primary body text */
+    --cli-text-dim:    rgba(242, 241, 232, 0.55);   /* very-secondary, hints */
+
+    /* Overlay & highlight tokens (derived from brand black/white).
+       NEVER use these for text — text is always full-strength var(--color-black)
+       on light bg or var(--color-off-white) on dark bg. These tokens are for
+       backgrounds, hover states, shadows, and overlays ONLY. */
+    --overlay-faint:    rgba(31, 31, 31, 0.04);    /* hover bg, faint tint over dark surfaces */
+    --overlay-light:    rgba(31, 31, 31, 0.08);
+    --overlay-medium:   rgba(31, 31, 31, 0.35);    /* card shadow base */
+    --overlay-strong:   rgba(31, 31, 31, 0.6);     /* drawer backdrop, modal scrim */
+    --highlight-faint:  rgba(242, 241, 232, 0.04); /* hover bg on dark island surfaces */
+    --highlight-light:  rgba(242, 241, 232, 0.10);
+}
+
+/* ---- Base resets ---- */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html { scroll-behavior: smooth; }
+
+/* Base body type — single-sourced (was re-declared inline on ~20 pages). Each
+   page's inline <style> now sets ONLY its own background + text color (dark vs
+   light/manila). A page that needs a different base font/size still overrides. */
+body {
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Universal a11y: skip-link ---- */
+.skip-link {
+    position: absolute;
+    top: -50px;
+    left: 0;
+    background: var(--color-strong-green);
+    color: var(--color-black);
+    padding: 10px 20px;
+    z-index: 1000;
+    text-decoration: none;
+    font-weight: 600;
+}
+.skip-link:focus { top: 0; }
+
+/* Screen-reader-only utility — visually hidden, available to assistive tech.
+   Consolidated from identical inline copies on 17 pages. */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Scroll-progress bar — driven by /js/scroll-progress.js, element + #progressBar
+   stay in each page's markup. Per-page theme via --progress-fill (default =
+   strong-green → teal). Replaces the inline .progress-bar copied onto 16 pages. */
+.progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    z-index: 200;
+    background: var(--progress-fill, var(--page-accent, linear-gradient(90deg, var(--color-strong-green), var(--color-teal))));
+}
+
+/* ---- Universal a11y: focus ring ----
+   Uses currentColor so the outline always matches the focused element's
+   text color. Since text colors must already meet WCAG contrast on their
+   surrounding bg, the outline inherits that compliance automatically.
+   No more "neon green outline on cream bg" failures. */
+:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+/* Inputs/textareas/selects keep their own thicker green focus styling
+   (defined later in this file) — those rules stay. */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ---- Reveal-on-scroll (fade + lift as section enters viewport) ---- */
+.reveal {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(.22,.61,.36,1);
+}
+.reveal.is-revealed {
+    opacity: 1;
+    transform: none;
+}
+/* will-change only while the element is near the viewport (JS-toggled), so the
+   compositor hint is armed before the animation and dropped once it settles. */
+.reveal.reveal-near,
+.reveal-stagger.reveal-near > * { will-change: opacity, transform; }
+
+/* Grid stagger — direct children of .reveal-stagger cascade in with the SAME
+   30px rise + scale. Triggered when the GRID itself enters
+   view (its own .is-revealed, added by reveal-on-scroll.js) so the cascade
+   plays on-screen even though the parent section pre-reveals earlier. */
+.reveal-stagger > * {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(.22,.61,.36,1);
+}
+.reveal-stagger.is-revealed > * { opacity: 1; transform: none; filter: none; }
+.reveal-stagger.is-revealed > *:nth-child(2) { transition-delay: .08s; }
+.reveal-stagger.is-revealed > *:nth-child(3) { transition-delay: .16s; }
+.reveal-stagger.is-revealed > *:nth-child(4) { transition-delay: .24s; }
+.reveal-stagger.is-revealed > *:nth-child(5) { transition-delay: .32s; }
+.reveal-stagger.is-revealed > *:nth-child(6) { transition-delay: .40s; }
+.reveal-stagger.is-revealed > *:nth-child(7) { transition-delay: .48s; }
+.reveal-stagger.is-revealed > *:nth-child(8) { transition-delay: .56s; }
+@media (prefers-reduced-motion: reduce) {
+    .reveal, .reveal-stagger > * { opacity: 1; transform: none; transition: none; }
+}
+
+/* ---- Site-wide chrome ---- */
+
+/* Top research/news banner — same gradient pattern on every page */
+/* Fixed CTA "Read Our Newest Research →" with the #11 "sweep-in" hover: black
+   bar, //// support-window motif, JetBrains Mono caps, a left→right underline
+   sweep, and a full-width sweep of strong-green arrows flying in from off-screen
+   left. The inner .rb-* structure is built by /js/site-ticker.js (single
+   source); per-page banner overrides were removed so this applies everywhere. */
+.research-banner {
+    background: var(--color-black);
+    color: var(--color-off-white);
+    text-align: center;
+    padding: 0.8rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    border-bottom: 1px solid color-mix(in srgb, var(--page-accent, var(--color-strong-green)) 28%, transparent);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.3s;
+}
+.research-banner a {
+    color: inherit;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+.research-banner:hover { box-shadow: inset 0 0 50px color-mix(in srgb, var(--page-accent, var(--color-strong-green)) 10%, transparent); }
+
+/* Any canvas injected into the banner (matrix rain OR winter snow) sits BELOW
+   the link/text so hover, the underline sweep and the flying arrows stay visible. */
+.research-banner > a { position: relative; z-index: 2; }
+.research-banner canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+
+/* //// support-window motif (faded pair + solid pair) */
+.research-banner .rb-slashes { font-weight: 700; color: var(--page-accent, var(--color-strong-green)); letter-spacing: 0.05em; }
+.research-banner .rb-slashes .f { opacity: 0.45; }
+
+/* headline + its left→right underline sweep */
+.research-banner .rb-txt { position: relative; }
+.research-banner .rb-txt::after {
+    content: ''; position: absolute; left: 0; bottom: -4px; height: 2px; width: 100%;
+    background: var(--page-accent, var(--color-strong-green));
+    transform: scaleX(0); transform-origin: left;
+    transition: transform 0.5s cubic-bezier(.4, 0, .5, 1);
+}
+.research-banner:hover .rb-txt::after { transform: scaleX(1); }
+
+/* the existing arrow — turns strong-green + pulses as the sweep lands */
+.research-banner .rb-arrowbox { position: relative; display: inline-block; margin-left: 0.15em; }
+.research-banner .rb-arrow { display: inline-block; font-weight: 700; transition: transform 0.25s ease, color 0.25s ease; }
+.research-banner:hover .rb-arrow { color: var(--page-accent, var(--color-strong-green)); animation: rb-arrow-pulse 0.9s ease-in-out infinite; }
+
+/* flying arrows — sweep the full width in from off-screen left, out off-screen
+   right, spread across the bar height (top:50% + --sy). text-stroke gives weight. */
+.research-banner .rb-r {
+    position: absolute; left: 0; top: 50%;
+    font-style: normal; font-weight: 700; font-size: 0.78em; line-height: 1;
+    color: var(--page-accent, var(--color-strong-green)); opacity: 0; pointer-events: none;
+    -webkit-text-stroke: 0.6px currentColor;
+    will-change: transform, opacity;
+}
+.research-banner:hover .rb-r { animation: rb-sweep 0.62s cubic-bezier(.4, 0, .6, 1) infinite; animation-delay: var(--d); }
+
+@keyframes rb-sweep {
+    0%   { opacity: 0; transform: translate(var(--sx), calc(-50% + var(--sy))) scale(0.95); }
+    10%  { opacity: 1; }
+    88%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--ex), calc(-50% + var(--sy))) scale(0.7); }
+}
+@keyframes rb-arrow-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.16); } }
+@media (prefers-reduced-motion: reduce) {
+    .research-banner:hover .rb-r { animation: none; opacity: 0; }
+    .research-banner:hover .rb-arrow { animation: none; }
+    .research-banner .rb-txt::after { transition: none; }
+}
+
+/* --- Matrix digital rain (privacy + CLI + OPI OS pages) -----
+   Scoped via body.digital-rain. The canvas is injected by
+   js/site-ticker.js. Calm/empty at rest; green katakana rain
+   fades in on hover. On these pages the flying arrows are
+   suppressed so the rain is the sole decoration. */
+
+/* suppress the flying arrows on the rain pages (keep the resting → glyph) */
+body.digital-rain .research-banner .rb-r { display: none; }
+
+/* the rain canvas: full-bleed across the bar, behind the text, hidden at rest */
+body.digital-rain .research-banner { position: relative; }   /* already relative, but explicit */
+body.digital-rain .research-banner .rb-rain {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.45s ease;
+}
+/* keep the link/text above the rain */
+body.digital-rain .research-banner a { position: relative; z-index: 2; }
+
+/* reveal on hover (and keyboard focus-within for a11y) */
+body.digital-rain .research-banner:hover  .rb-rain,
+body.digital-rain .research-banner:focus-within .rb-rain { opacity: 1; }
+
+/* reduced motion: no rain at all (canvas isn't created in JS either, this is a belt-and-suspenders) */
+@media (prefers-reduced-motion: reduce) {
+    body.digital-rain .research-banner .rb-rain { display: none; }
+}
+
+/* --- Winter snow banner (Nov 1 – Mar 1) ---------------------
+   Snow canvas injected by js/site-ticker.js. During winter the
+   snow is THE banner effect on every page: it overrides the
+   resting flying arrows and the digital-rain matrix. The text
+   flips to opi-black with a soft white halo once snow reaches
+   the text band (.snowed-in toggled by JS) so it stays legible. */
+.research-banner .rb-winter { z-index: 0; }                 /* the snow canvas (also covered by generic rule above) */
+
+/* during winter, hide flying arrows + matrix on ALL pages */
+body.winter-banner .research-banner .rb-r { display: none; }
+body.winter-banner .research-banner .rb-rain { display: none; }
+
+/* text legibility flip while snow covers the band */
+.research-banner.snowed-in,
+.research-banner.snowed-in a { color: var(--color-black); }
+.research-banner.snowed-in .rb-txt,
+.research-banner.snowed-in .rb-arrow {
+    text-shadow: 0 0 3px rgba(255,255,255,0.95), 0 1px 2px rgba(255,255,255,0.85);
+}
+.research-banner.snowed-in .rb-slashes { color: var(--color-dark-green); }
+.research-banner.snowed-in .rb-txt::after { background: var(--color-dark-green); }
+
+@media (prefers-reduced-motion: reduce) {
+    /* JS draws a single static snowed frame; nothing animates */
+    .research-banner.snowed-in .rb-txt,
+    .research-banner.snowed-in .rb-arrow { text-shadow: 0 0 3px rgba(255,255,255,0.95); }
+}
+
+/* Section divider used between black ↔ cream sections */
+.divider-green {
+    height: 4px;
+    /* Footer divider — tracks the page accent; green→teal only as the no-accent fallback. */
+    background: var(--page-accent, linear-gradient(90deg, var(--color-strong-green), var(--color-teal), var(--color-strong-green)));
+}
+
+/* ==========================================================
+   Table of Contents (sidebar nav for long-form pages)
+   ----------------------------------------------------------
+   ONE pattern, every page. Dark island wrapper (opi-black bg)
+   + threat-map link styling: off-white text, faint hover wash,
+   opi-green left bar + green text + faint green wash on active.
+
+   On light pages: reads as a crisp dark island.
+   On dark pages: bg matches page bg so the container dissolves,
+   but link styling/active state are identical site-wide.
+   ==========================================================*/
+.toc {
+    position: sticky;
+    top: calc(var(--header-height, 90px) + 1rem);
+    align-self: start;
+    background: var(--color-black);
+    color: var(--color-off-white);
+    padding: 1rem 1rem 0.75rem 1.25rem;     /* tighter bottom — most TOCs have no CTA */
+    border-radius: 8px;
+    font-family: var(--font-mono);
+}
+/* Restore extra bottom padding ONLY when the .toc-cta actually has content
+   (empty .toc-cta stubs are hidden via the :not(:has(*)) rule below) */
+.toc:has(.toc-cta:has(*)) {
+    padding-bottom: 1rem;
+}
+
+/* Section label / eyebrow inside the TOC — opi-green. Catches both the
+   common header patterns (.toc h3, .toc h4, .toc-label) used across pages. */
+.toc h3,
+.toc h4,
+.toc-label {
+    color: var(--color-strong-green);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 0.85rem;
+}
+
+.toc-list {
+    list-style: none;
+    border-left: 0;
+    padding: 0;
+    margin: 0;
+}
+.toc-list li { margin-bottom: 0.2rem; }
+
+/* Links: threat-map pattern */
+.toc-list a {
+    display: block;
+    padding: 0.4rem 0.7rem;
+    margin-left: 0;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--color-off-white);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    border-radius: 0 4px 4px 0;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    line-height: 1.5;
+}
+/* Hover: faint off-white wash, no color shift (text stays full strength) */
+.toc-list a:hover,
+.toc-list a:focus-visible {
+    color: var(--color-off-white);
+    background: var(--highlight-faint);
+    border-left-color: transparent;
+}
+/* Keyboard focus keeps the global focus ring — outline:none here suppressed it
+   (WCAG 2.4.7). The hover wash above still applies on focus too. */
+/* Active: page-accent left bar + page-accent text + faint accent wash.
+   Each page sets --page-accent (naloxone teal, finding-treatment purple,
+   etc); defaults to brand strong-green when unset. */
+.toc-list a.active {
+    color: var(--page-accent, var(--color-strong-green));
+    border-left-color: var(--page-accent, var(--color-strong-green));
+    background: color-mix(in srgb, var(--page-accent, var(--color-strong-green)) 8%, transparent);
+    font-weight: 600;
+}
+
+/* CTA slot at bottom of TOC. Most pages stub it as an empty <div class="toc-cta">
+   + placeholder comment, which would render a stray divider line. Hide when
+   truly empty (no element children — text/comments/whitespace don't count
+   for :has(*)). */
+.toc-cta {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+}
+.toc-cta:has(*) {
+    border-top: 1px solid color-mix(in srgb, var(--color-off-white) 18%, transparent);
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+.toc-cta:not(:has(*)) {
+    display: none;
+}
+/* Outline pill button. Defaults to --page-accent (per-page accent) so the
+   button color matches the rest of the page; falls back to brand green when
+   --page-accent is unset. Pages no longer need to set --toc-accent
+   explicitly — it tracks --page-accent automatically. */
+.toc-cta a {
+    --toc-accent: var(--page-accent, var(--color-strong-green));
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: 1.5px solid var(--toc-accent);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--toc-accent);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+.toc-cta a:hover,
+.toc-cta a:focus-visible {
+    background: var(--toc-accent);
+    color: var(--color-black);
+    outline: none;
+}
+
+/* Smooth-scroll anchored sections sit BELOW the sticky header instead of
+   being clipped behind it. Applies to any anchored heading or section
+   that the TOC (or any in-page link) targets. */
+section[id],
+article[id],
+h1[id], h2[id], h3[id], h4[id] {
+    scroll-margin-top: calc(var(--header-height, 90px) + 1.5rem);
+}
+/* Mobile: the sticky TOC bar (~48px) docks BELOW the header, so an anchored
+   section must clear BOTH or its heading lands hidden behind the bar. The
+   desktop value above only clears the header (there's no bar on desktop). */
+@media (max-width: 768px) {
+    section[id], article[id],
+    h1[id], h2[id], h3[id], h4[id] {
+        scroll-margin-top: calc(var(--header-height, 90px) + 3.5rem);
+    }
+}
+
+/* Mobile toggle button (injected by site-toc.js) — hidden on desktop */
+.toc-summary { display: none; }
+
+/* Mobile: TOC becomes a sticky, collapsible bar docked under the nav so
+   in-page navigation stays reachable while scrolling. The .toc-summary
+   toggle (shows the current section + chevron) is injected by site-toc.js;
+   tap to expand the list, tap a link to jump and auto-close. */
+@media (max-width: 768px) {
+    .toc {
+        display: block;                      /* defends against the mobile `nav { display:none }`
+                                                hamburger rule if a TOC uses <nav class="toc"> */
+        position: sticky;
+        top: var(--header-height, 90px);   /* dock directly under the sticky nav */
+        z-index: 90;                        /* below header (100), above content */
+        margin: 0 0 2rem;
+        padding: 0;                          /* summary + list own their padding */
+        transition: top 0.3s ease;          /* slide in sync with the header hide/show */
+    }
+    /* When the nav hides on scroll-down, dock the bar to the very top (no gap) */
+    body:has(header.is-hidden) .toc {
+        top: 0;
+    }
+
+    /* The TOC lives in a 2-col grid wrapper (.page-body / .content-layout /
+       .privacy-layout / .cli-page-body / .page-layout). In a single-column
+       grid, a sticky grid item can't travel — its row is only as tall as
+       itself. Switch the wrapper to block flow on mobile so position:sticky
+       works. `body` prefix gives specificity over each page's inline
+       `.wrapper { display:grid }`. Matches the wrapper class-agnostically. */
+    body :has(> .toc) {
+        display: block;
+    }
+
+    .toc-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.8rem 1.25rem;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        text-align: left;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--color-off-white);
+    }
+    .toc-summary-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .toc-summary-chevron {
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+    }
+    .toc.is-open .toc-summary-chevron {
+        transform: rotate(180deg);
+    }
+
+    /* List collapsed by default; expands when the bar is open */
+    .toc-list {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+        padding: 0 0.75rem;
+        display: block;
+    }
+    .toc.is-open .toc-list {
+        max-height: 70vh;
+        overflow-y: auto;
+        padding-bottom: 0.75rem;
+    }
+    /* Keep the vertical list treatment (not pills) */
+    .toc-list a {
+        border-left: 2px solid transparent;
+        border-radius: 0 4px 4px 0;
+    }
+    /* The injected summary replaces any in-markup label/heading + CTA on mobile */
+    .toc-label,
+    .toc h3,
+    .toc h4,
+    .toc-cta {
+        display: none;
+    }
+}
+
+/* ==========================================================
+   Header (sticky, full-width, dropdown nav)
+   ==========================================================*/
+header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--color-black);
+    border-bottom: 1px solid transparent;   /* seamless under the nav on EVERY page (user: no line) */
+    transition: transform 0.3s ease;
+}
+/* (Nav border is transparent on every page above — no per-page :has() scoping
+   needed anymore; the user wants the line gone everywhere.) */
+/* Hide-on-scroll-down state */
+header.is-hidden {
+    transform: translateY(-100%);
+}
+@media (prefers-reduced-motion: reduce) {
+    header { transition: none; }
+}
+.header-inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0.5rem 2rem;   /* 8px top/bottom: logo grows but bar height stays ~76px */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.logo { height: 30px; width: auto; display: block; }   /* sized to match the footer wide logo (~360px wide) */
+.header-inner > a { line-height: 0; }   /* kill the inline-baseline gap under the logo img so it centers vertically (the footer-logo fix) */
+nav { display: flex; align-items: center; gap: 2rem; }
+/* Tighter gap for the desktop header nav only: now that the links are
+   button-sized chips, a small gap reads as one row of buttons and keeps the
+   nav from overflowing the header on narrow desktop widths. Scoped to the
+   direct child so the mobile drawer nav keeps its own spacing. */
+.header-inner > nav { gap: 0.5rem; }
+/* Scoped to HEADER nav and ONLY plain text links (not buttons). A bare
+   `nav a` rule was bleeding into other <nav> wrappers (404 recovery buttons,
+   semantic nav blocks). And without :not(.btn) here, this rule overrode
+   .btn-primary's color on hover, painting strong-green text on cream bg —
+   failed WCAG. Buttons should keep their own color, always. */
+header nav a:not(.btn) {
+    color: var(--color-off-white);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    line-height: 1;
+    /* Match the Subscribe button box exactly (.btn: 0.65rem 1.3rem / 8px / 1.5px)
+       so the links and the button read as one row of equal-sized chips. */
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    padding: 0.7rem 1.3rem;
+    transition: color 0.15s, border-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
+}
+/* Hard-shadow press — same neo-brutalist language as the buttons. Hover lifts
+   the link into a green hard shadow; :active presses it flush into the shadow
+   (the "click" feel, matching .btn). [aria-current] marks the live page green. */
+header nav a:not(.btn):hover,
+header nav a:not(.btn):focus-visible {
+    color: var(--color-off-white);
+    border-color: var(--page-accent, var(--color-strong-green));
+    box-shadow: 3px 3px 0 var(--page-accent, var(--color-strong-green));
+    transform: translate(-1px, -1px);
+}
+header nav a:not(.btn):active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 var(--page-accent, var(--color-strong-green));
+}
+header nav a:not(.btn)[aria-current] { color: var(--page-accent, var(--color-strong-green)); }
+@media (prefers-reduced-motion: reduce) {
+    header nav a:not(.btn):hover,
+    header nav a:not(.btn):active { transform: none; }
+}
+/* Narrow-desktop band (769–880px): the desktop nav still shows here — the
+   hamburger only takes over at ≤768px — but the full button-sized chips would
+   overflow the header. Trim ONLY the horizontal padding in this band; the
+   height + radius stay button-matched, and ≥881px keeps the exact 1.3rem. */
+@media (max-width: 880px) {
+    .header-inner > nav a:not(.btn) { padding-left: 0.9rem; padding-right: 0.9rem; }
+}
+/* OPI OS nav link — on hover it becomes a Windows-95 raised button (gray bevel,
+   a nod to the OS) while KEEPING the neo-brutalist green drop shadow + click
+   press of the other nav chips. Placed after the base nav rules so it wins. */
+header nav a.nav-opi-os:hover,
+header nav a.nav-opi-os:focus-visible {
+    background: #c0c0c0;
+    color: var(--color-black);
+    border-color: #c0c0c0;
+    box-shadow:
+        inset 2px 2px 0 #ffffff,                 /* light top-left bevel */
+        inset -2px -2px 0 #808080,               /* dark bottom-right bevel */
+        3px 3px 0 var(--page-accent, var(--color-strong-green));     /* neo-brutalist drop shadow, kept */
+    transform: translate(-1px, -1px);
+}
+header nav a.nav-opi-os:active {
+    box-shadow:
+        inset 2px 2px 0 #808080,                 /* bevel inverts → sunken */
+        inset -2px -2px 0 #ffffff,
+        0 0 0 var(--page-accent, var(--color-strong-green));         /* pressed flush into the shadow */
+    transform: translate(2px, 2px);
+}
+/* Classic Win95 dotted focus rectangle, inset inside the bevel (keyboard only). */
+header nav a.nav-opi-os:focus-visible {
+    outline: 1px dotted var(--color-black);
+    outline-offset: -5px;
+}
+@media (prefers-reduced-motion: reduce) {
+    header nav a.nav-opi-os:hover,
+    header nav a.nav-opi-os:active { transform: none; }
+}
+.nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--color-off-white);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* Dropdown menus (Projects / About / More) — JS-toggled via .is-open class */
+.nav-item { position: relative; }
+.dropdown {
+    position: absolute;
+    top: calc(100% + 14px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-6px);
+    background: var(--color-black);
+    border: 1px solid color-mix(in srgb, var(--color-off-white) 15%, transparent);
+    border-radius: 10px;
+    padding: 8px 0;
+    min-width: 210px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.18s, transform 0.18s, visibility 0.18s;
+    z-index: 200;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+.dropdown a {
+    display: block;
+    padding: 10px 18px;
+    color: var(--color-off-white);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+.dropdown a:hover {
+    background: color-mix(in srgb, var(--color-strong-green) 12%, transparent);
+    color: var(--color-strong-green);
+}
+.nav-item.is-open .dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Mobile nav (≤768px) */
+@media (max-width: 768px) {
+    .header-inner { padding: 0.5rem 1rem; }   /* 8px top/bottom keeps bar ~64px with the bigger logo */
+    .logo { height: 52px; }   /* display:block on the base rule centers it; bigger on mobile */
+    .nav-toggle { display: block; }
+    nav {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--color-black);
+        flex-direction: column;
+        padding: 1.5rem 2rem;
+        gap: 1rem;
+        display: none;
+        border-bottom: 1px solid color-mix(in srgb, var(--color-off-white) 10%, transparent);
+    }
+    nav.is-open { display: flex; }
+    .dropdown {
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0 0 0 1rem;
+        min-width: 0;
+    }
+}
+
+/* Simplified mobile hamburger menu — js/site-nav.js injects `.mobile-nav-menu`
+   (Projects / Team / News / Contact / Subscribe) into <nav>. On mobile it
+   REPLACES the full desktop nav (the Projects/About dropdowns + OPI OS are too
+   long for the drawer): hide every other nav child, show only this list. The
+   desktop nav is untouched (the menu is display:none above the breakpoint). */
+.mobile-nav-menu { display: none; }
+@media (max-width: 768px) {
+    header nav > *:not(.mobile-nav-menu) { display: none; }
+    .mobile-nav-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+    }
+}
+
+/* ==========================================================
+   Buttons
+   ==========================================================*/
+/* TWO ROLES, accent-driven, hard-shadow press.
+   Primary  = filled with --page-accent + black outline.
+   Outline  = ink border (black on light / accent on dark) that fills the accent.
+   Hover    = the button slides into its hard shadow; :active sits flush.
+   Tokens   : --btn-shadow  (black on light; dark surfaces set off-white)
+              --outline-ink (black on light; dark surfaces set the accent)
+   .filter-btn is a separate pill; cli.html buttons + .btn-glitch keep their own. */
+.btn,
+.btn-primary, .btn-accent, .btn-dark,
+.btn-outline, .btn-ghost, .btn-outline-accent {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.3rem;
+    border: 1.5px solid transparent;
+    border-radius: 8px;                 /* one squircle for every button */
+    font-family: var(--btn-font, var(--font-body));   /* a page can set --btn-font for its theme font, no new class needed */
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 var(--btn-shadow, var(--color-black));
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.btn:hover,
+.btn-primary:hover, .btn-accent:hover, .btn-dark:hover,
+.btn-outline:hover, .btn-ghost:hover, .btn-outline-accent:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 var(--btn-shadow, var(--color-black));
+}
+.btn:active,
+.btn-primary:active, .btn-accent:active, .btn-dark:active,
+.btn-outline:active, .btn-ghost:active, .btn-outline-accent:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 var(--btn-shadow, var(--color-black));
+}
+
+/* PRIMARY — filled with the page accent + black outline */
+.btn-primary, .btn-accent, .btn-dark {
+    background: var(--page-accent, var(--color-strong-green));
+    color: var(--color-black);
+    border-color: var(--color-black);
+}
+
+/* OUTLINE — ink black on light / accent on dark; fills the accent + black frame on hover */
+.btn-outline, .btn-ghost, .btn-outline-accent {
+    background: transparent;
+    color: var(--outline-ink, var(--color-black));
+    border-color: var(--outline-ink, var(--color-black));
+}
+.btn-outline:hover, .btn-ghost:hover, .btn-outline-accent:hover {
+    background: var(--page-accent, var(--color-strong-green));
+    color: var(--color-black);
+    border-color: var(--color-black);
+}
+
+/* The site is mostly dark, so DEFAULT to a dark surface: off-white shadow +
+   accent outline-ink. LIGHT surfaces — manila/OSM pages and the index cream
+   CTA — flip both to black. Add any other light button area to this list. */
+:root {
+    --btn-shadow: var(--color-off-white);
+    --outline-ink: var(--page-accent, var(--color-strong-green));
+}
+.manila-page, .cta-section, .newsletter-hero {
+    --btn-shadow: var(--color-black);
+    --outline-ink: var(--color-black);
+}
+
+/* ==========================================================
+   Shared filter bar — used on index.html, projects.html,
+   whitepapers.html, and any future filterable card grid.
+   Pages opt-in via .initiatives-filter > .filter-btn markup.
+   ========================================================== */
+.initiatives-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2rem;
+    /* sticky behavior */
+    position: sticky;
+    top: calc(var(--header-height, 90px) + 0.5rem);
+    z-index: 50;
+    background: color-mix(in srgb, var(--color-black) 88%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 0.75rem 1rem;
+    /* OPI squircle (matches the 8px neo-brutalist button radius) instead of a
+       full pill. Black outline + off-white hard offset shadow = same press
+       language as .btn-primary on the dark page. */
+    border-radius: 12px;
+    border: 1.5px solid var(--color-black);
+    box-shadow: 4px 4px 0 var(--btn-shadow, var(--color-off-white));
+}
+/* Each topic button carries its category color via --fbtn; hover + active fill
+   with it (matching the card pills). All / New default to the site green. */
+.filter-btn {
+    --fbtn: var(--color-strong-green);
+    background: transparent;
+    color: var(--color-off-white);
+    border: 1.5px solid var(--color-strong-green);
+    padding: 0.5rem 1.1rem;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    min-height: 40px;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+.filter-btn[data-filter="opioid-settlements"] { --fbtn: var(--color-blaze-orange); }
+.filter-btn[data-filter="privacy"]            { --fbtn: var(--color-strong-green); }
+.filter-btn[data-filter="civic-tech"]         { --fbtn: var(--color-light-purple); }
+.filter-btn[data-filter="research"]           { --fbtn: var(--color-strong-yellow); }
+.filter-btn[data-filter="advocacy"]           { --fbtn: var(--color-strong-red); }
+/* Hover/focus — fill the category color + black text + black outline (the pill
+   look), lifted into a small off-white hard shadow (neo-brutalist pop on dark). */
+.filter-btn:hover,
+.filter-btn:focus-visible {
+    background: var(--fbtn);
+    color: var(--color-black);
+    border-color: var(--color-black);
+    transform: translate(-2px, -2px);
+    box-shadow: 2px 2px 0 var(--color-off-white);
+}
+.filter-btn:focus-visible {
+    outline: 2px solid var(--color-off-white);
+    outline-offset: 2px;
+}
+.filter-btn:active {                  /* press flush on click */
+    transform: translate(0, 0);
+    box-shadow: 0 0 0 var(--color-off-white);
+}
+.filter-btn.is-active {               /* selected filter — filled, sitting flat */
+    background: var(--fbtn);
+    color: var(--color-black);
+    border-color: var(--color-black);
+}
+@media (prefers-reduced-motion: reduce) {
+    .filter-btn:hover,
+    .filter-btn:focus-visible,
+    .filter-btn:active { transform: none; }
+}
+.filter-count {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-off-white);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+/* Summary toggle is mobile-only; hidden on desktop (mirrors .toc-summary). */
+.filter-summary { display: none; }
+/* Mobile: the wrapping row of filter chips eats too much vertical space, so
+   collapse the whole bar into a sticky dropdown modeled on the site TOC bar.
+   A .filter-summary button (injected by the inline script) shows the active
+   filter; tapping it expands the chip list; picking a chip collapses it. */
+@media (max-width: 768px) {
+    .initiatives-filter {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 0;
+        padding: 0;
+        overflow: hidden;            /* clip the collapsing list to the squircle */
+    }
+    /* Summary toggle = the always-visible bar header (mono, uppercase, like
+       .toc-summary). Shows "Filter: <active>" + a chevron. */
+    .filter-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.8rem 1.1rem;
+        background: none;
+        border: 0;
+        cursor: pointer;
+        text-align: left;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--color-off-white);
+    }
+    .filter-summary-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .filter-summary-label b {        /* the active-filter name, emphasized */
+        font-weight: 700;
+        color: var(--color-strong-green);
+    }
+    .filter-summary-chevron {
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+    }
+    .initiatives-filter.is-open .filter-summary-chevron {
+        transform: rotate(180deg);
+    }
+    /* Collapse the chips by default; expand when the bar is open. Wrap the
+       chips in flex so they stack full-width. */
+    .initiatives-filter .filter-btn {
+        width: 100%;
+        justify-content: flex-start;
+        text-align: left;
+        margin: 0;
+    }
+    /* Hide every chip + the count until opened; the summary stands alone. */
+    .initiatives-filter:not(.is-open) .filter-btn,
+    .initiatives-filter:not(.is-open) .filter-count {
+        display: none;
+    }
+    .initiatives-filter.is-open {
+        gap: 0.4rem;
+        padding: 0 0.75rem 0.75rem;
+    }
+    .initiatives-filter.is-open .filter-summary {
+        padding-bottom: 0.5rem;
+    }
+    .filter-count {
+        width: 100%;
+        margin-left: 0;
+        text-align: center;
+        padding-top: 0.5rem;
+    }
+}
+/* .btn-accent / .btn-outline / .btn-ghost / .btn-outline-accent and the old
+   manila variants are all folded into the two unified roles defined above. */
+
+/* ---- CTA interaction utilities (opt-in per button) ----
+   .btn-arrow: wrap the trailing arrow as <span class="ar">&rarr;</span> — it slides on hover.
+   .btn-swap:  on hover, the data-hover label slides up over the resting label.
+               Markup: <a class="btn btn-primary btn-swap" data-hover="Subscribe &rarr;">Subscribe</a> */
+.btn-arrow .ar { display: inline-block; transition: transform 0.24s ease; }
+.btn-arrow:hover .ar, .btn-arrow:focus-visible .ar { transform: translateX(5px); }
+
+.btn-swap { position: relative; overflow: hidden; }
+.btn-swap::after {
+    content: attr(data-hover);
+    position: absolute; inset: 0;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+    background: inherit; color: inherit; border-radius: inherit;
+    transform: translateY(105%);
+    transition: transform 0.26s ease;
+}
+.btn-swap:hover::after, .btn-swap:focus-visible::after { transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+    .btn-arrow .ar, .btn-swap::after { transition: none; }
+}
+
+/* Support CTA — universal donate prompt shown above the footer on most
+   pages. Always renders on OPI black so accent colors (eyebrow, border,
+   button) keep high contrast regardless of whether the page background is
+   dark editorial or light manila. Each page sets --page-accent (defaults
+   to brand strong-green when unset). The faded `//` slash prefix in the
+   eyebrow is a pseudo-element so every page gets the same effect without
+   markup duplication. OSM pages used to ship their own .donate-bar —
+   those are replaced with .support-cta in markup. CLI pages keep .cli-cta
+   (terminal aesthetic). */
+.support-cta {
+    margin: 3rem auto 0;
+    padding: 2rem 2.25rem;
+    /* Match the page's content width instead of a fixed 780px: on TOC pages the
+       840px content column constrains this down; on full-width pages it caps at
+       --max-width. The float-channel clamp (which would shrink the box to ~199px
+       on a 375px phone) is applied only >=721px, so mobile stays full-width. */
+    max-width: var(--max-width);
+    background: var(--color-black);
+    border: 1.5px solid var(--page-accent, var(--color-strong-green));
+    border-radius: 10px;
+    box-shadow: 6px 6px 0 var(--page-accent, var(--color-strong-green));   /* neo-brutalist hard offset */
+    color: var(--color-off-white);
+    /* The box is always dark, so the action button inside sits on black —
+       force its hard shadow off-white (manila/OSM pages otherwise flip it to
+       black, which vanishes against the box). The button keeps its black
+       outline from the primary role. Matches the policy-briefs CTA. */
+    --btn-shadow: var(--color-off-white);
+}
+@media (min-width: 721px) {
+    .support-cta { max-width: min(var(--max-width), calc(100vw - var(--float-channel) * 2)); }
+}
+/* Bottom breathing room before the footer line. On pages where the CTA is a
+   direct child of <main> (no padded content column beneath it) the footer used
+   to hug the box. This adds the same gap naloxone gets from its page-layout
+   bottom padding (~5rem). Nested-in-container pages (naloxone, finding-treatment,
+   the OSM hubs) already get this from their container padding, so this rule only
+   targets the bare case and leaves the reference pages untouched. */
+main > .support-cta:last-child {
+    margin-bottom: 5rem;
+}
+.support-cta .section-eyebrow {
+    /* Higher specificity than per-page .section-eyebrow rules so the
+       accent color and block layout win regardless of page context. */
+    color: var(--page-accent, var(--color-strong-green));
+    margin: 0 0 0.5rem;
+    display: block;
+}
+.support-cta .section-eyebrow::before {
+    /* Faded leading slashes — no trailing space, so combined with the
+       literal "// Support" in the markup this renders as four slashes
+       tight against each other (//// Support), the first pair faded and
+       the second pair full opacity. */
+    content: "//";
+    opacity: 0.5;
+}
+.support-cta .section-title {
+    color: var(--color-off-white);
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.4rem, 2.5vw, 1.6rem);
+    line-height: 1.3;
+}
+.support-cta p {
+    color: var(--color-off-white);
+    margin: 0 0 1.25rem;
+    line-height: 1.7;
+    max-width: 580px;
+}
+.support-cta-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* Section eyebrow — the small uppercase label above a section heading.
+   Per-page rules set color, font-size, letter-spacing, margin; this is the
+   single source of truth for weight + family. CLI pages keep their own
+   .cli-section-label (terminal aesthetic). OSM manila pages override
+   font-family to var(--font-typewriter) in their own inline <style>. */
+.section-eyebrow {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* Section title — the heading below the eyebrow. Per-page rules set color,
+   font-size, line-height, margin. CLI pages keep .cli-section h2 (mono).
+   OSM manila pages override font-family to typewriter. */
+.section-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.9rem, 4vw, 2.25rem);
+}
+
+/* Hero title (page H1) — single source, sized clearly ABOVE the section titles
+   so the page heading stays dominant (clamp = mobile-safe). Per-page rules keep
+   family (typewriter on OSM), color, weight. */
+.hero-title,
+.page-header h1,
+.page-hero h1 {
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+}
+
+/* Hero CTA button row — used on every dark editorial hero. Spacing between
+   the subtitle and the buttons lives here (subtitle margin: 0) for a single
+   source of truth. */
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+}
+
+/* Section divider — bold neo-brutalist rule (3px solid bar). LIGHT pages use
+   opi-black (the default, no transparency); DARK pages set --divider-ink to
+   the page accent (a black rule would vanish on a dark bg). Used today by
+   finding-treatment (light → black) and naloxone (dark → teal). */
+.section-divider {
+    border: 0;
+    height: 3px;
+    background: var(--divider-ink, var(--color-black));
+    margin: 2.75rem 0;
+}
+
+/* Hero ombré strip — gradient bar across the bottom of a topic-page hero, set
+   per page via --hero-strip: default = green (no-accent pages); OSM = orange
+   (on .manila-page); naloxone (teal) + finding-treatment (purple) set their own. */
+:root {
+    /* #6 — 8 hard bands top→bottom. Default (no-accent pages): dark green →
+       strong green, ENDING on strong green (no teal). */
+    --hero-strip: linear-gradient(to bottom,
+        var(--color-dark-green) 0 12.5%,
+        color-mix(in srgb, var(--color-dark-green) 85%, var(--color-strong-green)) 12.5% 25%,
+        color-mix(in srgb, var(--color-dark-green) 71%, var(--color-strong-green)) 25% 37.5%,
+        color-mix(in srgb, var(--color-dark-green) 57%, var(--color-strong-green)) 37.5% 50%,
+        color-mix(in srgb, var(--color-dark-green) 43%, var(--color-strong-green)) 50% 62.5%,
+        color-mix(in srgb, var(--color-dark-green) 29%, var(--color-strong-green)) 62.5% 75%,
+        color-mix(in srgb, var(--color-dark-green) 15%, var(--color-strong-green)) 75% 87.5%,
+        var(--color-strong-green) 87.5% 100%);
+}
+/* OSM — blaze-orange family: strong-red → blaze-orange → strong-yellow. */
+.manila-page {
+    background: var(--manila);
+    position: relative;
+    --hero-strip: linear-gradient(to bottom,
+        var(--color-strong-red) 0 12.5%,
+        color-mix(in srgb, var(--color-strong-red) 70%, var(--color-blaze-orange)) 12.5% 25%,
+        color-mix(in srgb, var(--color-strong-red) 35%, var(--color-blaze-orange)) 25% 37.5%,
+        var(--color-blaze-orange) 37.5% 50%,
+        color-mix(in srgb, var(--color-blaze-orange) 70%, var(--color-strong-yellow)) 50% 62.5%,
+        color-mix(in srgb, var(--color-blaze-orange) 45%, var(--color-strong-yellow)) 62.5% 75%,
+        color-mix(in srgb, var(--color-blaze-orange) 20%, var(--color-strong-yellow)) 75% 87.5%,
+        var(--color-strong-yellow) 87.5% 100%);
+}
+
+/* OSM "manila dossier" theme — consolidated from the 6 OSM pages' inline copies
+   (texture system + content cards + button row). Scoped to .manila-page, which
+   only ever appears on the 6 OSM page <body>s. Tokens (--manila*), --page-accent,
+   .redacted, the .section-x and .hero-title typewriter overrides, and the .form-x
+   and .db-x families stay inline per page (site-wide-shared or page-local). */
+.manila-page::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.018'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+}
+.manila-page > * { position: relative; z-index: 1; }
+.manila-page .content-card {
+    background: var(--color-white);
+    border: 1px solid var(--manila-darker);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+.manila-page .content-card a { color: inherit; }
+.manila-page .content-card strong { color: var(--color-black); }
+.manila-page .content-card ul,
+.manila-page .content-card ol { padding-left: 1.25rem; font-size: 0.85rem; color: var(--color-black); line-height: 1.8; }
+.manila-page .content-card li { margin-bottom: 0.4rem; }
+.manila-page .btn-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; align-items: center; }
+
+/* OSM hero — LIGHT manila band, full-width (content centered at --max-width).
+   Black text + black redactions come from the per-page defaults. The orange
+   ombré strip is an ::after framed by thin black hairlines so it pops on the
+   light bg. "Opioid Settlement" is split off as a small eyebrow so the
+   page-specific title sits on one line at the full hero size. */
+.manila-page .manila-hero {
+    max-width: none;
+    margin: 0;
+    /* Full-bleed band, but inset the CONTENT to exactly match the nav/TOC/footer:
+       the centered 1280 box edge PLUS the same 2rem gutter those use (header-inner
+       = centering-margin + 2rem padding). Without the +2rem the hero crept ~32px
+       left of everything else on widescreens. */
+    padding: 3rem calc(max((100% - var(--max-width)) / 2, 0px) + 2rem);
+    position: relative;
+}
+.manila-page .manila-hero::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 13px;                 /* #6 — show all 8 bands */
+    background: var(--hero-strip);
+    border-top: 1.5px solid var(--color-black);
+    border-bottom: 1.5px solid var(--color-black);
+}
+/* Editorial-hero #6 strip — a real <div class="hero-strip"> pinned to the hero's
+   bottom (these heroes can't use ::after — naloxone/otters already use both
+   pseudos for radial blobs). Same recipe as the OSM ::after; --hero-strip is
+   inherited per family. Added to .hero (naloxone) + the .page-header heroes. */
+.hero-strip {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 13px;
+    background: var(--hero-strip);
+    border-top: 1.5px solid var(--color-black);
+    border-bottom: 1.5px solid var(--color-black);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Pixelated #6 — privacy/CLI hero variant. Pair with .hero-strip
+   (which supplies position + hairlines); this swaps the gradient for a
+   green LED dot-matrix field (SVG tile + faint --page-accent ombre, which
+   falls back to strong-green). Used as class="hero-strip hero-strip-pixels". */
+.hero-strip-pixels{
+    height:13px;
+    border-top:1.5px solid var(--color-black);
+    border-bottom:1.5px solid var(--color-black);
+    background-color:var(--cli-bg, #0d0d0d);
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='13' viewBox='0 0 96 13'%3E%3Cg fill='%2300ff85' shape-rendering='crispEdges'%3E%3Crect x='0' y='0' width='2' height='2' opacity='.9'/%3E%3Crect x='6' y='0' width='2' height='2' opacity='.45'/%3E%3Crect x='9' y='0' width='2' height='2' opacity='.95'/%3E%3Crect x='18' y='0' width='2' height='2' opacity='.55'/%3E%3Crect x='24' y='0' width='2' height='2' opacity='.85'/%3E%3Crect x='33' y='0' width='2' height='2' opacity='.4'/%3E%3Crect x='36' y='0' width='2' height='2' opacity='.9'/%3E%3Crect x='45' y='0' width='2' height='2' opacity='.6'/%3E%3Crect x='54' y='0' width='2' height='2' opacity='.95'/%3E%3Crect x='60' y='0' width='2' height='2' opacity='.5'/%3E%3Crect x='63' y='0' width='2' height='2' opacity='.85'/%3E%3Crect x='72' y='0' width='2' height='2' opacity='.45'/%3E%3Crect x='78' y='0' width='2' height='2' opacity='.9'/%3E%3Crect x='87' y='0' width='2' height='2' opacity='.55'/%3E%3Crect x='90' y='0' width='2' height='2' opacity='.85'/%3E%3Crect x='3' y='3' width='2' height='2' opacity='.5'/%3E%3Crect x='12' y='3' width='2' height='2' opacity='.8'/%3E%3Crect x='15' y='3' width='2' height='2' opacity='.35'/%3E%3Crect x='27' y='3' width='2' height='2' opacity='.7'/%3E%3Crect x='30' y='3' width='2' height='2' opacity='.45'/%3E%3Crect x='39' y='3' width='2' height='2' opacity='.85'/%3E%3Crect x='48' y='3' width='2' height='2' opacity='.4'/%3E%3Crect x='51' y='3' width='2' height='2' opacity='.75'/%3E%3Crect x='57' y='3' width='2' height='2' opacity='.5'/%3E%3Crect x='66' y='3' width='2' height='2' opacity='.8'/%3E%3Crect x='75' y='3' width='2' height='2' opacity='.4'/%3E%3Crect x='81' y='3' width='2' height='2' opacity='.7'/%3E%3Crect x='84' y='3' width='2' height='2' opacity='.45'/%3E%3Crect x='93' y='3' width='2' height='2' opacity='.8'/%3E%3Crect x='0' y='6' width='2' height='2' opacity='.4'/%3E%3Crect x='9' y='6' width='2' height='2' opacity='.6'/%3E%3Crect x='21' y='6' width='2' height='2' opacity='.35'/%3E%3Crect x='42' y='6' width='2' height='2' opacity='.55'/%3E%3Crect x='54' y='6' width='2' height='2' opacity='.4'/%3E%3Crect x='69' y='6' width='2' height='2' opacity='.5'/%3E%3Crect x='90' y='6' width='2' height='2' opacity='.35'/%3E%3Crect x='15' y='9' width='2' height='2' opacity='.3'/%3E%3Crect x='36' y='9' width='2' height='2' opacity='.4'/%3E%3Crect x='63' y='9' width='2' height='2' opacity='.3'/%3E%3Crect x='84' y='9' width='2' height='2' opacity='.35'/%3E%3C/g%3E%3C/svg%3E"),
+        linear-gradient(to bottom,
+            color-mix(in srgb, var(--page-accent, var(--color-strong-green)) 22%, transparent) 0%,
+            color-mix(in srgb, var(--page-accent, var(--color-strong-green)) 8%, transparent) 45%,
+            transparent 100%);
+    background-repeat:repeat-x, repeat-x;
+    background-position:top left, top left;
+    background-size:96px 13px, 100% 13px;
+}
+.manila-hero .hero-eyebrow {
+    font-family: var(--font-typewriter);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--color-black);
+    margin-bottom: 0.4rem;
+}
+/* Lower mobile floor than the global hero clamp so the 3-word "X Resource Hub"
+   titles wrap to ~2 lines instead of 3 on phones; desktop stays at 3.6rem. */
+.manila-hero .hero-title { font-size: clamp(1.9rem, 5vw, 3.6rem); margin-bottom: 0.6rem; }
+.manila-hero .page-identity { margin-bottom: 0.4rem; }
+.manila-hero .hero-intro a.btn-primary { text-decoration: none; margin-top: 0.6rem; }
+
+/* Editorial heroes are <header>/blocks that inherit the nav's z-index:100 — drop
+   them below the floating otter/back-to-top (z-index 80) so those sit on top of
+   the hero's bottom strip (image 2 had the otter behind it). */
+.page-header, .page-hero { z-index: 1; }
+
+/* ============================================================
+   TOC-PAGE CANONICAL LAYOUT — single structural skeleton shared by every
+   page with a hero + sticky TOC (team, otters, mission-approach, naloxone,
+   finding-treatment, the 2 CLI pages, and the 5 OSM pages). Pages differ
+   ONLY in content / font / color; the grid, post-hero gap, column gap,
+   width and hero padding live HERE so they can't drift again. The per-page
+   inline copies of these were stripped so this rule wins. */
+.page-body, .page-layout, .cli-page-body, .content-layout {
+    display: grid;
+    grid-template-columns: var(--toc-width) 1fr;
+    gap: 3rem;
+    align-items: start;
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 3rem 2rem 6rem;   /* 3rem top = the shared post-hero gap (OSM lacked it) */
+}
+.page-header { padding: 3rem 0; }   /* editorial hero band; OSM .manila-hero has its own 3rem */
+@media (max-width: 768px) {
+    .page-body, .page-layout, .cli-page-body, .content-layout {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 2rem 1.25rem 4rem;
+    }
+    .page-header { padding: 2rem 0; }
+}
+
+/* Section spacing — consistent vertical rhythm across editorial pages.
+   Each `<section class="content-section">` gets the same bottom margin so
+   the rhythm stays consistent regardless of which page you're on. CLI and
+   OSM pages may override per their aesthetic. */
+.content-section {
+    margin-bottom: 3rem;
+}
+/* Canonical content sizes — single source, ~25% up from the old per-page
+   values. Per-page rules keep color/margin; OSM mono body is .content-card p.
+   Section title is a clamp so it scales down on phones (mobile-safe). */
+.content-section > h3 {
+    font-size: 1.5rem;
+}
+/* DIRECT children only — keeps the body bump from bleeding into nested
+   components (accordion, whitepaper cards, footnotes, mono callouts) that own
+   their smaller sizes. .db-footnote is a direct child but keeps its small mono
+   size. Nested prose falls back to the 17px body base — no visible change. */
+.content-section > p:not(.db-footnote),
+.content-section > ul > li,
+.content-section > ol > li {
+    font-size: 1.1rem;
+}
+
+/* OSM (manila) body text — SINGLE SOURCE. Body is Geist (clean + compact, like
+   finding-treatment); the section + hero HEADERS keep IM Fell via each page's
+   typewriter override, and .section-eyebrow stays IM Fell. Do NOT re-declare
+   .content-card p / .hero-intro p per page — that is what kept drifting. */
+.content-card p {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--color-black);
+    margin-bottom: 0.75rem;
+}
+.content-card p:last-child { margin-bottom: 0; }
+.hero-intro p {
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--color-black);
+    margin-bottom: 0.5rem;
+    max-width: 800px;
+}
+
+/* Text selection — branded highlight: strong-green background with black
+   text. Applies sitewide. Note: rule must be repeated for ::selection and
+   ::-moz-selection (Firefox uses the prefixed form and ignores grouped
+   rules with unknown selectors). */
+::selection {
+    background: var(--page-accent, var(--color-strong-green));
+    color: var(--color-black);
+    text-shadow: none;
+}
+::-moz-selection {
+    background: var(--page-accent, var(--color-strong-green));
+    color: var(--color-black);
+    text-shadow: none;
+}
+
+/* Click ripple — small accent ring that expands from any left-click
+   anywhere on the page. Color tracks --page-accent so each page gets a
+   ripple in its theme color (teal on naloxone, light-purple on
+   finding-treatment, etc.). Injected by /js/click-ripple.js; this rule
+   only defines the visual + animation. Disabled under prefers-reduced-
+   motion (the JS guard handles that, and this fallback keeps it invisible
+   if the script ever ran in that mode). */
+.click-ripple {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--page-accent, var(--color-strong-green)) 40%, transparent);
+    transform: translate(-50%, -50%) scale(0);
+    pointer-events: none;
+    z-index: 9999;
+    animation: opi-click-ripple 0.6s ease-out forwards;
+}
+@keyframes opi-click-ripple {
+    to {
+        transform: translate(-50%, -50%) scale(8);
+        opacity: 0;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .click-ripple { animation: none; opacity: 0; }
+}
+
+/* Strong/bold text takes its color from --strong-color, which each page
+   sets to whichever accent has good contrast against the body background
+   (light accent on dark pages, dark accent on light pages). Defaults to
+   currentColor — i.e., inherits the surrounding text color — which is the
+   WCAG-safe fallback when --strong-color isn't set. */
+strong {
+    color: var(--strong-color, currentColor);
+}
+
+/* Body prose links — the SITE-WIDE STANDARD for in-content text links.
+   Underlined at rest (the underline is the "clickable" affordance; color is
+   inherited, so links read black on light surfaces / off-white on dark). On
+   hover the page-accent highlight (--page-accent, strong-green by default;
+   blaze-orange on OSM, teal on naloxone, light-purple on finding-treatment)
+   sweeps in left-to-right and the text reads black. No bold, so nothing
+   reflows. Targets <a> inside <p>, <li>, blockquotes, and table cells.
+   Nav / footer / TOC / banner anchors opt out via the reset just below;
+   buttons and card-level anchors win on specificity. */
+p a, li a, blockquote a, td a, .txt-link {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    background-image: linear-gradient(var(--page-accent, var(--color-strong-green)), var(--page-accent, var(--color-strong-green)));
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: 0% 100%;
+    transition: background-size 0.28s ease, color 0.18s ease;
+}
+p a:hover, p a:focus-visible,
+li a:hover, li a:focus-visible,
+blockquote a:hover, blockquote a:focus-visible,
+td a:hover, td a:focus-visible,
+.txt-link:hover, .txt-link:focus-visible {
+    color: var(--color-black);
+    /* A bold child (<strong>) otherwise keeps the page's --strong-color (e.g.
+       teal on naloxone); force it black so the whole link reads black on hover. */
+    --strong-color: var(--color-black);
+    background-size: 100% 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+    p a, li a, blockquote a, td a, .txt-link { transition: none; }
+}
+
+/* Chrome anchors opt out of the highlight — they live inside <li>/<p> too but
+   carry their own hover treatment: nav, dropdowns, TOC, footer, banner. */
+header nav a, .dropdown a,
+.opi-drawer-list a, .opi-drawer-footer,
+.toc-list a, .toc-cta a,
+.glitch-link, .footer-social a, .footer-brand a,
+.research-banner a {
+    background-image: none;
+}
+
+/* ==========================================================
+   Footer (canonical 4-col grid + newsletter band + bottom)
+   ----------------------------------------------------------
+   Uses --footer-* hooks so individual pages (e.g.
+   addiction-privacy) can override accent / fonts without
+   touching markup. Defaults map to brand palette.
+   ==========================================================*/
+:root {
+    --footer-bg:           var(--color-black);
+    --footer-fg:           var(--color-off-white);
+    --footer-accent:       var(--page-accent, var(--color-strong-green));
+    --footer-muted:        color-mix(in srgb, var(--color-off-white) 60%, transparent);
+    --footer-border:       color-mix(in srgb, var(--color-off-white) 12%, transparent);
+    --footer-font-body:    var(--font-body);
+    --footer-font-heading: var(--font-display);
+    --footer-font-mono:    var(--font-mono);
+    --footer-font-logo:    var(--font-logo);
+}
+/* Resolve --footer-accent at the BODY level: the :root copy above resolves
+   --page-accent at :root, which misses pages that set --page-accent on `body`
+   (the editorial heroes — finding-treatment, otters, team, …). The footer lives
+   inside body, so a body-level declaration picks up the page accent either way. */
+body { --footer-accent: var(--page-accent, var(--color-strong-green)); }
+
+footer {
+    background: var(--footer-bg);
+    padding: 4rem 0 0;   /* horizontal gutter moved into .footer-inner so footer content lines up with nav/hero/TOC (all inset 2rem INSIDE the 1280 box) */
+    color: var(--footer-fg);
+    font-family: var(--footer-font-body);
+}
+.footer-inner { max-width: var(--max-width); margin: 0 auto; padding: 0 2rem; display: flex; flex-direction: column; }
+/* Uniform 3rem rhythm between footer blocks — margin-based, NOT flex `gap`
+   (`gap` collapses across the mobile display:contents boundary). */
+.footer-grid, .footer-newsletter, .footer-cc, .footer-subway-map { margin-bottom: 3rem; }
+/* Desktop footer order: the Creative-Commons band drops BELOW the subway map. */
+.footer-grid       { order: 1; }
+.footer-newsletter { order: 2; }
+.footer-subway-map { order: 3; }
+.footer-cc         { order: 4; }
+.footer-bottom     { order: 5; }
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 3rem;
+}
+.footer-brand img { margin-bottom: 1rem; }
+.footer-logo-link {
+    display: inline-block;
+    line-height: 0;            /* kill descender gap under the img */
+}
+.footer-logo {
+    /* Trimmed wide wordmark (~9:1, padding cropped — originals in _dev/img-originals).
+       Fill the brand column width; height follows the natural ratio. */
+    display: block;
+    width: 100%;
+    max-width: 360px;
+    height: auto;
+    object-fit: contain;
+    object-position: left center;
+}
+.footer-brand p {
+    color: var(--footer-fg);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+/* CC license line under the social links (site-wide, from site-footer.js).
+   Off-white text, framed top + bottom with an OPI-green hairline. */
+.footer-cc {
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: var(--color-off-white);
+    border-top: 1px solid var(--footer-accent);
+    border-bottom: 1px solid var(--footer-accent);
+    padding: 0.75rem 0;
+}
+.footer-cc a {
+    color: var(--color-off-white);
+    text-decoration: underline;
+}
+.footer-cc a:hover { color: var(--color-black); }   /* black text rides the global green hover-sweep (was footer-accent = green-on-green, unreadable) */
+/* Desktop only: the gap BELOW the CC band read as too large (user); trim it.
+   The gap ABOVE the band is restored on .footer-subway-map. Mobile keeps 3rem. */
+@media (min-width: 769px) {
+    .footer-cc { margin-bottom: 1.5rem; }
+}
+.footer-social { display: flex; gap: 1rem; }
+.footer-social a {
+    color: var(--footer-fg);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.2s;
+}
+.footer-social a:hover { color: var(--footer-accent); }
+
+.footer-col h4 {
+    font-family: var(--footer-font-heading);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    color: var(--footer-accent);
+}
+.footer-col ul { list-style: none; }
+.footer-col li { margin-bottom: 0.5rem; }
+.footer-col a {
+    color: var(--footer-fg);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: background-size 0.28s ease, color 0.18s ease;
+}
+/* Footer column links ride the same accent highlight-sweep as body links: the
+   gradient now comes from the global `li a` rule (they're no longer opted out),
+   off-white at rest, text flips to black as the accent sweeps in on hover. The
+   Codeberg .glitch-link keeps its own glitch + accent hover — it has no sweep
+   behind it, so black text there would be invisible. */
+.footer-col a:hover { color: var(--footer-accent); }
+.footer-col a:not(.glitch-link):hover,
+.footer-col a:not(.glitch-link):focus-visible { color: var(--color-black); }
+
+.footer-newsletter {
+    text-align: center;
+}
+.footer-newsletter h4 {
+    font-family: var(--footer-font-heading);
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--footer-fg);
+}
+.footer-newsletter p {
+    color: var(--footer-fg);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+.newsletter-form {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 400px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.newsletter-form input[type="email"] {
+    flex: 1;
+    min-width: 220px;
+    padding: 0.75rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--footer-fg) 30%, transparent);
+    border-radius: 100px;
+    background: var(--footer-bg);
+    color: var(--footer-fg);
+    font-size: 0.9rem;
+    font-family: var(--footer-font-body);
+}
+.newsletter-form input::placeholder {
+    color: color-mix(in srgb, var(--color-black) 65%, transparent);   /* faded black, AA-contrast on the off-white input (was 50%, failed AA) */
+}
+.newsletter-privacy {
+    font-size: 0.72rem;
+    color: var(--footer-fg);
+    margin-top: 1rem;
+}
+
+/* Newsletter status message + form sizing — single-sourced (was inline-duplicated
+   on 16 pages; 3 pages had no copy at all, leaving their status message unstyled).
+   Styles the JS-injected footer form + the success/error message written by
+   subscribeToGhost() into #footerNewsletterMsg. */
+.footer-newsletter-form { max-width: 440px; margin: 0 auto; }
+.newsletter-msg { font-size: 0.82rem; margin-top: 0.6rem; min-height: 1.2em; }
+.newsletter-msg.success { color: var(--color-strong-green); }
+.newsletter-msg.error { color: #ff6b73; }   /* lighter red: 5.97:1 on the dark footer (strong-red #f71824 was only 4.01:1, fails AA) */
+.footer-newsletter .newsletter-msg { max-width: 440px; margin: 0.5rem auto 0; }
+/* The HOME hero newsletter sits on a LIGHT iridescent background — the footer's
+   green / light-red wash out there, so use dark ink for contrast. ID beats the
+   .newsletter-msg.success/.error rules above on specificity. */
+#heroNewsletterMsg.success { color: var(--color-black); }
+#heroNewsletterMsg.error { color: #b3121b; }
+
+/* Desktop: js/site-footer.js tucks the Subscribe block INTO the brand column,
+   under the tagline. Compact + left-aligned to match the brand; the subtitle +
+   "Unsubscribe anytime." are hidden and the Subscribe button collapses to an
+   arrow so it fits the narrow column. The `.footer-brand` parent scopes ALL of
+   this to desktop — on mobile the Subscribe block is a grid sibling (NOT inside
+   .footer-brand), so it keeps the full centered box untouched. */
+.footer-brand .footer-newsletter {
+    text-align: left;
+    margin-top: 1.5rem;
+}
+.footer-brand .footer-newsletter h4 {
+    font-size: 1rem;
+    margin-bottom: 0.4rem;
+}
+.footer-brand .footer-newsletter > p {   /* the subtitle + "Unsubscribe anytime." */
+    display: none;
+}
+.footer-brand .newsletter-form {
+    max-width: none;
+    margin: 0;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+}
+.footer-brand .newsletter-form input[type="email"] {
+    min-width: 0;                        /* let it shrink to the column width */
+    padding: 0.55rem 0.85rem;
+}
+.footer-brand .newsletter-form button {
+    font-size: 0;                        /* hides the "Subscribe" label (kept in DOM for screen readers) */
+    padding: 0.55rem 0.75rem;
+    flex-shrink: 0;
+}
+.footer-brand .newsletter-form button::after {
+    content: "\2192";                    /* → arrow submit */
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 0;
+}
+.footer-legal {
+    color: var(--footer-fg);
+    font-size: 0.75rem;
+}
+.footer-motto {
+    font-family: var(--footer-font-logo);
+    font-style: italic;
+    color: var(--footer-fg);
+    font-size: 0.8rem;
+}
+
+@media (max-width: 900px) {
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 768px) {
+    .footer-grid { grid-template-columns: 1fr; }
+    .footer-bottom { flex-direction: column; gap: 0.5rem; text-align: center; }
+    .footer-logo {
+        max-width: 160px;         /* trimmed square-otter mark — prominent + readable on mobile */
+        height: auto;
+        margin-left: auto;
+        margin-right: auto;       /* center on mobile */
+    }
+    .footer-brand { text-align: center; }
+    /* Mobile: js/site-footer.js moves the Subscribe block INTO the grid (right
+       after the brand). Reset its desktop `order:2` to 0 so the grid lays it out
+       in DOM order (after the brand, before the columns); drop its block margin
+       since the grid's own 3rem gap handles the spacing. */
+    .footer-newsletter { margin-bottom: 0; order: 0; }
+}
+
+/* ==========================================================
+   Side drawer overlay (Projects + About)
+   ----------------------------------------------------------
+   JS-injected. Slides in from right. Big bold typography.
+   Backdrop overlays content. X-close in nav, click-outside,
+   Escape — all close.
+   ==========================================================*/
+/* Wrapper: fixed full-viewport, z-index above ANY page-level stacking
+   context (transforms, filters, position+overflow). Without this, per-page
+   hero styles (e.g., .page-header { position: relative; overflow: hidden })
+   trap the backdrop behind themselves and the hero bleeds through. */
+.opi-drawer-wrapper {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    pointer-events: none;
+}
+.opi-drawer-wrapper > .opi-drawer-backdrop,
+.opi-drawer-wrapper > .opi-drawer {
+    pointer-events: auto;
+}
+
+.opi-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay-strong);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+.opi-drawer-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.opi-drawer {
+    position: fixed;
+    top: 0;  /* flush with the top of the browser window */
+    right: 0;
+    bottom: 0;
+    width: min(820px, 92vw);
+    /* Container context so the drawer's type scales with the DRAWER, not the
+       viewport. Previously the font grew with vw/vh while this box stayed
+       capped at 720px, so on a large display the longest item ("Opioid
+       Settlements Watchdog") outgrew the panel and clipped. */
+    container-type: inline-size;
+    background: var(--color-black);
+    border-left: 1px solid color-mix(in srgb, var(--color-off-white) 12%, transparent);
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 95;
+    overflow-y: auto;
+}
+.opi-drawer.is-open {
+    transform: translateX(0);
+}
+@media (max-width: 768px) {
+    .opi-drawer { width: 100vw; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .opi-drawer-backdrop, .opi-drawer { transition: none; }
+}
+
+/* Inner: flex column so footer sticks to bottom.
+   align-items: stretch overrides the global `nav { align-items: center }` rule
+   so children fill the cross axis (drawer width) instead of shrink-wrapping. */
+.opi-drawer-inner {
+    min-height: 100%;
+    /* Neutralize the mobile `nav { position:absolute; top:100% }` collapse rule
+       (line ~562) — it bleeds into this <nav> and shoves the drawer content a
+       full screen down, which is what made the drawer scroll on mobile. */
+    position: static;
+    background: none;
+    border: 0;
+    padding: clamp(1.5rem, 4.5vh, 3rem) 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: clamp(1rem, 3vh, 3rem);
+    text-align: right;
+}
+@media (max-width: 768px) {
+    .opi-drawer-inner { padding: clamp(1.25rem, 4vh, 2rem) 1.25rem; }
+}
+
+/* Title sits at top, right-aligned, big. Off-white + bold (not green) so it
+   reads as a header without competing with the green hover state below. */
+.opi-drawer-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    /* Sized off the drawer (cqw), capped by viewport height so it can't get
+       tall-screen huge. 6cqw of the 820px panel ≈ 49px, which keeps the longest
+       item inside the 3rem side padding at every screen size.
+       vw fallback first for any engine without container queries. */
+    font-size: clamp(1.1rem, min(3.2vw, 6.4vh), 3rem);
+    font-size: clamp(1.1rem, min(6cqw, 6.4vh), 3rem);
+    line-height: 1.1;
+    color: var(--color-off-white);
+    margin: 0 0 clamp(0.5rem, 2vh, 1.5rem);
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Items list — right-aligned, sharing the same right offset as the title/footer
+   (no negative margin) and no inter-item dividers. */
+.opi-drawer-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.opi-drawer-list li {
+    text-align: right;  /* aligns the inline-block anchor flush right within the li */
+}
+.opi-drawer-list a {
+    display: inline-block;  /* shrink-wraps so the highlight sits behind text only */
+    padding: clamp(0.3rem, 1.1vh, 0.9rem) 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    /* Sized off the drawer (cqw), capped by viewport height so it can't get
+       tall-screen huge. 6cqw of the 820px panel ≈ 49px, which keeps the longest
+       item inside the 3rem side padding at every screen size.
+       vw fallback first for any engine without container queries. */
+    font-size: clamp(1.1rem, min(3.2vw, 6.4vh), 3rem);
+    font-size: clamp(1.1rem, min(6cqw, 6.4vh), 3rem);
+    color: var(--color-off-white);
+    text-decoration: none;
+    line-height: 1.1;
+    white-space: nowrap;
+    /* Body-link highlight sweep (re-instated over the nav opt-out above): the
+       page accent wipes in left→right; text inverts to black on hover. */
+    background-image: linear-gradient(var(--page-accent, var(--color-strong-green)), var(--page-accent, var(--color-strong-green)));
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: 0% 100%;
+    transition: background-size 0.28s ease, color 0.18s ease;
+}
+/* Hover/focus: the body-link highlight sweep — page accent wipes in and the
+   text inverts to OPI black (matches in-content text links). */
+.opi-drawer-list a:hover, .opi-drawer-list a:focus-visible,
+.opi-drawer-footer:hover, .opi-drawer-footer:focus-visible {
+    color: var(--color-black);
+    background-size: 100% 100%;
+}
+
+/* Footer "view all projects" pinned to bottom right — bigger, full off-white,
+   keeps the arrow + animated underline */
+.opi-drawer-footer {
+    align-self: flex-end;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1rem, min(2.4vw, 4.5vh), 2.4rem);
+    font-size: clamp(1rem, min(4.4cqw, 4.5vh), 2.4rem);
+    color: var(--color-off-white);
+    text-decoration: none;
+    line-height: 1.15;
+    white-space: nowrap;
+    background-image: linear-gradient(var(--page-accent, var(--color-strong-green)), var(--page-accent, var(--color-strong-green)));
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: 0% 100%;
+    transition: background-size 0.28s ease, color 0.18s ease;
+}
+
+/* Drawer close button (top-left X). Two crossed bars built from spans
+   so the look matches the burger's morph. Sits absolutely above the
+   inner padding. */
+.opi-drawer-close {
+    position: absolute;
+    top: 1.25rem;
+    left: 1.25rem;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    z-index: 5;
+    display: block;
+}
+.opi-drawer-close span {
+    position: absolute;
+    top: 50%;
+    left: 4px;
+    right: 4px;
+    height: 3px;
+    background: var(--color-off-white);
+    border-radius: 2px;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+.opi-drawer-close span:nth-of-type(1) { transform: translateY(-50%) rotate(45deg); }
+.opi-drawer-close span:nth-of-type(2) { transform: translateY(-50%) rotate(-45deg); }
+.opi-drawer-close:hover span,
+.opi-drawer-close:focus-visible span {
+    background: var(--color-strong-green);
+}
+.opi-drawer-close:focus-visible {
+    outline: 2px solid var(--color-strong-green);
+    outline-offset: 4px;
+    border-radius: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+    .opi-drawer-close span { transition: none; }
+}
+
+/* Hide the ticker (research banner) when any drawer is open */
+body.opi-drawer-active .research-banner { display: none; }
+
+/* ==========================================================
+   .cta-underline — reusable hover utility
+   ----------------------------------------------------------
+   Animated underline scales from 0 to 100% on hover/focus.
+   Uses currentColor so it works on any text color context.
+   ==========================================================*/
+.cta-underline {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 4px;
+    text-decoration: none;
+    color: inherit;
+}
+.cta-underline::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: bottom right;
+    transition: transform 0.25s ease-out;
+}
+.cta-underline:hover::after,
+.cta-underline:focus-visible::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
+@media (prefers-reduced-motion: reduce) {
+    .cta-underline::after { transition: none; }
+}
+
+/* Card-level trigger — these cards are fully-clickable <a>, so hovering or
+   focusing anywhere on the card draws the arrow's underline (not just hovering
+   the arrow text). Applies to whitepaper + initiative (projects/briefs) cards. */
+.whitepaper-card:hover .cta-underline::after,
+.whitepaper-card:focus-within .cta-underline::after,
+.initiative-card:hover .cta-underline::after,
+.initiative-card:focus-within .cta-underline::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
+
+/* ==========================================================
+   Form inputs — site-wide baseline
+   ----------------------------------------------------------
+   Off-white bg, opi-black text, 2px green outline. Outline
+   offset increases on focus (a small "lift"). Applies to all
+   text-like inputs, textareas, and select dropdowns. Per-page
+   forms inherit this; per-form CSS can override with higher
+   specificity if a special look is needed.
+
+   The !important is a defensive measure — some parent forms
+   (e.g. the JS-injected footer newsletter) set their own bg
+   with the same specificity. Removing the !importants would
+   require tracking down each per-form rule first.
+   ==========================================================*/
+input[type="text"],
+input[type="email"],
+input[type="url"],
+input[type="tel"],
+input[type="number"],
+input[type="search"],
+input[type="password"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="month"],
+input[type="week"],
+textarea,
+select {
+    border-radius: 8px !important;                              /* match the button squircle */
+    border: 1.5px solid var(--color-black) !important;
+    outline: none !important;
+    box-shadow: 3px 3px 0 var(--color-black) !important;        /* neo-brutalist hard edge */
+    background: var(--color-off-white) !important;
+    color: var(--color-black) !important;
+    padding: 10px 1rem !important;
+    transition: box-shadow 0.18s ease, border-color 0.18s ease !important;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="url"]:focus,
+input[type="tel"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+input[type="datetime-local"]:focus,
+input[type="time"]:focus,
+input[type="month"]:focus,
+input[type="week"]:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--page-accent, var(--color-strong-green)) !important;   /* focus = green outline only; the hard shadow stays as-is (not recolored) */
+    background: var(--color-white) !important;
+}
+
+/* Footer newsletter input sits on the dark footer — the default black hard
+   shadow would vanish, so it uses a strong-green shadow with a black outline
+   that stays on top of the green on focus. */
+.footer-newsletter-form input[type="email"] {
+    box-shadow: 3px 3px 0 var(--footer-accent) !important;
+}
+.footer-newsletter-form input[type="email"]:focus {
+    border-color: var(--color-black) !important;
+    box-shadow: 3px 3px 0 var(--footer-accent) !important;
+}
+
+/* OSM / manila pages: form controls (WFAM db filters, Report WFAM inputs) take
+   the page accent (blaze-orange) for their outline instead of the global green,
+   so the accent is consistent across the OSM pages. */
+.manila-page input[type="text"],
+.manila-page input[type="email"],
+.manila-page input[type="url"],
+.manila-page input[type="tel"],
+.manila-page input[type="number"],
+.manila-page input[type="search"],
+.manila-page textarea,
+.manila-page select {
+    outline-color: var(--page-accent, var(--color-strong-green)) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: color-mix(in srgb, var(--color-black) 65%, transparent);   /* ~#696865, 4.89:1 on #F2F1E8 (50% failed AA 1.4.3) */
+}
+/* "* indicates a required field" key — explains the asterisks (WCAG 3.3.2).
+   Inherits the page text colour, so it reads on dark + manila forms alike. */
+.form-required-note { font-size: 0.85rem; margin-bottom: 1rem; }
+
+/* Textarea defaults: vertical resize, comfortable min-height */
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Select dropdown: strip native chrome, draw a custom arrow so the
+   off-white bg stays consistent. Inline SVG → no extra HTTP request. */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none'><path d='M1 1.5L6 6.5L11 1.5' stroke='%231f1f1f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 1rem center !important;
+    background-size: 12px 8px !important;
+    padding-right: 2.5rem !important;
+    cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    input[type="text"],
+    input[type="email"],
+    input[type="url"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="search"],
+    input[type="password"],
+    textarea,
+    select { transition: none !important; }
+}
+
+/* X close button — sits in the header nav, only visible while a drawer is open */
+.opi-nav-close {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--color-off-white);
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 0.4rem;
+    margin-left: 0.5rem;
+    transition: color 0.18s;
+}
+.opi-nav-close:hover { color: var(--color-strong-green); }
+body.opi-drawer-active .opi-nav-close { display: inline-block; }
+
+/* When a drawer is open, lock body scroll */
+body.opi-drawer-active {
+    overflow: hidden;
+}
+
+/* ==========================================================
+   Project card system — Uiverse two-layer with hover lift
+   ----------------------------------------------------------
+   Outer (the card itself) holds the gradient bg.
+   ::before is the solid inner that fully covers the gradient
+   at rest; on hover the inner scales down so a thin gradient
+   frame is revealed, the card translates up, and a green glow
+   spreads outward — the "lift off the page" effect.
+
+   Per-theme classes (.card-settlements, .card-digital, etc.)
+   should NOT set background or border on the card body — the
+   tag chip + arrow color carry the per-theme accents instead.
+   .card-settlements is the lone exception: its inner is
+   off-white (so the redacted-on-black trick still works).
+   ==========================================================*/
+.initiative-card {
+    position: relative;
+    z-index: 0;
+    isolation: isolate;
+    --card-ink: var(--color-black);     /* body text on the off-white face */
+    --card-arrow: var(--color-black);   /* "Browse →" arrow */
+    border: 1.5px solid var(--color-black);   /* black outline so the card pops against the green shadow */
+    background: var(--color-off-white);   /* off-white face (privacy .card-digital flips to black below) */
+    box-shadow: 6px 6px 0 var(--card-accent, var(--page-accent, var(--color-strong-green)));   /* neo-brutalist hard shadow — color = this card's category pill */
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+.initiative-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--color-off-white);
+    z-index: -1;
+    transform-origin: center;
+    transition: transform 0.3s ease, border-radius 0.3s ease;
+}
+.initiative-card:hover,
+.initiative-card:focus-within {
+    transform: translate(3px, 3px);   /* slide into the hard shadow */
+    box-shadow: 3px 3px 0 var(--card-accent, var(--page-accent, var(--color-strong-green)));
+}
+.initiative-card:active {
+    transform: translate(6px, 6px);
+    box-shadow: 0 0 0 var(--card-accent, var(--page-accent, var(--color-strong-green)));
+}
+/* The card's hard-shadow color = its OWN category pill color (so a row of mixed-
+   category cards shows each project's color, not one page accent). Keys off the
+   pill the card contains via :has(); falls back to --page-accent then green for
+   any card with no recognized tag. Applies on index + projects (shared rule). */
+.initiative-card:has(.initiative-tag.tag-opioid-settlements) { --card-accent: var(--color-blaze-orange); }
+.initiative-card:has(.initiative-tag.tag-privacy)            { --card-accent: var(--color-strong-green); }
+.initiative-card:has(.initiative-tag.tag-civic-tech)         { --card-accent: var(--color-light-purple); }
+.initiative-card:has(.initiative-tag.tag-research)           { --card-accent: var(--color-strong-yellow); }
+.initiative-card:has(.initiative-tag.tag-advocacy)           { --card-accent: var(--color-strong-red); }
+/* gradient-border reveal on hover removed — the card keeps a solid face + black
+   outline + green shadow; hover just slides into the shadow. */
+/* Settlements card: inner stays off-white so .redacted opacity tricks read */
+.card-settlements::before {
+    background: var(--color-off-white);
+}
+/* Privacy projects (.card-digital) stay DARK with a strong-green outline. */
+.card-digital {
+    background: var(--color-black);
+    border-color: var(--color-strong-green);
+    --card-arrow: var(--color-strong-green);   /* keeps its CLI green text + arrow */
+}
+.card-digital::before { background: var(--color-black); }
+@media (prefers-reduced-motion: reduce) {
+    .initiative-card,
+    .initiative-card::before { transition: none; }
+    .initiative-card:hover,
+    .initiative-card:focus-within { transform: none; }
+    .initiative-card:hover::before,
+    .initiative-card:focus-within::before { transform: none; }
+}
+
+/* "Read more →" CTA inside cards: opi-green by default, with the
+   .cta-underline class providing the hover underline. Per-theme
+   overrides (e.g. .card-settlements) can still target this. */
+.initiative-card .initiative-arrow {
+    color: var(--card-arrow, var(--color-black));
+}
+/* Card title + body default to --card-ink (black on the off-white face) so brief/
+   card embeds on any page stay visible even without per-page text rules. */
+.initiative-card h4, .initiative-card p {
+    color: var(--card-ink, var(--color-black));
+    /* Mono CLI/privacy cards can carry long unbreakable tokens; wrap them so a
+       card never forces horizontal scroll on narrow screens. */
+    overflow-wrap: anywhere;
+}
+/* Brief-card title matches the index card titles: bold Fraunces. */
+.card-brief h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+}
+
+/* ----------------------------------------------------------
+   Card title + body typography — SINGLE SOURCE for index +
+   projects (the per-card font rules were duplicated inline on
+   both pages and had drifted; removed there in favor of this).
+   Default: bold Fraunces, sized up, even tracking. Two exceptions:
+   .card-settlements -> IM Fell (typewriter); .card-digital ->
+   mono CLI (kept in each page's inline <style>). ---------- */
+.initiative-card h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.4rem;
+    line-height: 1.25;
+    letter-spacing: normal;
+    text-transform: none;
+    margin-bottom: 0.6rem;
+}
+.initiative-card p {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+}
+/* Settlement Watchdog — typewriter (IM Fell English), matching the OSM theme. */
+.card-settlements h4 {
+    font-family: var(--font-typewriter);
+}
+/* Category pills — one per card; the label + color match the filter category
+   so cards and filters read as one system. Set per card via the `tag` field in
+   projects-data.js (the category key). High specificity so these win over the
+   superseded per-theme `.card-* .initiative-tag` rules still inline on
+   index/projects; pill SHAPE comes from each page's base `.initiative-tag`. */
+/* Outline + category colors are SHARED by the project-card pills and the
+   whitepaper-card pills (whitepapers.html + any page rendering whitepapers), so
+   both read identically and a color change lives in ONE place. Card selectors
+   keep the .initiative-card scope (to beat the superseded inline .card-* rules);
+   whitepaper pills have no such conflict, so .whitepaper-tag alone is enough. */
+.initiative-card .initiative-tag,
+.whitepaper-tag { border: 1.5px solid var(--color-black); }   /* neo-brutalist outline — cleaner than a hard shadow at pill size */
+.initiative-card .initiative-tag.tag-opioid-settlements,
+.whitepaper-tag.tag-opioid-settlements { background: var(--color-blaze-orange); color: var(--color-black); }
+.initiative-card .initiative-tag.tag-privacy,
+.whitepaper-tag.tag-privacy            { background: var(--color-strong-green);  color: var(--color-black); }
+.initiative-card .initiative-tag.tag-civic-tech,
+.whitepaper-tag.tag-civic-tech         { background: var(--color-light-purple);  color: var(--color-black); }
+.initiative-card .initiative-tag.tag-research,
+.whitepaper-tag.tag-research           { background: var(--color-strong-yellow); color: var(--color-black); }
+.initiative-card .initiative-tag.tag-advocacy,
+.whitepaper-tag.tag-advocacy           { background: var(--color-strong-red);    color: var(--color-black); }
+
+/* ==========================================================
+   .card-garage — sectional garage door overlay (4 rows × 8 cells)
+   ----------------------------------------------------------
+   At rest the door fully covers the card, drawn as 4 stacked
+   panel rows of 8 raised rectangular cells each — matching a
+   real sectional garage door. On hover/focus, each row
+   stagger-rolls up (top first), translating far enough to
+   clear the card entirely (so the project info beneath is
+   fully revealed, not just the bottom 1/5).
+
+   The base .initiative-card lift + glow still apply; the
+   inner-scale gradient frame is disabled so the door is the
+   sole reveal effect.
+   ==========================================================*/
+.card-garage {
+    overflow: hidden;
+}
+.card-garage:hover::before,
+.card-garage:focus-within::before {
+    transform: none;
+    border-radius: inherit;
+}
+
+.card-garage .garage-door,
+.filter-btn.filter-btn-garage .filter-btn-door {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;                     /* the dark seam between sectional rows */
+    background: color-mix(in srgb, var(--color-black) 30%, transparent);
+    /* Fade the overlay in sync with the panel roll-up so the revealed card
+       text/colors render at their canonical values (no 30%-black tint). */
+    transition: background 0.35s cubic-bezier(0.55, 0.06, 0.4, 1);
+}
+.card-garage:hover .garage-door,
+.card-garage:focus-within .garage-door {
+    background: transparent;
+}
+
+/* A row of 8 raised cells. flex:1 = each row is 1/4 of door height. */
+.card-garage .garage-panel,
+.filter-btn.filter-btn-garage .filter-btn-door > .garage-panel {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0;
+    padding: 0;
+    background: var(--color-off-white);
+    transform-origin: top center;
+    transition: transform 0.35s cubic-bezier(0.55, 0.06, 0.4, 1);
+}
+
+/* Each cell — raised rectangular panel. 135° gradient gives the
+   "light hits the top-left, shadow on the bottom-right" feel; inset
+   box-shadow draws the chamfered bevel border. */
+.garage-panel > span {
+    margin: 6px 4px;
+    background: linear-gradient(135deg,
+        color-mix(in srgb, var(--color-off-white) 96%, var(--color-cream)) 0%,
+        var(--color-cream) 50%,
+        color-mix(in srgb, var(--color-black) 8%, var(--color-cream)) 100%);
+    border-radius: 2px;
+    box-shadow:
+        inset 1px 1px 0 0 color-mix(in srgb, var(--color-off-white) 75%, transparent),
+        inset -1px -1px 0 0 color-mix(in srgb, var(--color-black) 28%, transparent),
+        inset 0 -2px 4px color-mix(in srgb, var(--color-black) 12%, transparent);
+}
+
+/* Tighter cell margins on the small filter-button door */
+.filter-btn.filter-btn-garage .garage-panel > span {
+    margin: 2px 1px;
+    border-radius: 1px;
+    box-shadow:
+        inset 1px 1px 0 0 color-mix(in srgb, var(--color-off-white) 75%, transparent),
+        inset -1px -1px 0 0 color-mix(in srgb, var(--color-black) 28%, transparent);
+}
+
+/* Stagger roll-up: top row first; each row translates -500% so
+   even the bottom row clears the card entirely. */
+.card-garage:hover .garage-panel:nth-child(1),
+.card-garage:focus-within .garage-panel:nth-child(1),
+.filter-btn.filter-btn-garage:hover .garage-panel:nth-child(1),
+.filter-btn.filter-btn-garage:focus-visible .garage-panel:nth-child(1),
+.filter-btn.filter-btn-garage.is-active .garage-panel:nth-child(1) { transition-delay: 0ms;   transform: translateY(-500%); }
+
+.card-garage:hover .garage-panel:nth-child(2),
+.card-garage:focus-within .garage-panel:nth-child(2),
+.filter-btn.filter-btn-garage:hover .garage-panel:nth-child(2),
+.filter-btn.filter-btn-garage:focus-visible .garage-panel:nth-child(2),
+.filter-btn.filter-btn-garage.is-active .garage-panel:nth-child(2) { transition-delay: 80ms;  transform: translateY(-500%); }
+
+.card-garage:hover .garage-panel:nth-child(3),
+.card-garage:focus-within .garage-panel:nth-child(3),
+.filter-btn.filter-btn-garage:hover .garage-panel:nth-child(3),
+.filter-btn.filter-btn-garage:focus-visible .garage-panel:nth-child(3),
+.filter-btn.filter-btn-garage.is-active .garage-panel:nth-child(3) { transition-delay: 160ms; transform: translateY(-500%); }
+
+.card-garage:hover .garage-panel:nth-child(4),
+.card-garage:focus-within .garage-panel:nth-child(4),
+.filter-btn.filter-btn-garage:hover .garage-panel:nth-child(4),
+.filter-btn.filter-btn-garage:focus-visible .garage-panel:nth-child(4),
+.filter-btn.filter-btn-garage.is-active .garage-panel:nth-child(4) { transition-delay: 240ms; transform: translateY(-500%); }
+
+@media (prefers-reduced-motion: reduce) {
+    .card-garage .garage-panel,
+    .filter-btn.filter-btn-garage .garage-panel { transition: opacity 0.2s ease; }
+    .card-garage:hover .garage-panel,
+    .card-garage:focus-within .garage-panel,
+    .filter-btn.filter-btn-garage:hover .garage-panel,
+    .filter-btn.filter-btn-garage:focus-visible .garage-panel,
+    .filter-btn.filter-btn-garage.is-active .garage-panel {
+        transform: none;
+        opacity: 0;
+        pointer-events: none;
+        transition-delay: 0ms;
+    }
+}
+
+.card-garage .initiative-tag {
+    background: var(--color-off-white);
+    color: var(--color-black);
+}
+
+/* Garage section heading — sits between tier-2 grid and garage grid */
+.garage-header {
+    margin-top: 4rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+.garage-header h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.4rem, 2.4vw, 2rem);
+    color: var(--color-off-white);
+    margin: 0.25rem 0 0;
+}
+
+/* Garage filter chip — same size as other filter buttons; door
+   uses the same 4×8 panel grid pattern as cards (just smaller).
+   Door covers the "Garage" label at rest; opens on hover, focus,
+   or when the chip is the active filter. */
+.filter-btn.filter-btn-garage {
+    position: relative;
+    overflow: hidden;
+}
+.filter-btn.filter-btn-garage .filter-btn-label {
+    position: relative;
+    z-index: 1;
+}
+
+/* ==========================================================
+   MOBILE / TOUCH (no hover) — garage door behavior
+   (A) Filter chip: door stays OPEN so the "Garage" label is
+       always readable (desktop hides it behind a closed door
+       that only rolls up on hover).
+   (B) Cards: hover is unavailable, so the door opens via a
+       JS-toggled .is-open class (first tap) instead of :hover;
+       a second tap follows the card link. See projects-render.js.
+   ========================================================== */
+@media (max-width: 768px) {
+    /* (A) Filter chip — force the door fully open + fade the tint,
+       same end-state as the hover/.is-active rules above. */
+    .filter-btn.filter-btn-garage .filter-btn-door { background: transparent; }
+    .filter-btn.filter-btn-garage .garage-panel { transform: translateY(-500%); transition-delay: 0ms; }
+
+    /* (B) Cards — disable the hover/focus reveal on touch so a tap
+       doesn't half-open the door; the .is-open class drives it. */
+    .card-garage:hover .garage-door,
+    .card-garage:focus-within .garage-door { background: color-mix(in srgb, var(--color-black) 30%, transparent); }
+    .card-garage:hover .garage-panel,
+    .card-garage:focus-within .garage-panel { transform: none; }
+    .card-garage:hover .garage-panel:nth-child(1),
+    .card-garage:hover .garage-panel:nth-child(2),
+    .card-garage:hover .garage-panel:nth-child(3),
+    .card-garage:hover .garage-panel:nth-child(4),
+    .card-garage:focus-within .garage-panel:nth-child(1),
+    .card-garage:focus-within .garage-panel:nth-child(2),
+    .card-garage:focus-within .garage-panel:nth-child(3),
+    .card-garage:focus-within .garage-panel:nth-child(4) { transform: none; transition-delay: 0ms; }
+
+    /* (B) Open state, set by JS on first tap — door rolls up, tint clears. */
+    .card-garage.is-open .garage-door { background: transparent; }
+    .card-garage.is-open .garage-panel:nth-child(1) { transition-delay: 0ms;   transform: translateY(-500%); }
+    .card-garage.is-open .garage-panel:nth-child(2) { transition-delay: 80ms;  transform: translateY(-500%); }
+    .card-garage.is-open .garage-panel:nth-child(3) { transition-delay: 160ms; transform: translateY(-500%); }
+    .card-garage.is-open .garage-panel:nth-child(4) { transition-delay: 240ms; transform: translateY(-500%); }
+}
+
+/* ==========================================================
+   Glitch button (.btn-glitch) — adapted from Uiverse
+   ----------------------------------------------------------
+   Use with: <button class="btn-glitch" data-glitch="LABEL">LABEL</button>
+   The data-glitch attribute is rendered via ::after as the
+   "ghost" copy that glitches behind the real text on hover.
+   ==========================================================*/
+.btn-glitch {
+    position: relative;
+    padding: 10px 50px;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    border: 1px solid transparent;
+    border-radius: 5px;
+    color: var(--color-off-white);
+    background: transparent;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.btn-glitch::after {
+    --move1: inset(50% 50% 50% 50%);
+    --move2: inset(31% 0 40% 0);
+    --move3: inset(39% 0 15% 0);
+    --move4: inset(45% 0 40% 0);
+    --move5: inset(45% 0 6% 0);
+    --move6: inset(14% 0 61% 0);
+    clip-path: var(--move1);
+    content: attr(data-glitch);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: block;
+    padding: inherit;
+    text-align: center;
+}
+.btn-glitch:hover {
+    background: transparent;
+    border: 1px solid var(--color-strong-green);
+    box-shadow: 0 10px 10px -10px var(--color-strong-green);
+    text-shadow: -1px -1px 0 var(--color-strong-green), 1px 1px 0 var(--color-atomic-purple);
+}
+.btn-glitch:hover::after {
+    animation: opi-glitch 1s steps(2, end);
+    text-shadow: -3px -3px 0 var(--color-strong-green), 3px 3px 0 var(--color-atomic-purple);
+    background: transparent;
+    border: 3px solid var(--color-strong-green);
+}
+@keyframes opi-glitch {
+    0%   { clip-path: var(--move1); transform: translate(0, -10px); }
+    10%  { clip-path: var(--move2); transform: translate(-10px, 10px); }
+    20%  { clip-path: var(--move3); transform: translate(10px, 0); }
+    30%  { clip-path: var(--move4); transform: translate(-10px, 10px); }
+    40%  { clip-path: var(--move5); transform: translate(10px, -10px); }
+    50%  { clip-path: var(--move6); transform: translate(-10px, 10px); }
+    60%  { clip-path: var(--move1); transform: translate(10px, -10px); }
+    70%  { clip-path: var(--move3); transform: translate(-10px, 10px); }
+    80%  { clip-path: var(--move2); transform: translate(10px, -10px); }
+    90%  { clip-path: var(--move4); transform: translate(-10px, 10px); }
+    100% { clip-path: var(--move1); transform: translate(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .btn-glitch:hover::after { animation: none; clip-path: var(--move1); }
+}
+
+/* Glitch on a plain text link (e.g. the footer Codeberg link) — the same
+   opi-glitch ghost as .btn-glitch but with no button chrome. Pair with
+   data-glitch="LABEL" matching the link text. */
+.glitch-link { position: relative; display: inline-block; }
+.glitch-link::after {
+    --move1: inset(50% 50% 50% 50%);
+    --move2: inset(31% 0 40% 0);
+    --move3: inset(39% 0 15% 0);
+    --move4: inset(45% 0 40% 0);
+    --move5: inset(45% 0 6% 0);
+    --move6: inset(14% 0 61% 0);
+    clip-path: var(--move1);
+    content: attr(data-glitch);
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+.glitch-link:hover {
+    text-shadow: -1px -1px 0 var(--color-strong-green), 1px 1px 0 var(--color-atomic-purple);
+}
+.glitch-link:hover::after {
+    animation: opi-glitch 1s steps(2, end);
+    text-shadow: -3px -3px 0 var(--color-strong-green), 3px 3px 0 var(--color-atomic-purple);
+}
+@media (prefers-reduced-motion: reduce) {
+    .glitch-link:hover::after { animation: none; clip-path: var(--move1); }
+}
+
+/* ==========================================================
+   Whitepaper card — used on /whitepapers.html and any project
+   page that pulls from /js/whitepapers-data.js (e.g. the
+   privacy reports section on /addiction-privacy.html). One
+   data source, one card style.
+   ==========================================================*/
+.whitepapers-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.75rem;
+    margin-top: 2.5rem;
+}
+@media (max-width: 720px) {
+    .whitepapers-grid { grid-template-columns: 1fr; }
+}
+
+.whitepaper-card {
+    --card-radius: 16px;
+    position: relative;
+    z-index: 0;
+    isolation: isolate;
+    border: 1.5px solid var(--color-strong-green);   /* solid green outline around the whole card */
+    border-radius: var(--card-radius);
+    background: var(--color-black);   /* solid face — gradient removed (it left outline remnants) */
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 6px 6px 0 var(--color-off-white);   /* off-white hard shadow (matches the index media cards) */
+    transition: transform 0.14s ease, box-shadow 0.14s ease, opacity 0.18s ease, scale 0.18s ease;
+}
+.whitepaper-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--color-black);
+    z-index: -1;
+    /* inset (not transform: scale) so the revealed gradient border is the
+       SAME px width on all four sides. Scale-from-center produced unequal
+       borders on tall cards (proportional shrink → narrower side strips,
+       and the bottom strip could be hidden behind flex children that
+       extend to the card's bottom edge). */
+    transition: inset 0.3s ease, border-radius 0.3s ease;
+}
+.whitepaper-card:hover,
+.whitepaper-card:focus-within {
+    transform: translate(3px, 3px);   /* slide into the hard shadow */
+    box-shadow: 3px 3px 0 var(--color-off-white);
+}
+.whitepaper-card:active {
+    transform: translate(6px, 6px);
+    box-shadow: 0 0 0 var(--color-off-white);
+}
+/* gradient-border reveal removed — the card now has a solid strong-green outline. */
+@media (prefers-reduced-motion: reduce) {
+    .whitepaper-card,
+    .whitepaper-card::before { transition: none; }
+    .whitepaper-card:hover,
+    .whitepaper-card:focus-within { transform: none; }
+    .whitepaper-card:hover::before,
+    .whitepaper-card:focus-within::before { inset: 0; }
+}
+
+.whitepaper-cover {
+    background: var(--color-black);
+    border-radius: calc(var(--card-radius) - 4px) calc(var(--card-radius) - 4px) 0 0;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+}
+.whitepaper-cover img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    box-shadow: 0 10px 30px var(--overlay-strong);
+}
+
+/* OSM (manila) pages only: whitepaper cards take the page accent (blaze-orange)
+   border + an opi-black hard shadow instead of the default green / off-white,
+   and the cover image is hidden on mobile to cut scroll length. Scoped to
+   .manila-page so whitepapers.html + addiction-privacy keep the green look. */
+.manila-page .whitepaper-card {
+    border-color: var(--page-accent, var(--color-strong-green));
+    box-shadow: 6px 6px 0 var(--color-black);
+}
+.manila-page .whitepaper-card:hover,
+.manila-page .whitepaper-card:focus-within {
+    box-shadow: 3px 3px 0 var(--color-black);
+}
+.manila-page .whitepaper-card:active {
+    box-shadow: 0 0 0 var(--color-black);
+}
+@media (max-width: 768px) {
+    .manila-page .whitepaper-cover { display: none; }
+}
+
+/* OSM (manila) pages: policy-brief cards (.card-brief) also take the page-accent
+   border + opi-black hard shadow, matching the whitepaper cards. */
+.manila-page .card-brief {
+    border-color: var(--page-accent, var(--color-strong-green));
+    box-shadow: 6px 6px 0 var(--color-black);
+}
+.manila-page .card-brief:hover,
+.manila-page .card-brief:focus-within {
+    box-shadow: 3px 3px 0 var(--color-black);
+}
+.manila-page .card-brief:active {
+    box-shadow: 0 0 0 var(--color-black);
+}
+
+.whitepaper-meta {
+    padding: 1.5rem 1.6rem 1.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+/* Top row of the card meta: tag chip on the left, publish date on the right. */
+.whitepaper-headrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+.whitepaper-tag {
+    display: inline-block;
+    padding: 0.3rem 0.75rem;
+    border-radius: 100px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-black);
+    font-family: var(--font-body);   /* match the project-card pills */
+    /* background + 1.5px black outline come from the shared .tag-<category>
+       rules above (e.g. .whitepaper-tag.tag-privacy) — set per card via the
+       category class added by the renderer. */
+}
+.whitepaper-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.05rem;
+    line-height: 1.35;
+    color: var(--color-off-white);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.whitepaper-date {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--color-off-white);
+    margin: 0;
+    white-space: nowrap;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+.whitepaper-authors {
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--color-off-white);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.whitepaper-arrow {
+    display: inline-block;
+    align-self: flex-start;  /* don't stretch in the flex column — keep the underline hugging the text */
+    margin-top: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--color-strong-green);
+    font-weight: 600;
+}
+
+/* Filter transition state (used by whitepapers.html filter bar) */
+.whitepaper-card.is-filtering-out { opacity: 0; scale: 0.96; pointer-events: none; }
+.whitepaper-card.is-hidden { display: none; }
+
+/* ==========================================================
+   Animated burger / X — adapted from Uiverse
+   ----------------------------------------------------------
+   Replaces the ☰ char button. Three off-white bars that
+   morph to an X via the .is-open state class.
+   Used as both the mobile menu toggle AND the drawer close
+   button. JS toggles .is-open on the .burger element.
+   ==========================================================*/
+.burger {
+    position: relative;
+    width: 32px;
+    height: 24px;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    display: none;  /* shown on mobile or when drawer is open */
+}
+.burger span {
+    display: block;
+    position: absolute;
+    height: 3px;
+    width: 100%;
+    background: var(--color-off-white);
+    border-radius: 9px;
+    opacity: 1;
+    left: 0;
+    transform: rotate(0deg);
+    transition: 0.25s ease-in-out;
+}
+.burger span:nth-of-type(1) { top: 0; transform-origin: left center; }
+.burger span:nth-of-type(2) { top: 50%; transform: translateY(-50%); transform-origin: left center; }
+.burger span:nth-of-type(3) { top: 100%; transform: translateY(-100%); transform-origin: left center; }
+
+.burger.is-open span:nth-of-type(1) {
+    transform: rotate(45deg);
+    top: -2px;
+    left: 4px;
+}
+.burger.is-open span:nth-of-type(2) {
+    width: 0%;
+    opacity: 0;
+}
+.burger.is-open span:nth-of-type(3) {
+    transform: rotate(-45deg);
+    top: 22px;
+    left: 4px;
+}
+
+/* Show on mobile only — drawer has its own .opi-drawer-close X */
+@media (max-width: 768px) {
+    .burger { display: block; }
+}
+
+/* Hide the old separate close button — drawer's own X handles it now */
+.opi-nav-close { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+    .burger span { transition: none; }
+}
+
+/* ==========================================================
+   Subway map (Batch 7)
+   ----------------------------------------------------------
+   Renders via /js/subway-map.js into [data-subway-map] containers.
+   Two sizes: data-subway-map-size="full" (projects.html top section,
+   with audience-filter column) and "mini" (footer, every page).
+   ==========================================================*/
+.subway-section {
+    background: var(--color-black);
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-off-white) 8%, transparent);
+}
+.subway-section-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+.subway-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--color-strong-green);
+    display: block;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+.subway-map {
+    width: 100%;
+    max-width: 620px;       /* don't grow obnoxiously wide on big monitors */
+    margin: 0 auto;
+    overflow: visible;
+    /* Height is intrinsic to the SVG aspect ratio (viewBox / width).
+       No explicit height — the renderer sizes the viewBox to fit data. */
+}
+.subway-map[data-subway-map-size="mini"] {
+    max-width: 520px;
+}
+.subway-map svg {
+    display: block;
+    overflow: visible;
+    width: 100%;
+    height: auto;
+}
+
+.subway-line {
+    transition: opacity 0.2s ease, stroke-width 0.2s ease;
+}
+.subway-line-halo {
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+.subway-station {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    cursor: pointer;
+    outline: none;
+}
+.subway-station:focus-visible circle:first-of-type {
+    stroke: var(--color-strong-green);
+    stroke-width: 3;
+}
+.subway-station-hub { cursor: pointer; }
+/* Label group = background pill + text. Hidden at rest; on hover the
+   whole group fades in. The pill (opi-black) sits behind the text so the
+   label stays legible even when it overlays a line. */
+.subway-station-label-group {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+.subway-station-label-group.is-hovered {
+    opacity: 1;
+}
+.subway-station-label-bg {
+    /* fill set inline (var(--color-black)); just ensure proper rendering */
+    stroke: color-mix(in srgb, var(--color-strong-green) 50%, transparent);
+    stroke-width: 1;
+}
+.subway-station-label {
+    fill: var(--color-off-white);
+    font-family: var(--font-mono), monospace;
+    pointer-events: none;
+}
+.subway-line-label {
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+/* Hover: lit lines + dimmed others */
+.subway-map.is-hovering .subway-line:not(.is-line-active),
+.subway-map.is-hovering .subway-line-halo:not(.is-line-active) {
+    opacity: 0.18;
+}
+.subway-map.is-hovering .subway-station:not(.is-line-active):not(.is-hovered) {
+    opacity: 0.3;
+}
+.subway-map.is-hovering .subway-line-label:not([data-line-id="hub"]) {
+    opacity: 0.4;
+}
+.subway-station-label.is-hovered {
+    font-size: 14px;
+    fill: var(--color-strong-green);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .subway-line, .subway-line-halo, .subway-station, .subway-station-label, .subway-line-label { transition: none; }
+}
+
+/* Subway legend — color swatch + line label, plus coming-soon (dashed) and
+   interchange (ring) entries. Used both on the projects page (below the
+   full map) and in the footer (below the mini-map). Auto-rendered by
+   /js/subway-map.js into any [data-subway-legend] container. */
+.subway-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 1.25rem;
+    margin: 1.5rem auto 0;
+    max-width: 920px;
+    padding: 0 1rem;
+}
+.subway-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.72rem;
+    color: var(--color-off-white);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    line-height: 1;
+}
+.subway-legend-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid color-mix(in srgb, var(--color-off-white) 25%, transparent);
+}
+.subway-legend-swatch.subway-legend-halo {
+    /* Black research swatch with a white halo so it reads on dark bg */
+    box-shadow: 0 0 0 2px var(--color-off-white);
+}
+.subway-legend-swatch.subway-legend-dashed {
+    /* Dashed bar (coming-soon line indicator) — render as a small SVG-style stripe */
+    background: repeating-linear-gradient(
+        to right,
+        var(--color-off-white) 0,
+        var(--color-off-white) 3px,
+        transparent 3px,
+        transparent 5px
+    ) !important;
+    border-radius: 2px;
+    height: 4px;
+    width: 22px;
+    border: none;
+}
+.subway-legend-label {
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    /* On mobile the project card grid below already lists every project
+       — the SVG map would be redundant. Hide the whole subway section.
+       Footer mini-map also hidden for the same reason. */
+    .subway-section {
+        display: none;
+    }
+    .footer-subway-map {
+        display: none;
+    }
+}
+
+/* Footer mini-map wrapper */
+.footer-subway-map {
+    margin: 0 auto 3rem;   /* bottom margin = the gap ABOVE the CC band; the bare `0 auto` was wiping the footer rhythm's margin-bottom. Subway is desktop-only (display:none ≤768) so this is effectively a desktop rule. */
+    text-align: center;
+    max-width: 520px;
+}
+.footer-subway-eyebrow {
+    font-family: var(--footer-font-mono, var(--font-mono));
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--color-off-white);
+    display: block;
+    margin-bottom: 0.75rem;
+}
+.footer-subway-map .subway-legend {
+    margin-top: 1rem;
+    gap: 0.4rem 0.85rem;
+}
+.footer-subway-map .subway-legend-item {
+    font-size: 0.62rem;
+    color: var(--footer-fg);
+    opacity: 0.85;
+}
+.footer-subway-map .subway-legend-swatch { width: 11px; height: 11px; }
+.footer-subway-map .subway-legend-swatch.subway-legend-dashed { width: 18px; height: 3px; }
+
+/* ==========================================================
+   CLI / Terminal — shared chrome (Batch 11)
+   ----------------------------------------------------------
+   Used by addiction-privacy.html (page-level CLI aesthetic)
+   and /cli.html (the live browser terminal). All instances
+   reference --cli-* tokens defined at :root.
+   ==========================================================*/
+.terminal-window {
+    background: var(--cli-surface);
+    border: 1px solid var(--cli-border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1.5rem 0;
+}
+/* Linux-style variant: square corners, no fake Mac dots, just a plain
+   shell-prompt title and a [ × ] exit link on the right. */
+.terminal-window--linux {
+    border-radius: 2px;
+    border-color: var(--cli-border);
+}
+
+.terminal-titlebar {
+    background: var(--cli-surface-2);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--cli-border);
+}
+.terminal-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+.terminal-dot--red    { background: var(--color-strong-red); }
+.terminal-dot--yellow { background: var(--color-strong-yellow); }
+.terminal-dot--green  { background: var(--cli-green); }
+
+.terminal-title {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--cli-text-dim);
+    margin-left: 8px;
+}
+
+/* Linux titlebar: shell-prompt-style title + exit link */
+.terminal-titlebar--linux {
+    padding: 6px 12px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    gap: 0;
+}
+.terminal-title-prompt { color: var(--color-strong-green); }
+.terminal-title-sep    { color: var(--color-cream); }
+.terminal-title-path   { color: var(--color-strong-yellow); }
+/* Title-bar buttons (refresh, close). Plain text-y look — no chrome. */
+.terminal-titlebar-btn {
+    color: var(--color-cream);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    padding: 2px 6px;
+    border-radius: 2px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+}
+.terminal-titlebar-btn:hover,
+.terminal-titlebar-btn:focus-visible {
+    color: var(--color-light-purple);
+    background: color-mix(in srgb, var(--color-light-purple) 12%, transparent);
+    outline: none;
+}
+.terminal-titlebar-btn[data-action="hard-reload"] {
+    margin-left: auto;
+}
+.terminal-titlebar-btn[data-action="hard-reload"]:hover,
+.terminal-titlebar-btn[data-action="hard-reload"]:focus-visible {
+    color: var(--cli-green);
+    background: color-mix(in srgb, var(--cli-green) 12%, transparent);
+}
+.terminal-titlebar-close:hover,
+.terminal-titlebar-close:focus-visible {
+    color: var(--cli-red) !important;
+    background: color-mix(in srgb, var(--cli-red) 12%, transparent) !important;
+}
+
+.terminal-body {
+    padding: 1.25rem 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    line-height: 1.9;
+    color: var(--cli-text);
+    /* Query container so terminal content (e.g. .opi-help-list) responds to the
+       terminal's OWN width, not the viewport. This keeps the narrow OPI OS CLI
+       window in sync with the wide /cli page — same width → same layout. */
+    container-type: inline-size;
+}
+
+/* Inline syntax highlighting inside .terminal-body (or anywhere) */
+.terminal-body .line { margin-bottom: 2px; }
+.terminal-body .prompt    { color: var(--cli-green);    opacity: 0.7; }
+.terminal-body .cmd       { color: var(--color-cream);  font-weight: 500; }
+.terminal-body .flag      { color: var(--color-light-purple); } 
+.terminal-body .value     { color: var(--cli-green); }
+.terminal-body .output    { color: var(--cli-text-dim); padding-left: 1rem; }
+.terminal-body .error     { color: var(--cli-red); }
+.terminal-body .warning   { color: var(--cli-orange); }
+.terminal-body .comment   { color: var(--cli-comment); }
+.terminal-body .success   { color: var(--cli-green); }
+.terminal-body .highlight { color: var(--color-off-white); }   /* paths, status, info — was cyan; light-purple stays in OPI palette */
+.terminal-body .num       { color: var(--cli-yellow); }
+.terminal-body .label     { color: var(--cli-purple); }
+
+/* Cursor blink utility — used by .cli-hero, the live terminal input, etc. */
+.cli-cursor {
+    display: inline-block;
+    width: 9px;
+    height: 1.05em;
+    background: var(--cli-green);
+    margin-left: 4px;
+    vertical-align: middle;
+    animation: cli-blink 1s steps(2, end) infinite;
+}
+@keyframes cli-blink {
+    0%, 49%   { opacity: 1; }
+    50%, 100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .cli-cursor { animation: none; opacity: 1; }
+}
+
+/* Faint green scanline texture behind the terminal (page background). Steady —
+   the old flicker is gone; the CRT "screen" effect lives on .terminal-window
+   below. */
+.scanlines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.55;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        color-mix(in srgb, var(--color-strong-green) 8%, transparent) 3px,
+        color-mix(in srgb, var(--color-strong-green) 8%, transparent) 4px
+    );
+}
+
+/* ---- CRT screen effect (the terminal "tube") ----
+   Balatro-ish: a steady phosphor glow, no flicker. Scanlines + a soft vignette
+   painted OVER the screen via ::after (mix-blend multiply darkens the rows +
+   curved-tube edges), a per-colour BLOOM on the text (each span glows its own
+   colour), and a green halo bleeding off the cli.html screen. Static → reduced-
+   motion safe. Applies to every .terminal-window (cli.html + OPI OS). */
+.terminal-window { position: relative; isolation: isolate; }
+.terminal-window::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    z-index: 4;
+    mix-blend-mode: multiply;
+    background:
+        radial-gradient(125% 125% at 50% 50%, transparent 58%, color-mix(in srgb, var(--color-black) 55%, transparent) 100%),
+        repeating-linear-gradient(0deg,
+            transparent, transparent 2px,
+            color-mix(in srgb, var(--color-black) 26%, transparent) 2px,
+            color-mix(in srgb, var(--color-black) 26%, transparent) 3px);
+}
+.terminal-body,
+.opi-banner {
+    text-shadow:
+        0 0 1px currentColor,
+        0 0 6px color-mix(in srgb, currentColor 30%, transparent);
+}
+.cli-page-window {
+    box-shadow: 0 0 50px color-mix(in srgb, var(--color-strong-green) 16%, transparent);
+}
+
+/* ==========================================================
+   /cli.html — full-page browser terminal
+   ----------------------------------------------------------
+   Renderer: /js/opi-cli.js. Mounts into #opi-cli-app inside a
+   .terminal-window that takes up the page's main column.
+   ==========================================================*/
+.cli-page {
+    background: var(--cli-bg);
+    min-height: calc(100vh - var(--header-height) - 4rem);
+    padding: 2rem 1rem 3rem;
+    position: relative;
+    overflow: hidden;
+}
+.cli-page-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+.cli-page-window {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+}
+.cli-page-window .terminal-body {
+    flex: 1;
+    min-height: 60vh;
+    max-height: 75vh;
+    overflow-y: auto;
+    padding: 1.5rem 1.75rem;
+    cursor: text;
+}
+/* Quickstart pills — sit between the terminal and the cli-page-tip.
+   Click one → it runs the embedded `data-cli-run` command in the terminal. */
+.cli-quickstart {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1.25rem auto 0;
+    max-width: 920px;
+    padding: 0 1rem;
+}
+.cli-quickstart-label {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--cli-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-right: 0.25rem;
+}
+.cli-pill {
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--cli-green) 50%, transparent);
+    color: var(--cli-green);
+    padding: 0.4rem 0.85rem;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.cli-pill:hover,
+.cli-pill:focus-visible {
+    background: color-mix(in srgb, var(--cli-green) 14%, transparent);
+    border-color: var(--cli-green);
+    outline: none;
+    transform: translateY(-1px);
+}
+.cli-pill:active {
+    transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+    .cli-pill, .cli-pill:hover, .cli-pill:active { transform: none; }
+}
+
+.cli-page-tip {
+    text-align: center;
+    color: var(--color-off-white);             /* off-white for legibility */
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    margin: 1rem auto 0;
+    max-width: 720px;
+    line-height: 1.7;
+}
+.cli-page-tip strong {
+    color: var(--color-light-purple);          /* "Best on desktop." stands out in light-purple */
+    font-weight: 600;
+}
+.cli-page-tip code {
+    color: var(--cli-green);
+    background: color-mix(in srgb, var(--cli-green) 10%, transparent);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+}
+
+/* ==========================================================
+   Global customer-support floating button
+   ----------------------------------------------------------
+   Injected on every page by /js/site-footer.js. Replaces the
+   per-page back-to-top arrows (which are hidden via the rule
+   below). Circle with OPI-black outline, the custy-support
+   icon as background. Click → /contact.html.
+   ========================================================== */
+.opi-support-btn {
+    position: fixed;
+    bottom: calc(3rem + 56px);     /* stacked above .opi-back-to-top, clears the footer copyright bar */
+    /* Hug the content rail: on wide screens sit ~24px outside the 1280px
+       content column instead of the far viewport corner, so the channel stays
+       consistent across card grids and topic pages. Falls back to 1.5rem on
+       narrower screens (where content already reaches the edge). */
+    right: max(1.5rem, calc((100vw - var(--max-width)) / 2 - 85px));
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: var(--color-off-white) center / 80% no-repeat url('/opi/images/custy-support.webp');
+    border: 2px solid var(--color-black);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.4);
+    z-index: 80;
+    text-decoration: none;
+    display: block;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.opi-support-btn:hover,
+.opi-support-btn:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 26px color-mix(in srgb, var(--page-accent, var(--color-strong-green)) 45%, transparent);  /* subtle outside glow, tracks the page accent — no fill behind the otter */
+    outline: none;
+}
+.opi-support-btn-icon {
+    /* visually-hidden — image is the bg of .opi-support-btn for crisp scaling */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+}
+.opi-support-btn-tooltip {
+    position: absolute;
+    right: calc(100% + 0.75rem);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--color-black);
+    color: var(--color-off-white);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+.opi-support-btn:hover .opi-support-btn-tooltip,
+.opi-support-btn:focus-visible .opi-support-btn-tooltip {
+    opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+    .opi-support-btn,
+    .opi-support-btn:hover,
+    .opi-support-btn:focus-visible {
+        transform: none;
+        transition: none;
+    }
+}
+
+/* ==========================================================
+   Global back-to-top arrow — sibling of .opi-support-btn,
+   injected on every page (except /cli + /contact) by
+   /js/site-footer.js. Sits below the support button, opens
+   on scroll past 400px.
+   ========================================================== */
+.opi-back-to-top {
+    position: fixed;
+    bottom: 3rem;                   /* clears the footer copyright bar without floating too high */
+    /* Hug the content rail (matches .opi-support-btn) so both buttons stay
+       vertically aligned and a consistent distance from content site-wide. */
+    right: max(1.5rem, calc((100vw - var(--max-width)) / 2 - 85px));
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: var(--page-accent, var(--color-strong-green));
+    color: var(--color-black);
+    border: 2px solid var(--color-black);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1;
+    z-index: 80;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+    transition: opacity 0.25s ease, visibility 0.25s ease, transform 0.25s ease, background-color 0.2s ease;
+}
+.opi-back-to-top.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.opi-back-to-top:hover,
+.opi-back-to-top:focus-visible {
+    outline: none;
+    transform: translateY(-4px);   /* nudge the arrow up */
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--page-accent, var(--color-strong-green)) 50%, transparent);  /* glow tracks the page accent */
+}
+@media (prefers-reduced-motion: reduce) {
+    .opi-back-to-top { transition: opacity 0.25s ease, visibility 0.25s ease; transform: none !important; }
+}
+
+/* Per-page legacy `.back-to-top` markup is being stripped this batch.
+   Until those edits land, hide them so they don't double up with the
+   global arrow above. After the strip sweep this rule is harmless. */
+.back-to-top {
+    display: none !important;
+}
+
+/* ==========================================================
+   OSM state reporting-process database (.rp-*) — SINGLE SOURCE
+   ----------------------------------------------------------
+   Rendered by /js/reporting-process.js into #reportingProcessList
+   from /data/reporting-process.json (synced from Airtable). Used on
+   osm-accountability-gov AND osm-accountability-journalists. Relies on
+   the manila tokens (--manila-darker) the OSM pages define on :root.
+   ========================================================== */
+/* Multi-select checkbox groups (WFAM/AG forms) stack one option per line so
+   long option sets stay readable instead of wrapping across a single row. */
+.checkbox-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.checkbox-item { display: flex; align-items: flex-start; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.78rem; color: var(--color-black); cursor: pointer; line-height: 1.4; }
+.checkbox-item input { margin-top: 3px; flex-shrink: 0; }
+/* The hidden attribute must beat .form-group's display:flex (an author display
+   rule otherwise overrides [hidden]) so conditional fields — the tribe / Alaska
+   selects — stay hidden until the chosen State reveals them. */
+.form-group[hidden] { display: none; }
+
+/* ── WFAM / AG report forms — CANONICAL styling (single source) ──────────────
+   The report form markup is injected once from js/wfam-report-form.js into
+   #reportFormMount; these rules (scoped to .native-form so other forms are
+   untouched) make it render IDENTICALLY on every page instead of relying on
+   per-page inline copies that had drifted (e.g. mono vs Geist labels). */
+/* Scoped to .manila-page so ONLY the manila report/AG forms (community, hub,
+   gov, journalists) get this — the contact page is a different dark theme with
+   its own off-white form styling and must NOT be overridden. */
+.manila-page .native-form { display: flex; flex-direction: column; gap: 1rem; }
+.manila-page .native-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.manila-page .native-form .form-group { display: flex; flex-direction: column; gap: 0.3rem; }
+.manila-page .native-form .form-group > label { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: var(--color-black); }
+.manila-page .native-form .form-group .hint { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 400; color: var(--color-black); }
+.manila-page .native-form .form-status { font-family: var(--font-mono); font-size: 0.82rem; padding: 0.75rem 1rem; border-radius: 4px; display: none; }
+/* LIGHT manila bg → black text for contrast (dark-green #1b7a3a on cream was only
+   ~3.2:1). The green/red tint + left accent + the ✓ in the message carry the
+   success/error signal. */
+.manila-page .native-form .form-status.success { display: block; background: color-mix(in srgb, var(--color-dark-green) 15%, transparent); color: var(--color-black); border-left: 3px solid var(--color-dark-green); font-weight: 600; }
+.manila-page .native-form .form-status.error { display: block; background: color-mix(in srgb, var(--color-strong-red) 11%, transparent); color: var(--color-black); border-left: 3px solid var(--color-strong-red); font-weight: 600; }
+/* Honor the `hidden` attribute the form JS toggles: the success/error rules above
+   set display:block, so a box that carries .success from the start would show an
+   empty coloured bar on load. This keeps it hidden until there's a real message. */
+.manila-page .native-form .form-status[hidden] { display: none !important; }
+/* Same override fix for the PIPED groups (Tribe / Alaska): .form-group sets
+   display:flex, which would beat the `hidden` attribute and show them always.
+   wfam-form.js toggles `hidden`; this makes that actually hide them. */
+.manila-page .native-form .form-group[hidden] { display: none !important; }
+@media (max-width: 640px) { .manila-page .native-form .form-row { grid-template-columns: 1fr; } }
+
+.rp-controls { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin: 1rem 0 0.4rem; }
+.rp-search { flex: 1; min-width: 200px; max-width: 360px; padding: 0.55rem 0.9rem; font-family: var(--font-body); font-size: 0.85rem; border: 1px solid var(--manila-darker); border-radius: 4px; background: var(--color-white); color: var(--color-black); outline: none; }
+.rp-search:focus { border-color: var(--color-dark-green); }
+.rp-count { font-family: var(--font-mono); font-size: 0.68rem; color: var(--color-black); white-space: nowrap; }
+/* AG-card meta lines ("Showing one example…" hint + "Last synced · View full
+   database ↗") — one consistent size/font across every OSM page, matched to the
+   .db-footnote scale, with the standard link hover (the lines live in <div>s, so
+   the p a/li a/td a standard doesn't reach them). */
+.rp-hint, .rp-meta { font-family: var(--font-body); font-size: 0.8rem; line-height: 1.5; color: var(--color-black); margin: 0.75rem 0 0; }
+.rp-meta a, .rp-hint a {
+    color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.2em;
+    background-image: linear-gradient(var(--page-accent, var(--color-strong-green)), var(--page-accent, var(--color-strong-green)));
+    background-repeat: no-repeat; background-position: left center; background-size: 0% 100%;
+    transition: background-size 0.28s ease, color 0.18s ease;
+}
+.rp-meta a:hover, .rp-meta a:focus-visible,
+.rp-hint a:hover, .rp-hint a:focus-visible { color: var(--color-black); background-size: 100% 100%; }
+.rp-list { display: grid; gap: 1rem; }
+/* Neobrutalist card: black border + hard black drop shadow, sharp corners. */
+#reportingProcessList { display: grid; gap: 1.25rem; }
+.rp-card { background: var(--color-white); border: 2px solid var(--color-black); border-radius: 0; box-shadow: 5px 5px 0 var(--color-black); padding: 1.25rem 1.5rem; }
+.rp-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.rp-state { font-family: var(--font-typewriter); font-size: 1.15rem; font-weight: 800; color: var(--color-black); margin: 0; }
+.rp-updated { font-family: var(--font-mono); font-size: 0.66rem; color: var(--color-black); opacity: 0.7; }
+.rp-change { font-family: var(--font-mono); font-size: 0.78rem; color: var(--color-black); line-height: 1.6; margin: 0 0 0.75rem; }
+/* The first image attachment sits in a bordered box to the LEFT of the checks/
+   x's; the status list takes the remaining width. Stacks on narrow screens. */
+.rp-status-section { display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 0.75rem; }
+.rp-status-section .rp-status-grid { flex: 1 1 auto; min-width: 0; margin-bottom: 0; }
+.rp-card-img { flex: 0 0 auto; display: block; max-width: 170px; border: 1.5px solid var(--color-black); align-self: flex-start; }
+.rp-card-img img { display: block; width: 100%; height: auto; }
+@media (max-width: 560px) { .rp-status-section { flex-direction: column; } .rp-card-img { max-width: 100%; } }
+
+/* Status list — one row per question, hairline dividers + subtle zebra striping
+   so nothing runs together and each row is easy to scan. */
+.rp-status-grid { display: grid; grid-template-columns: 1fr; gap: 0; margin-bottom: 0.75rem; border-top: 1px solid color-mix(in srgb, var(--color-black) 14%, transparent); }
+.rp-status-item { display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.74rem; color: var(--color-black); padding: 0.42rem 0.55rem; border-bottom: 1px solid color-mix(in srgb, var(--color-black) 12%, transparent); }
+.rp-status-item:nth-child(even) { background: color-mix(in srgb, var(--color-black) 4%, transparent); }
+.rp-status-label { flex: 1; }
+.rp-chip { width: 18px; height: 18px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; font-size: 0.72rem; border: 1px solid var(--color-black); }
+/* High-contrast brand chips: ✓ on OPI green, ✗ on OPI red, glyph always black. */
+.rp-yes { background: var(--color-strong-green); color: var(--color-black); }
+.rp-no { background: var(--color-strong-red); color: var(--color-black); }
+.rp-partial { background: var(--color-strong-yellow); color: var(--color-black); }
+.rp-unknown { background: color-mix(in srgb, var(--color-black) 8%, transparent); color: var(--color-black); }
+.rp-details { border-top: 1px solid var(--manila-darker); margin-top: 0.5rem; padding-top: 0.25rem; display: grid; gap: 0; }
+.rp-detail { display: grid; grid-template-columns: 170px 1fr; gap: 0.75rem; font-family: var(--font-mono); font-size: 0.76rem; line-height: 1.6; padding: 0.45rem 0.55rem; border-bottom: 1px solid color-mix(in srgb, var(--color-black) 12%, transparent); }
+.rp-detail:nth-child(even) { background: color-mix(in srgb, var(--color-black) 4%, transparent); }
+.rp-detail-label { font-weight: 700; color: var(--color-black); }
+.rp-detail-val { color: var(--color-black); overflow-wrap: anywhere; }
+/* Links inside the card read as clickable (linkified URLs + contacts). */
+.rp-detail-val a, .rp-card a:not(.rp-attachment) { color: var(--color-dark-green); text-decoration: underline; text-underline-offset: 2px; }
+.rp-attachment-img { padding: 0; }
+.rp-attachment-img img { display: block; max-width: 140px; height: auto; border: 1.5px solid var(--color-black); }
+.rp-empty { font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-black); font-style: italic; padding: 1.5rem 0; }
+.rp-hint { font-style: italic; opacity: 0.75; }
+.rp-attachments { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+.rp-attachment { font-family: var(--font-mono); font-size: 0.72rem; border: 1.5px solid var(--color-black); padding: 0.25rem 0.6rem; text-decoration: none; color: var(--color-black); background: var(--color-white); }
+.rp-attachment:hover { background: var(--color-black); color: var(--color-white); }
+.rp-disclaimer { margin-top: 0.85rem; padding-top: 0.65rem; border-top: 1px dashed var(--manila-darker); font-family: var(--font-mono); font-size: 0.68rem; color: var(--color-black); opacity: 0.78; line-height: 1.5; }
+@media (max-width: 600px) { .rp-detail { grid-template-columns: 1fr; gap: 0.1rem; } }
+
+/* ==========================================================
+   OSM accordions (WFAM FAQ, etc.) — SINGLE SOURCE
+   ----------------------------------------------------------
+   Consolidated from per-page inline copies. The item is a
+   neo-brutalist button: sits on a hard black shadow; closed,
+   it slides into the shadow on hover (trigger fills the page
+   accent) and presses flush on :active; open, it settles at
+   the shallow depth with an inverted black header + accent text.
+   ========================================================== */
+.accordion-item {
+    border: 1.5px solid var(--color-black);
+    box-shadow: 4px 4px 0 var(--color-black);
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    background: var(--color-white);
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+.accordion-item:not(.open):hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--color-black); }
+.accordion-item:not(.open):active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--color-black); }
+.accordion-item.open { box-shadow: 2px 2px 0 var(--color-black); }   /* settled / pressed-in */
+.accordion-trigger {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease;
+}
+.accordion-trigger:hover { background: var(--page-accent, var(--color-strong-green)); }   /* hover fills the page accent */
+/* Expanded header inverts: OPI-black bar, accent-color text. */
+.accordion-item.open .accordion-trigger,
+.accordion-item.open .accordion-trigger:hover { background: var(--color-black); }
+.accordion-item.open .accordion-trigger h4 { color: var(--page-accent, var(--color-blaze-orange)); }
+.accordion-item.open .accordion-trigger .chevron { color: var(--page-accent, var(--color-blaze-orange)); }
+.accordion-trigger h4 { font-family: var(--font-body); font-size: 1rem; font-weight: 600; color: var(--color-black); line-height: 1.4; padding-right: 1rem; }
+.accordion-trigger .chevron { font-size: 0; color: var(--color-black); flex-shrink: 0; line-height: 1; }
+.accordion-trigger .chevron::before { content: "+"; font-size: 1.15rem; font-weight: 700; display: inline-block; }
+.accordion-item.open .chevron::before { content: "\2212"; }   /* minus sign when expanded */
+.accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+.accordion-item.open .accordion-body { max-height: 3000px; }
+.accordion-content { padding: 0 1.25rem 1.25rem; font-family: var(--font-body); font-size: 0.95rem; color: var(--color-black); line-height: 1.7; }
+.accordion-content p { margin-bottom: 0.75rem; }
+.accordion-content p:last-child { margin-bottom: 0; }
+.accordion-content a { color: inherit; }
+.accordion-content strong { color: var(--color-black); }
+.accordion-content ul, .accordion-content ol { padding-left: 1.25rem; margin: 0.5rem 0; }
+.accordion-content li { margin-bottom: 0.5rem; }
+@media (prefers-reduced-motion: reduce) {
+    .accordion-item,
+    .accordion-item:not(.open):hover,
+    .accordion-item:not(.open):active { transform: none; }
+}
+
+/* CLI theme variants — toggled by `opi theme amber/paper` (default = green,
+   no class needed). Recolors the CLI tokens locally so only the .terminal-
+   window picks up the new theme; the rest of the page is unaffected. */
+.terminal-window.opi-theme-amber,
+.opi-os-window.opi-theme-amber {
+    --cli-bg:        #1a0e00;
+    --cli-surface:   #1a0e00;
+    --cli-surface-2: #261600;
+    --cli-border:    #4a3000;
+    --cli-green:     #ffb000;     /* amber primary */
+    --cli-cyan:      #ffd866;
+    --cli-yellow:    #ffe085;
+    --cli-purple:    #ffa64d;
+    --cli-text:      rgba(255, 192, 100, 0.92);
+    --cli-text-dim:  rgba(255, 192, 100, 0.55);
+    --cli-comment:   rgba(255, 192, 100, 0.6);
+}
+.terminal-window.opi-theme-amber .opi-banner,
+.terminal-window.opi-theme-amber .terminal-body .success,
+.terminal-window.opi-theme-amber .terminal-body .value,
+.terminal-window.opi-theme-amber .opi-input,
+.terminal-window.opi-theme-amber .opi-cursor,
+.terminal-window.opi-theme-amber .terminal-title-prompt,
+.opi-os-window.opi-theme-amber .opi-banner,
+.opi-os-window.opi-theme-amber .terminal-body .success,
+.opi-os-window.opi-theme-amber .terminal-body .value,
+.opi-os-window.opi-theme-amber .opi-input,
+.opi-os-window.opi-theme-amber .opi-cursor,
+.opi-os-window.opi-theme-amber .terminal-title-prompt {
+    color: #ffb000;
+    background: transparent;
+}
+.terminal-window.opi-theme-amber .opi-cursor,
+.opi-os-window.opi-theme-amber .opi-cursor { background: #ffb000 !important; }
+/* The OS CLI mount paints its own black background inline, so recolor it too
+   when the amber theme is active (the /cli page window uses --cli-surface). */
+.opi-os-window.opi-theme-amber #opi-os-cli-mount { background: #1a0e00 !important; }
+
+/* paper theme retired — green text on cream bg failed contrast */
+
+/* Keyboard shortcuts panel — triggered by ? or F1. Floating
+   centered overlay; click outside or Esc to dismiss. */
+.opi-shortcuts-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: color-mix(in srgb, var(--color-black) 80%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+.opi-shortcuts-inner {
+    background: var(--cli-surface);
+    border: 1px solid var(--cli-green);
+    border-radius: 6px;
+    padding: 1.5rem 1.75rem;
+    max-width: 460px;
+    width: 100%;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5),
+                0 0 0 1px color-mix(in srgb, var(--cli-green) 20%, transparent);
+    font-family: var(--font-mono);
+}
+.opi-shortcuts-title {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--cli-green);
+    margin-bottom: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--cli-green) 30%, transparent);
+}
+.opi-shortcuts-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+.opi-shortcuts-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    font-size: 0.85rem;
+    color: var(--cli-text);
+}
+.opi-shortcuts-list li > span {
+    color: var(--cli-text-dim);
+    flex: 1;
+}
+.opi-shortcuts-list kbd {
+    display: inline-block;
+    background: var(--cli-surface-2);
+    border: 1px solid var(--cli-border);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--cli-green);
+    min-width: 22px;
+    text-align: center;
+}
+.opi-shortcuts-footer {
+    margin-top: 1rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid var(--cli-border);
+    font-size: 0.72rem;
+    color: var(--cli-text-dim);
+    text-align: center;
+}
+
+/* Matrix-rain overlay (canvas) — triggered by `opi matrix`. Fixed
+   to viewport, fades in for 30 seconds, then fades back out. */
+.opi-matrix-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    background: rgba(0, 0, 0, 0.85);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+.opi-matrix-overlay.is-active {
+    opacity: 1;
+}
+.opi-matrix-overlay canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+.opi-matrix-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-black);
+    color: var(--cli-green);
+    border: 1px solid var(--cli-green);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    z-index: 10000;
+    pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    .opi-matrix-overlay { transition: none; }
+}
+
+/* Live terminal: each transcript line + the input row */
+.opi-line {
+    margin-bottom: 2px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.opi-input-row {
+    display: flex;
+    align-items: baseline;
+    margin-top: 0.25rem;
+}
+.opi-input-row .prompt {
+    color: var(--cli-green);
+    flex-shrink: 0;
+    margin-right: 0.5rem;          /* space after `>` only — not before the cursor */
+}
+/* Override the site-wide form input rule — terminal input is bare text
+   on the terminal background, NOT the off-white pill. Higher specificity
+   (`input.opi-input`) + !important defeats the global form baseline.
+   Native caret hidden — the fake .opi-cursor underscore takes over. */
+input.opi-input,
+.opi-input-row input.opi-input {
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    color: var(--cli-green) !important;          /* typed text in opi-green */
+    font-family: var(--font-mono) !important;
+    font-size: inherit !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    caret-color: transparent !important;          /* hide native caret */
+    transition: none !important;
+    width: 1ch;                                    /* sized via JS to value.length + 'ch' */
+    min-width: 1ch;
+    max-width: 100%;
+}
+input.opi-input:focus,
+.opi-input-row input.opi-input:focus {
+    outline: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+    caret-color: transparent !important;
+}
+
+/* Fake blinking underscore cursor that sits right after the typed text.
+   Only renders when an input row is the live (focused) one. */
+.opi-cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 3px;
+    background: var(--cli-green);
+    margin-left: 1px;
+    margin-bottom: 2px;
+    vertical-align: bottom;
+    animation: opi-cursor-blink 1s steps(2, end) infinite;
+}
+.opi-input-row.is-locked .opi-cursor {
+    display: none;          /* old prompts (already submitted) don't blink */
+}
+@keyframes opi-cursor-blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .opi-cursor { animation: none; opacity: 0.85; }
+}
+/* Pre block for ASCII tables */
+.opi-table {
+    color: var(--cli-text);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin: 0.5rem 0 1rem;
+    white-space: pre;
+    overflow-x: auto;
+}
+.opi-banner {
+    color: var(--cli-green);
+    margin-bottom: 0.5rem;
+    white-space: pre;
+    line-height: 1.2;
+    font-size: 0.78rem;
+}
+.opi-help-list {
+    list-style: none;
+    margin: 0.5rem 0 1rem;
+    padding: 0;
+}
+.opi-help-list li {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 0.75rem;
+    line-height: 1.7;
+}
+.opi-help-list .opi-help-cmd {
+    color: var(--cli-green);
+}
+.opi-help-list .opi-help-desc {
+    color: var(--cli-text-dim);
+    min-width: 0;                 /* let the description wrap instead of
+                                     overflowing the terminal width */
+    overflow-wrap: anywhere;
+}
+/* Narrow terminal → stack the two columns. Container-based (keys off the
+   terminal's own width) so it fires inside the OPI OS CLI window AND on a
+   phone — the OPI OS CLI and /cli now render `help` identically at any width. */
+@container (max-width: 600px) {
+    .opi-help-list li { grid-template-columns: 1fr; gap: 0; }
+    .opi-help-list .opi-help-desc { padding-left: 1rem; margin-bottom: 0.5rem; }
+}
+@media (max-width: 600px) {
+    .cli-page-window .terminal-body { padding: 1rem 1rem; max-height: 65vh; }
+}
+
+/* Footer easter-egg link to /cli.html — sits subtly between
+   copyright and motto in .footer-bottom */
+.footer-cli-egg {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--footer-fg);
+    opacity: 0.55;
+    text-decoration: none;
+    transition: color 0.18s, opacity 0.18s;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+.footer-cli-egg:hover,
+.footer-cli-egg:focus-visible {
+    color: var(--cli-green);
+    opacity: 1;
+}
+
+
+/* ==========================================================
+   WFAM database + contributors (shared)
+   ----------------------------------------------------------
+   Used by the OSM accountability pages (hub, journalists) with the
+   shared /js/wfam-db.js renderer. Manila tokens (--manila-dark etc.)
+   resolve from each OSM page's :root; these rules only match where
+   the WFAM markup exists.
+   ==========================================================*/
+/* DATABASE */
+.db-controls { display: flex; gap: 0.6rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.db-search { flex: 1; min-width: 180px; padding: 0.6rem 1rem; font-family: var(--font-body); font-size: 0.85rem; border: 1px solid var(--manila-darker); border-radius: 4px; background: var(--color-white); color: var(--color-black); outline: none; }
+.db-search:focus { border-color: var(--page-accent, var(--color-dark-green)); }
+.db-filter { padding: 0.6rem 0.7rem; font-family: var(--font-body); font-size: 0.8rem; border: 1px solid var(--manila-darker); border-radius: 4px; background: var(--color-white); color: var(--color-black); cursor: pointer; }
+.db-filter:focus { border-color: var(--page-accent, var(--color-dark-green)); outline: 2px solid color-mix(in srgb, var(--page-accent, var(--color-dark-green)) 35%, transparent); outline-offset: 0; }
+.db-meta { font-family: var(--font-mono); font-size: 0.68rem; color: var(--color-black); display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.4rem; }
+/* Database footnote — sits under the table; OPI-black bar with blaze-orange
+   (page-accent) mono text + the Airtable link. */
+.db-footnote { font-family: var(--font-body); font-size: 0.8rem; line-height: 1.5; background: var(--color-black); color: var(--page-accent, var(--color-strong-green)); margin-top: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 4px; }
+.db-footnote a { color: var(--page-accent, var(--color-strong-green)); font-weight: 700; text-decoration: underline; }
+
+.wfam-table-wrap { max-height: 70vh; overflow: auto; border: 1px solid var(--manila-darker); border-radius: 6px; background: var(--color-white); }
+.wfam-table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.74rem; }
+.wfam-table thead { background: var(--color-black); }
+.wfam-table th { padding: 0.65rem 0.75rem; text-align: left; font-weight: 700; color: var(--color-off-white); cursor: pointer; white-space: nowrap; user-select: none; border-bottom: 2px solid var(--color-black); }
+.wfam-table th:hover { color: var(--page-accent, var(--color-dark-green)); }
+.wfam-table th .si { font-size: 0.55rem; margin-left: 3px; opacity: 0.55; }
+.wfam-table th.sorted .si { opacity: 1; color: var(--page-accent, var(--color-dark-green)); }
+.wfam-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--manila-dark); color: var(--color-black); vertical-align: top; line-height: 1.5; }
+.wfam-table td.td-item { min-width: 180px; max-width: 220px; font-weight: 600; color: var(--color-black); }
+.wfam-table td.td-amt { white-space: nowrap; font-weight: 700; color: var(--color-black); text-align: right; }
+.wfam-table td.td-state { white-space: nowrap; min-width: 90px; }
+.wfam-table td.td-entity { min-width: 120px; max-width: 160px; }
+.wfam-table td.td-year { text-align: center; white-space: nowrap; }
+.wfam-table td.td-domain { min-width: 110px; }
+.wfam-table td.td-assess { min-width: 100px; }
+.wfam-table td.td-rat, .wfam-table td.td-notes, .wfam-table td.td-credit { min-width: 150px; max-width: 200px; }
+.wfam-table td.td-link, .wfam-table td.td-nl { text-align: center; white-space: nowrap; }
+.wfam-table tbody tr:hover { background: color-mix(in srgb, var(--page-accent, var(--color-dark-green)) 2.5%, transparent); }
+.wfam-table .db-empty { text-align: center; padding: 2.5rem; color: var(--color-black); }
+.clip2 { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Header sticks to the top of the table's own vertical scroll. th needs its own
+   solid background so rows don't show through as they scroll underneath. */
+.wfam-table thead th { position: sticky; top: 0; z-index: 2; background: var(--color-black); }
+.wfam-table td.td-juris { min-width: 90px; max-width: 130px; }
+/* Clipped cells clamp to 2 lines via their inner .clip2 div, so rows are a
+   uniform height and columns line up. Click a row to expand the full record. */
+.wfam-table tbody tr.db-row { cursor: pointer; }
+.wfam-table tbody tr.db-row.is-open { background: color-mix(in srgb, var(--page-accent, var(--color-dark-green)) 7%, transparent); }
+.wfam-table tr.db-detail > td { padding: 0; background: var(--manila-dark); border-bottom: 2px solid var(--color-black); }
+/* Sticky to the left edge of the table's scroll viewport + sized to the visible
+   width (set in JS) so the expanded record is fully readable without horizontal
+   scrolling, even though its row spans the full (wide) table. */
+.db-detail-card { position: sticky; left: 0; box-sizing: border-box; display: grid; grid-template-columns: 190px 1fr; gap: 0.35rem 1.25rem; padding: 1rem 1.25rem; font-family: var(--font-mono); font-size: 0.76rem; line-height: 1.55; }
+.db-detail-row { display: contents; }
+.db-detail-k { font-weight: 700; color: var(--color-black); }
+.db-detail-v { color: var(--color-black); overflow-wrap: anywhere; }
+.db-detail-v a { color: var(--color-dark-green); text-decoration: underline; text-underline-offset: 2px; }
+@media (max-width: 640px) { .db-detail-card { grid-template-columns: 1fr; gap: 0.1rem 0; } .db-detail-row { display: block; margin-bottom: 0.5rem; } }
+
+.cat-stamp { font-family: var(--font-logo); font-size: 0.6rem; display: inline-block; padding: 0.1rem 0.4rem; border: 1.5px solid; border-radius: 2px; letter-spacing: 0.02em; white-space: nowrap; }
+.cat-Waste { color: var(--color-strong-red); border-color: var(--color-strong-red); }
+.cat-Fraud { color: var(--color-strong-red); border-color: var(--color-strong-red); }
+.cat-Abuse { color: var(--color-blaze-orange); border-color: var(--color-blaze-orange); }
+.cat-Mismanagement { color: var(--color-strong-yellow); border-color: var(--color-strong-yellow); }
+.cat-Flagrant { color: var(--color-strong-red); border-color: var(--color-strong-red); background: color-mix(in srgb, var(--color-strong-red) 5%, transparent); }
+.cat-Good { color: var(--color-dark-green); border-color: var(--color-dark-green); }
+
+.dpill { display: inline-block; font-family: var(--font-body); font-size: 0.62rem; padding: 0.1rem 0.45rem; background: var(--manila-dark); border-radius: 100px; color: var(--color-black); margin: 1px 1px 1px 0; white-space: nowrap; }
+
+.db-pagination { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 0.75rem; align-items: center; }
+.db-pagination button { font-family: var(--font-mono); font-size: 0.72rem; padding: 0.3rem 0.65rem; border: 1px solid var(--manila-darker); background: var(--color-white); color: var(--color-black); border-radius: 3px; cursor: pointer; transition: all 0.15s; }
+.db-pagination button:hover, .db-pagination button.active { background: var(--color-dark-green); color: var(--color-white); border-color: var(--color-dark-green); }
+.db-pagination .pg-info { font-family: var(--font-mono); font-size: 0.68rem; color: var(--color-black); margin-left: 0.5rem; }
+
+/* CONTRIBUTORS */
+.contributors-section { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--manila-darker); }
+.contrib-label { font-size: 0.78rem; font-weight: 700; color: var(--color-black); margin-bottom: 0.5rem; }
+.contrib-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--manila-dark); margin-bottom: 0.65rem; }
+.contrib-bar .seg { transition: width 0.5s ease; }
+.contrib-legend { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; }
+.contrib-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--color-black); }
+.contrib-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.contrib-pct { font-size: 0.65rem; color: var(--color-black); }
+.contrib-anon { font-style: italic; color: var(--color-black); }
+.c0{background:var(--color-dark-green)} .c1{background:var(--color-blaze-orange)} .c2{background:var(--color-light-purple)}
+.c3{background:var(--color-teal)} .c4{background:var(--color-strong-red)} .c5{background:var(--color-strong-yellow)}
+.c6{background:var(--color-teal)} .c7{background:var(--color-dark-purple)} .c8{background:var(--color-strong-red)}
+.c-anon{background:var(--manila-darker)}
+
+}
